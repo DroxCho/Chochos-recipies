@@ -434,29 +434,32 @@ export const recipes: Recipe[] = [
 
 const RECIPE_META_KEY = 'recipes_meta_v1';
 const LOCAL_RECIPES_KEY = 'recipes_local_v1';
+const DELETED_RECIPES_KEY = 'recipes_deleted_v1';
 
 export function getRecipeById(id: string): Recipe | undefined {
   return recipes.find((recipe) => recipe.id === id);
 }
 
 function readLocalRecipes(): Recipe[] {
+  const deletedIds = readDeletedRecipeIds();
+
   if (typeof window === 'undefined') {
-    return recipes;
+    return recipes.filter((recipe) => !deletedIds.has(recipe.id));
   }
 
   const raw = localStorage.getItem(LOCAL_RECIPES_KEY);
   if (!raw) {
-    return recipes;
+    return recipes.filter((recipe) => !deletedIds.has(recipe.id));
   }
 
   try {
-    const parsed = JSON.parse(raw) as Recipe[];
+    const parsed = (JSON.parse(raw) as Recipe[]).filter((recipe) => !deletedIds.has(recipe.id));
     if (parsed.length === 0) {
-      return recipes;
+      return recipes.filter((recipe) => !deletedIds.has(recipe.id));
     }
 
     const byId = new Map(parsed.map((recipe) => [recipe.id, recipe]));
-    for (const seededRecipe of recipes) {
+    for (const seededRecipe of recipes.filter((recipe) => !deletedIds.has(recipe.id))) {
       if (!byId.has(seededRecipe.id)) {
         byId.set(seededRecipe.id, seededRecipe);
       }
@@ -464,7 +467,7 @@ function readLocalRecipes(): Recipe[] {
 
     return Array.from(byId.values());
   } catch {
-    return recipes;
+    return recipes.filter((recipe) => !deletedIds.has(recipe.id));
   }
 }
 
@@ -474,6 +477,48 @@ function writeLocalRecipes(localRecipes: Recipe[]): void {
   }
 
   localStorage.setItem(LOCAL_RECIPES_KEY, JSON.stringify(localRecipes));
+}
+
+function readDeletedRecipeIds(): Set<string> {
+  if (typeof window === 'undefined') {
+    return new Set();
+  }
+
+  const raw = localStorage.getItem(DELETED_RECIPES_KEY);
+  if (!raw) {
+    return new Set();
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as string[];
+    return new Set(parsed);
+  } catch {
+    return new Set();
+  }
+}
+
+function writeDeletedRecipeIds(ids: Set<string>): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  localStorage.setItem(DELETED_RECIPES_KEY, JSON.stringify(Array.from(ids)));
+}
+
+function markRecipeDeleted(id: string): void {
+  const ids = readDeletedRecipeIds();
+  ids.add(id);
+  writeDeletedRecipeIds(ids);
+}
+
+function clearDeletedRecipeMark(id: string): void {
+  const ids = readDeletedRecipeIds();
+  if (!ids.has(id)) {
+    return;
+  }
+
+  ids.delete(id);
+  writeDeletedRecipeIds(ids);
 }
 
 function getRecipeByIdFromLocal(id: string): Recipe | undefined {
@@ -1011,6 +1056,7 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
     const localRecipes = readLocalRecipes();
     writeLocalRecipes([createdRecipe, ...localRecipes.filter((recipe) => recipe.id !== createdRecipe.id)]);
     persistRecipeMeta(id, metaPatch);
+    clearDeletedRecipeMark(id);
     return applyMeta(createdRecipe, readRecipeMetaMap());
   }
 
@@ -1030,6 +1076,7 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
     const localRecipes = readLocalRecipes();
     writeLocalRecipes([createdRecipe, ...localRecipes.filter((recipe) => recipe.id !== createdRecipe.id)]);
     persistRecipeMeta(id, metaPatch);
+    clearDeletedRecipeMark(id);
     return applyMeta(createdRecipe, readRecipeMetaMap());
   }
 
@@ -1044,6 +1091,7 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
   }
 
   persistRecipeMeta(id, metaPatch);
+  clearDeletedRecipeMark(id);
   return applyMeta(mapRecipeRow(data as RecipeRow), readRecipeMetaMap());
 }
 
@@ -1139,6 +1187,7 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
 export async function deleteRecipeById(id: string): Promise<void> {
   const localRecipes = readLocalRecipes();
   writeLocalRecipes(localRecipes.filter((recipe) => recipe.id !== id));
+  markRecipeDeleted(id);
   removeRecipeMeta(id);
 
   if (!hasSupabaseAnonKey) {

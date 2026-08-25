@@ -7,6 +7,8 @@ import type { Recipe } from '../../types/recipe';
 
 interface RecipeCardProps {
   recipe: Recipe;
+  onDelete?: (id: string) => Promise<void>;
+  isDeleting?: boolean;
 }
 
 function complexityToStars(complexity?: Recipe['complexity']): number {
@@ -25,7 +27,7 @@ function complexityToStars(complexity?: Recipe['complexity']): number {
   return 0;
 }
 
-export function RecipeCard({ recipe }: RecipeCardProps) {
+export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardProps) {
   const { t, language } = useLanguage();
   const { role, userId } = useUserRole();
   const navigate = useNavigate();
@@ -42,6 +44,7 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
   const selectedCuisine = searchParams.get('cuisine');
   const isDishTypeActive = selectedDishType === (recipe.dishType ?? 'main');
   const isCuisineActive = selectedCuisine === (recipe.cuisine ?? 'international');
+  const canDeleteFromCard = role === 'admin' && typeof onDelete === 'function';
 
   function navigateWithMergedFilters(nextDishType?: string, nextCuisine?: string) {
     const nextParams = new URLSearchParams(searchParams);
@@ -108,11 +111,27 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
       ? 'cuisineVegetarian'
       : 'cuisineInternational';
 
+  async function handleDeleteFromCard(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!canDeleteFromCard || isDeleting) {
+      return;
+    }
+
+    if (!window.confirm(t('deleteRecipeConfirm'))) {
+      return;
+    }
+
+    await onDelete(recipe.id);
+  }
+
   return (
-    <Link
-      className="group block h-full rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
-      to={`/recipes/${recipe.id}`}
-    >
+    <div className="group relative block h-full">
+      <Link
+        className="block h-full rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+        to={`/recipes/${recipe.id}`}
+      >
       <article className="flex h-full min-h-[520px] flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-transform duration-200 ease-out group-hover:scale-[1.02] group-hover:shadow-md">
       {recipeImage && (
         <img
@@ -200,6 +219,18 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
         {t('viewDetails')}
       </span>
     </article>
-    </Link>
+      </Link>
+      {canDeleteFromCard && (
+        <button
+          aria-label={t('deleteRecipe')}
+          className="absolute bottom-3 right-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-rose-300 bg-white text-base font-bold leading-none text-rose-700 shadow-sm transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={isDeleting}
+          onClick={handleDeleteFromCard}
+          type="button"
+        >
+          ×
+        </button>
+      )}
+    </div>
   );
 }

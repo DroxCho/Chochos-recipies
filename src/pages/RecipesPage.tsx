@@ -31,7 +31,7 @@ function parseCuisineFilter(value: string | null): 'all' | RecipeCuisine {
 export function RecipesPage() {
   const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { recipes, isLoading, error } = useRecipes();
+  const { recipes, isLoading, deletingRecipeId, error, deleteExistingRecipe } = useRecipes();
   const pageSize = 12;
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
@@ -206,7 +206,7 @@ export function RecipesPage() {
         <p className="text-sm text-slate-500">{t('noRecipes')}</p>
       )}
 
-      <RecipeList recipes={paginatedRecipes} />
+      <RecipeList deletingRecipeId={deletingRecipeId} onDeleteRecipe={deleteExistingRecipe} recipes={paginatedRecipes} />
 
       {!isLoading && currentPage < totalPages && (
         <div className="mt-4 flex justify-center">

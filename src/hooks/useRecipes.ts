@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { canCreateRecipe, canViewRecipe } from '../auth/roles';
 import { useUserRole } from '../auth/useUserRole';
 import {
+  deleteRecipeById,
   fetchRecipeById,
   fetchRecipes,
   insertRecipe,
@@ -26,6 +27,7 @@ export function useRecipes() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [deletingRecipeId, setDeletingRecipeId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const applyVisibility = useCallback(
@@ -120,7 +122,36 @@ export function useRecipes() {
     }
   }
 
-  return { recipes, isLoading, isCreating, isUpdating, error, createRecipe, updateExistingRecipe };
+  async function deleteExistingRecipe(id: string) {
+    if (role !== 'admin') {
+      setError(t('noAddRecipePermission'));
+      throw new Error('Delete recipe not allowed');
+    }
+
+    setDeletingRecipeId(id);
+    try {
+      await deleteRecipeById(id);
+      setRecipes((prev) => prev.filter((item) => item.id !== id));
+      setError(null);
+    } catch {
+      setError(t('errorUpdateRecipe'));
+      throw new Error('Delete recipe failed');
+    } finally {
+      setDeletingRecipeId(null);
+    }
+  }
+
+  return {
+    recipes,
+    isLoading,
+    isCreating,
+    isUpdating,
+    deletingRecipeId,
+    error,
+    createRecipe,
+    updateExistingRecipe,
+    deleteExistingRecipe,
+  };
 }
 
 export function useRecipeDetails(id: string | undefined) {
