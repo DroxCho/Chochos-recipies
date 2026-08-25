@@ -1,19 +1,31 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { canCreateRecipe, canViewRecipe } from '../auth/roles';
+import { useUserRole } from '../auth/useUserRole';
 import {
   fetchRecipeById,
   fetchRecipes,
   insertRecipe,
   recipes as sampleRecipes,
+  updateRecipe,
 } from '../data/recipes';
 import type { CreateRecipeInput, Recipe } from '../types/recipe';
 import { useLanguage } from '../i18n/useLanguage';
 
 export function useRecipes() {
   const { t } = useLanguage();
+  const { role, userId } = useUserRole();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const applyVisibility = useCallback(
+    (allRecipes: Recipe[]): Recipe[] => {
+      return allRecipes.filter((recipe) => canViewRecipe(role, recipe, userId));
+    },
+    [role, userId],
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -22,12 +34,12 @@ export function useRecipes() {
       try {
         const data = await fetchRecipes();
         if (isMounted) {
-          setRecipes(data);
+          setRecipes(applyVisibility(data));
           setError(null);
         }
       } catch {
         if (isMounted) {
-          setRecipes(sampleRecipes);
+          setRecipes(applyVisibility(sampleRecipes));
           setError(t('errorLoadRecipes'));
         }
       } finally {
@@ -42,13 +54,23 @@ export function useRecipes() {
     return () => {
       isMounted = false;
     };
-  }, [t]);
+  }, [applyVisibility, t]);
 
   async function createRecipe(input: CreateRecipeInput) {
+    if (!canCreateRecipe(role) || !userId) {
+      setError(t('noAddRecipePermission'));
+      throw new Error('Create recipe not allowed');
+    }
+
     setIsCreating(true);
     try {
-      const createdRecipe = await insertRecipe(input);
-      setRecipes((prev) => [createdRecipe, ...prev]);
+      const createdRecipe = await insertRecipe({
+        ...input,
+        ownerId: userId,
+        ownerRole: role === 'admin' ? 'admin' : 'registered',
+        status: role === 'admin' ? 'approved' : 'pending',
+      });
+      setRecipes((prev) => applyVisibility([createdRecipe, ...prev]));
       setError(null);
       return createdRecipe;
     } catch {
@@ -59,7 +81,36 @@ export function useRecipes() {
     }
   }
 
-  return { recipes, isLoading, isCreating, error, createRecipe };
+  async function updateExistingRecipe(recipe: Recipe) {
+    setIsUpdating(true);
+    try {
+      const updated = await updateRecipe({
+        id: recipe.id,
+        title: recipe.title,
+        description: recipe.description,
+        prepMinutes: recipe.prepMinutes,
+        servings: recipe.servings,
+        complexity: recipe.complexity,
+        ingredients: recipe.ingredients,
+        steps: recipe.steps,
+        photoUrls: recipe.photoUrls,
+        status: recipe.status,
+        ownerId: recipe.ownerId,
+        ownerRole: recipe.ownerRole,
+      });
+
+      setRecipes((prev) => applyVisibility(prev.map((item) => (item.id === updated.id ? updated : item))));
+      setError(null);
+      return updated;
+    } catch {
+      setError(t('errorCreateRecipe'));
+      throw new Error('Update recipe failed');
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  return { recipes, isLoading, isCreating, isUpdating, error, createRecipe, updateExistingRecipe };
 }
 
 export function useRecipeDetails(id: string | undefined) {
@@ -67,6 +118,7 @@ export function useRecipeDetails(id: string | undefined) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { t } = useLanguage();
+  const { role, userId } = useUserRole();
 
   useEffect(() => {
     let isMounted = true;
@@ -82,13 +134,24 @@ export function useRecipeDetails(id: string | undefined) {
       try {
         const data = await fetchRecipeById(id);
         if (isMounted) {
-          setRecipe(data);
-          setError(null);
+          if (data && canViewRecipe(role, data, userId)) {
+            setRecipe(data);
+            setError(null);
+          } else {
+            setRecipe(undefined);
+            setError(t('recipeNotFound'));
+          }
         }
       } catch {
         if (isMounted) {
-          setRecipe(sampleRecipes.find((item) => item.id === id));
-          setError(t('errorLoadRecipeDetails'));
+          const fallback = sampleRecipes.find((item) => item.id === id);
+          if (fallback && canViewRecipe(role, fallback, userId)) {
+            setRecipe(fallback);
+            setError(t('errorLoadRecipeDetails'));
+          } else {
+            setRecipe(undefined);
+            setError(t('recipeNotFound'));
+          }
         }
       } finally {
         if (isMounted) {
@@ -102,7 +165,7 @@ export function useRecipeDetails(id: string | undefined) {
     return () => {
       isMounted = false;
     };
-  }, [id, t]);
+  }, [id, role, t, userId]);
 
   return { recipe, isLoading, error };
 }

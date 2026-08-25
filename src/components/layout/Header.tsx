@@ -1,9 +1,13 @@
 import { NavLink } from 'react-router-dom';
+import { canCreateRecipe } from '../../auth/roles';
+import { useUserRole } from '../../auth/useUserRole';
 import { useLanguage } from '../../i18n/useLanguage';
 import { LanguageToggle } from './LanguageToggle';
+import { UserRoleToggle } from './UserRoleToggle';
 
 export function Header() {
   const { t } = useLanguage();
+  const { role } = useUserRole();
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive
@@ -22,10 +26,13 @@ export function Header() {
           <NavLink to="/recipes" className={linkClass}>
             {t('navRecipes')}
           </NavLink>
-          <NavLink to="/recipes/new" className={linkClass}>
-            {t('navAddRecipe')}
-          </NavLink>
+          {canCreateRecipe(role) && (
+            <NavLink to="/recipes/new" className={linkClass}>
+              {t('navAddRecipe')}
+            </NavLink>
+          )}
           </nav>
+          <UserRoleToggle />
           <LanguageToggle />
         </div>
       </div>

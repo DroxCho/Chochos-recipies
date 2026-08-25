@@ -3,22 +3,38 @@ import type { FormEvent } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { useLanguage } from '../../i18n/useLanguage';
 import type { CreateRecipeInput } from '../../types/recipe';
+import type { TranslationKey } from '../../i18n/translations';
 
 interface RecipeFormProps {
   onCreate: (input: CreateRecipeInput) => Promise<void>;
   isSubmitting: boolean;
+  initialValues?: Partial<CreateRecipeInput>;
+  submitLabelKey?: TranslationKey;
+  resetOnSuccess?: boolean;
 }
 
-export function RecipeForm({ onCreate, isSubmitting }: RecipeFormProps) {
+export function RecipeForm({
+  onCreate,
+  isSubmitting,
+  initialValues,
+  submitLabelKey = 'createRecipe',
+  resetOnSuccess = true,
+}: RecipeFormProps) {
   const { t } = useLanguage();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [prepMinutes, setPrepMinutes] = useState(15);
-  const [servings, setServings] = useState(2);
-  const [complexity, setComplexity] = useState<'easy' | 'medium' | 'hard'>('medium');
-  const [ingredients, setIngredients] = useState<string[]>(['', '', '']);
-  const [steps, setSteps] = useState<string[]>(['', '', '']);
-  const [photoUrls, setPhotoUrls] = useState<string[]>(['']);
+  const [title, setTitle] = useState(initialValues?.title ?? '');
+  const [description, setDescription] = useState(initialValues?.description ?? '');
+  const [prepMinutes, setPrepMinutes] = useState(initialValues?.prepMinutes ?? 15);
+  const [servings, setServings] = useState(initialValues?.servings ?? 2);
+  const [complexity, setComplexity] = useState<'easy' | 'medium' | 'hard'>(initialValues?.complexity ?? 'medium');
+  const [ingredients, setIngredients] = useState<string[]>(
+    initialValues?.ingredients && initialValues.ingredients.length > 0 ? initialValues.ingredients : ['', '', ''],
+  );
+  const [steps, setSteps] = useState<string[]>(
+    initialValues?.steps && initialValues.steps.length > 0 ? initialValues.steps : ['', '', ''],
+  );
+  const [photoUrls, setPhotoUrls] = useState<string[]>(
+    initialValues?.photoUrls && initialValues.photoUrls.length > 0 ? initialValues.photoUrls : [''],
+  );
   const [error, setError] = useState<string | null>(null);
 
   function updateListValue(
@@ -77,14 +93,16 @@ export function RecipeForm({ onCreate, isSubmitting }: RecipeFormProps) {
       return;
     }
 
-    setTitle('');
-    setDescription('');
-    setPrepMinutes(15);
-    setServings(2);
-    setComplexity('medium');
-    setIngredients(['', '', '']);
-    setSteps(['', '', '']);
-    setPhotoUrls(['']);
+    if (resetOnSuccess) {
+      setTitle('');
+      setDescription('');
+      setPrepMinutes(15);
+      setServings(2);
+      setComplexity('medium');
+      setIngredients(['', '', '']);
+      setSteps(['', '', '']);
+      setPhotoUrls(['']);
+    }
   }
 
   return (
@@ -230,7 +248,7 @@ export function RecipeForm({ onCreate, isSubmitting }: RecipeFormProps) {
         disabled={isSubmitting}
         type="submit"
       >
-        {isSubmitting ? t('saving') : t('createRecipe')}
+        {isSubmitting ? t('saving') : t(submitLabelKey)}
       </button>
     </form>
   );
