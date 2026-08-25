@@ -230,25 +230,20 @@ export function RecipeDetailsPage() {
       <p className="mt-2 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
         {statusLabel}
       </p>
-      {complexityStars > 0 && (
-        <p className="mt-3 text-sm text-amber-500" aria-label={`${t('complexity')} ${complexityStars}`}>
-          {'★'.repeat(complexityStars)}
-          <span className="ml-1 text-slate-500">({complexityStars}/5)</span>
-        </p>
-      )}
       {currentRecipe.reviewComment && (
         <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">{currentRecipe.reviewComment}</p>
       )}
       {recipePhotos.length > 0 && (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 grid gap-5">
           {recipePhotos.map((photoUrl, index) => (
-            <img
-              key={`${currentRecipe.id}-photo-${index}`}
-              alt={`${localizedRecipe.title} ${index + 1}`}
-              className="h-40 w-full rounded-lg border border-slate-200 object-cover"
-              loading="lazy"
-              src={photoUrl}
-            />
+            <div key={`${currentRecipe.id}-photo-${index}`} className="mx-auto w-full max-w-2xl">
+              <img
+                alt={`${localizedRecipe.title} ${index + 1}`}
+                className="aspect-square w-full rounded-xl border border-slate-200 object-cover shadow-sm"
+                loading="lazy"
+                src={photoUrl}
+              />
+            </div>
           ))}
         </div>
       )}
@@ -260,6 +255,12 @@ export function RecipeDetailsPage() {
       <div className="mt-6 flex items-center gap-4 text-sm text-slate-500">
         <span>{t('prepLabel')}: {currentRecipe.prepMinutes} {t('minutesShort')}</span>
         <span>{t('servingsLabel')}: {currentRecipe.servings}</span>
+        {complexityStars > 0 && (
+          <span className="inline-flex items-center gap-1 text-amber-500" aria-label={`${t('complexity')} ${complexityStars}`}>
+            {'★'.repeat(complexityStars)}
+            <span className="text-slate-500">({complexityStars}/5)</span>
+          </span>
+        )}
       </div>
       {recipeIngredients.length > 0 && (
         <section className="mt-6">
