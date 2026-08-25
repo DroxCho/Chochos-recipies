@@ -26,6 +26,8 @@ export function EditRecipePage() {
       prepMinutes: input.prepMinutes,
       servings: input.servings,
       complexity: input.complexity,
+      dishType: input.dishType,
+      cuisine: input.cuisine,
       ingredients: input.ingredients,
       steps: input.steps,
       photoUrls: input.photoUrls,

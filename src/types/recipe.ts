@@ -1,5 +1,7 @@
 export type RecipeStatus = 'pending' | 'approved' | 'rejected' | 'changes_requested';
 export type RecipeOwnerRole = 'registered' | 'admin';
+export type RecipeDishType = 'main' | 'dessert' | 'soup' | 'salad' | 'appetizer' | 'breakfast';
+export type RecipeCuisine = 'bulgarian' | 'french' | 'asian' | 'italian' | 'mexican' | 'spanish' | 'turkish' | 'international';
 
 export interface Recipe {
   id: string;
@@ -8,6 +10,8 @@ export interface Recipe {
   prepMinutes: number;
   servings: number;
   complexity?: 'easy' | 'medium' | 'hard';
+  dishType?: RecipeDishType;
+  cuisine?: RecipeCuisine;
   ingredients?: string[];
   steps?: string[];
   photoUrls?: string[];
@@ -23,6 +27,8 @@ export interface CreateRecipeInput {
   prepMinutes: number;
   servings: number;
   complexity?: 'easy' | 'medium' | 'hard';
+  dishType?: RecipeDishType;
+  cuisine?: RecipeCuisine;
   ingredients?: string[];
   steps?: string[];
   photoUrls?: string[];

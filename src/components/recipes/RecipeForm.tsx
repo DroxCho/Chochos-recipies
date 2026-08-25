@@ -4,8 +4,11 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useLanguage } from '../../i18n/useLanguage';
 import type { CreateRecipeInput } from '../../types/recipe';
 import type { TranslationKey } from '../../i18n/translations';
+import type { RecipeCuisine, RecipeDishType } from '../../types/recipe';
 
 type ComplexityValue = '' | 'easy' | 'medium' | 'hard';
+type DishTypeValue = '' | RecipeDishType;
+type CuisineValue = '' | RecipeCuisine;
 
 interface RecipeFormProps {
   onCreate: (input: CreateRecipeInput) => Promise<void>;
@@ -28,6 +31,8 @@ export function RecipeForm({
   const [prepMinutes, setPrepMinutes] = useState(initialValues?.prepMinutes ?? 15);
   const [servings, setServings] = useState(initialValues?.servings ?? 2);
   const [complexity, setComplexity] = useState<ComplexityValue>(initialValues?.complexity ?? '');
+  const [dishType, setDishType] = useState<DishTypeValue>(initialValues?.dishType ?? '');
+  const [cuisine, setCuisine] = useState<CuisineValue>(initialValues?.cuisine ?? '');
   const [selectedComplexityStars, setSelectedComplexityStars] = useState(complexityToStars(initialValues?.complexity ?? ''));
   const [ingredients, setIngredients] = useState<string[]>(
     initialValues?.ingredients && initialValues.ingredients.length > 0 ? initialValues.ingredients : ['', '', ''],
@@ -113,6 +118,26 @@ export function RecipeForm({
     return 'complexityRequiredHint';
   }
 
+  const dishTypeOptions: Array<{ value: RecipeDishType; label: TranslationKey }> = [
+    { value: 'main', label: 'dishTypeMain' },
+    { value: 'dessert', label: 'dishTypeDessert' },
+    { value: 'soup', label: 'dishTypeSoup' },
+    { value: 'salad', label: 'dishTypeSalad' },
+    { value: 'appetizer', label: 'dishTypeAppetizer' },
+    { value: 'breakfast', label: 'dishTypeBreakfast' },
+  ];
+
+  const cuisineOptions: Array<{ value: RecipeCuisine; label: TranslationKey }> = [
+    { value: 'bulgarian', label: 'cuisineBulgarian' },
+    { value: 'french', label: 'cuisineFrench' },
+    { value: 'asian', label: 'cuisineAsian' },
+    { value: 'italian', label: 'cuisineItalian' },
+    { value: 'mexican', label: 'cuisineMexican' },
+    { value: 'spanish', label: 'cuisineSpanish' },
+    { value: 'turkish', label: 'cuisineTurkish' },
+    { value: 'international', label: 'cuisineInternational' },
+  ];
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -154,6 +179,11 @@ export function RecipeForm({
       return;
     }
 
+    if (!dishType || !cuisine) {
+      setError(t('validationTagsRequired'));
+      return;
+    }
+
     const normalizedIngredients = ingredients.map((item) => item.trim());
     if (normalizedIngredients.some((item) => item.length === 0)) {
       setError(t('validationIngredientsRequired'));
@@ -186,6 +216,8 @@ export function RecipeForm({
         prepMinutes,
         servings,
         complexity,
+        dishType,
+        cuisine,
         ingredients: normalizedIngredients,
         steps: normalizedSteps,
         photoUrls: normalizedPhotoUrls,
@@ -201,6 +233,8 @@ export function RecipeForm({
       setPrepMinutes(15);
       setServings(2);
       setComplexity('');
+      setDishType('');
+      setCuisine('');
       setSelectedComplexityStars(0);
       setIngredients(['', '', '']);
       setSteps(['', '', '']);
@@ -288,6 +322,42 @@ export function RecipeForm({
               {t(complexityLabelByStars(selectedComplexityStars))}
             </span>
           </div>
+        </div>
+
+        <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+          <label className="flex flex-col gap-1 text-sm text-slate-700">
+            {t('dishType')}
+            <select
+              className="rounded-md border border-slate-300 px-3 py-2"
+              onChange={(event) => setDishType(event.target.value as DishTypeValue)}
+              required
+              value={dishType}
+            >
+              <option value="">{t('selectDishType')}</option>
+              {dishTypeOptions.map((option) => (
+                <option key={`dish-type-${option.value}`} value={option.value}>
+                  {t(option.label)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col gap-1 text-sm text-slate-700">
+            {t('cuisineType')}
+            <select
+              className="rounded-md border border-slate-300 px-3 py-2"
+              onChange={(event) => setCuisine(event.target.value as CuisineValue)}
+              required
+              value={cuisine}
+            >
+              <option value="">{t('selectCuisineType')}</option>
+              {cuisineOptions.map((option) => (
+                <option key={`cuisine-type-${option.value}`} value={option.value}>
+                  {t(option.label)}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         <div className="sm:col-span-2">

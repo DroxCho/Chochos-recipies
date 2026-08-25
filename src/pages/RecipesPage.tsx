@@ -3,34 +3,67 @@ import { RecipeList } from '../components/recipes/RecipeList';
 import { useRecipes } from '../hooks/useRecipes';
 import { getLocalizedRecipe } from '../i18n/recipeContent';
 import { useLanguage } from '../i18n/useLanguage';
+import type { RecipeCuisine, RecipeDishType } from '../types/recipe';
 
 export function RecipesPage() {
   const { t, language } = useLanguage();
   const { recipes, isLoading, error } = useRecipes();
-  const pageSizeOptions = [6, 12, 24];
-  const [pageSize, setPageSize] = useState<number>(pageSizeOptions[0]);
+  const pageSize = 12;
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDishType, setSelectedDishType] = useState<'all' | RecipeDishType>('all');
+  const [selectedCuisine, setSelectedCuisine] = useState<'all' | RecipeCuisine>('all');
   const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
+
+  const dishTypeOptions: Array<{ value: 'all' | RecipeDishType; label: string }> = [
+    { value: 'all', label: t('allDishTypes') },
+    { value: 'main', label: t('dishTypeMain') },
+    { value: 'dessert', label: t('dishTypeDessert') },
+    { value: 'soup', label: t('dishTypeSoup') },
+    { value: 'salad', label: t('dishTypeSalad') },
+    { value: 'appetizer', label: t('dishTypeAppetizer') },
+    { value: 'breakfast', label: t('dishTypeBreakfast') },
+  ];
+
+  const cuisineOptions: Array<{ value: 'all' | RecipeCuisine; label: string }> = [
+    { value: 'all', label: t('allCuisines') },
+    { value: 'bulgarian', label: t('cuisineBulgarian') },
+    { value: 'french', label: t('cuisineFrench') },
+    { value: 'asian', label: t('cuisineAsian') },
+    { value: 'italian', label: t('cuisineItalian') },
+    { value: 'mexican', label: t('cuisineMexican') },
+    { value: 'spanish', label: t('cuisineSpanish') },
+    { value: 'turkish', label: t('cuisineTurkish') },
+    { value: 'international', label: t('cuisineInternational') },
+  ];
 
   const filteredRecipes = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) {
-      return recipes;
-    }
 
     return recipes.filter((recipe) => {
+      if (selectedDishType !== 'all' && recipe.dishType !== selectedDishType) {
+        return false;
+      }
+
+      if (selectedCuisine !== 'all' && recipe.cuisine !== selectedCuisine) {
+        return false;
+      }
+
+      if (!query) {
+        return true;
+      }
+
       const localizedRecipe = getLocalizedRecipe(recipe, language);
       const haystack = `${localizedRecipe.title} ${localizedRecipe.description}`.toLowerCase();
       return haystack.includes(query);
     });
-  }, [language, recipes, searchQuery]);
+  }, [language, recipes, searchQuery, selectedCuisine, selectedDishType]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRecipes.length / pageSize));
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [pageSize, searchQuery]);
+  }, [searchQuery, selectedCuisine, selectedDishType]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -68,7 +101,7 @@ export function RecipesPage() {
   const paginatedRecipes = useMemo(() => {
     const end = currentPage * pageSize;
     return filteredRecipes.slice(0, end);
-  }, [currentPage, filteredRecipes, pageSize]);
+  }, [currentPage, filteredRecipes]);
 
   return (
     <section aria-label="recipes-page" className="min-h-[320px]">
@@ -87,25 +120,34 @@ export function RecipesPage() {
         </label>
 
         <label className="flex items-center gap-2 text-sm text-slate-700">
-          <span>{t('recipesPerPage')}</span>
+          <span>{t('dishType')}</span>
           <select
             className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
-            onChange={(event) => setPageSize(Number(event.target.value))}
-            value={pageSize}
+            onChange={(event) => setSelectedDishType(event.target.value as 'all' | RecipeDishType)}
+            value={selectedDishType}
           >
-            {pageSizeOptions.map((option) => (
-              <option key={`page-size-${option}`} value={option}>
-                {option}
+            {dishTypeOptions.map((option) => (
+              <option key={`dish-type-filter-${option.value}`} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
         </label>
 
-        {!isLoading && filteredRecipes.length > 0 && (
-          <p className="text-sm text-slate-500">
-            {t('paginationPage')} {currentPage} {t('paginationOf')} {totalPages}
-          </p>
-        )}
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <span>{t('cuisineType')}</span>
+          <select
+            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+            onChange={(event) => setSelectedCuisine(event.target.value as 'all' | RecipeCuisine)}
+            value={selectedCuisine}
+          >
+            {cuisineOptions.map((option) => (
+              <option key={`cuisine-filter-${option.value}`} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       {isLoading && <p className="text-sm text-slate-500">{t('loadingRecipes')}</p>}
@@ -125,27 +167,6 @@ export function RecipesPage() {
       )}
 
       <div ref={loadMoreTriggerRef} className="h-6 w-full" aria-hidden="true" />
-
-      {!isLoading && filteredRecipes.length > 0 && (
-        <div className="mt-5 flex items-center gap-2">
-          <button
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 disabled:opacity-50"
-            disabled={currentPage <= 1}
-            onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-            type="button"
-          >
-            {t('paginationPrevious')}
-          </button>
-          <button
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 disabled:opacity-50"
-            disabled={currentPage >= totalPages}
-            onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-            type="button"
-          >
-            {t('paginationNext')}
-          </button>
-        </div>
-      )}
     </section>
   );
 }

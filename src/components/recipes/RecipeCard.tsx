@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { getLocalizedRecipe } from '../../i18n/recipeContent';
+import type { TranslationKey } from '../../i18n/translations';
+import { useUserRole } from '../../auth/useUserRole';
 import { useLanguage } from '../../i18n/useLanguage';
 import type { Recipe } from '../../types/recipe';
 
@@ -25,9 +27,11 @@ function complexityToStars(complexity?: Recipe['complexity']): number {
 
 export function RecipeCard({ recipe }: RecipeCardProps) {
   const { t, language } = useLanguage();
+  const { role, userId } = useUserRole();
   const localizedRecipe = getLocalizedRecipe(recipe, language);
   const recipeImage = recipe.photoUrls?.[0]?.trim();
   const complexityStars = complexityToStars(recipe.complexity);
+  const canSeeStatus = role === 'admin' || recipe.ownerId === userId;
   const statusLabel =
     recipe.status === 'pending'
       ? t('pendingStatus')
@@ -36,6 +40,36 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
       : recipe.status === 'changes_requested'
       ? t('changesRequestedStatus')
       : t('approvedStatus');
+
+  const dishTypeLabelKey: TranslationKey =
+    recipe.dishType === 'dessert'
+      ? 'dishTypeDessert'
+      : recipe.dishType === 'soup'
+      ? 'dishTypeSoup'
+      : recipe.dishType === 'salad'
+      ? 'dishTypeSalad'
+      : recipe.dishType === 'appetizer'
+      ? 'dishTypeAppetizer'
+      : recipe.dishType === 'breakfast'
+      ? 'dishTypeBreakfast'
+      : 'dishTypeMain';
+
+  const cuisineLabelKey: TranslationKey =
+    recipe.cuisine === 'bulgarian'
+      ? 'cuisineBulgarian'
+      : recipe.cuisine === 'french'
+      ? 'cuisineFrench'
+      : recipe.cuisine === 'asian'
+      ? 'cuisineAsian'
+      : recipe.cuisine === 'italian'
+      ? 'cuisineItalian'
+      : recipe.cuisine === 'mexican'
+      ? 'cuisineMexican'
+      : recipe.cuisine === 'spanish'
+      ? 'cuisineSpanish'
+      : recipe.cuisine === 'turkish'
+      ? 'cuisineTurkish'
+      : 'cuisineInternational';
 
   return (
     <Link
@@ -56,9 +90,19 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
           {t('noPhotoPlaceholder')}
         </div>
       )}
-      <p className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-        {statusLabel}
-      </p>
+      <div className="flex flex-wrap gap-2">
+        {canSeeStatus && (
+          <p className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+            {statusLabel}
+          </p>
+        )}
+        <p className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+          {t(dishTypeLabelKey)}
+        </p>
+        <p className="inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
+          {t(cuisineLabelKey)}
+        </p>
+      </div>
       <h3 className="text-lg font-semibold text-slate-900">{localizedRecipe.title}</h3>
       <p className="mt-2 text-sm text-slate-600">{localizedRecipe.description}</p>
       {complexityStars > 0 && (

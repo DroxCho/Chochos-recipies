@@ -1,4 +1,12 @@
-import type { CreateRecipeInput, Recipe, RecipeOwnerRole, RecipeStatus, UpdateRecipeInput } from '../types/recipe';
+import type {
+  CreateRecipeInput,
+  Recipe,
+  RecipeCuisine,
+  RecipeDishType,
+  RecipeOwnerRole,
+  RecipeStatus,
+  UpdateRecipeInput,
+} from '../types/recipe';
 import { getSupabaseClient, hasSupabaseAnonKey } from '../lib/supabase';
 
 export const recipes: Recipe[] = [
@@ -426,12 +434,53 @@ interface RecipeMeta {
   ownerId: string;
   ownerRole: RecipeOwnerRole;
   complexity?: 'easy' | 'medium' | 'hard';
+  dishType?: RecipeDishType;
+  cuisine?: RecipeCuisine;
   ingredients?: string[];
   steps?: string[];
   photoUrls?: string[];
 }
 
 type RecipeMetaMap = Record<string, RecipeMeta>;
+
+const PRESET_RECIPE_TAGS: Record<string, { dishType: RecipeDishType; cuisine: RecipeCuisine }> = {
+  'shopska-salad': { dishType: 'salad', cuisine: 'bulgarian' },
+  banitsa: { dishType: 'breakfast', cuisine: 'bulgarian' },
+  tarator: { dishType: 'soup', cuisine: 'bulgarian' },
+  kunefe: { dishType: 'dessert', cuisine: 'turkish' },
+  musaka: { dishType: 'main', cuisine: 'bulgarian' },
+  sarmi: { dishType: 'main', cuisine: 'bulgarian' },
+  kavarma: { dishType: 'main', cuisine: 'bulgarian' },
+  'bob-chorba': { dishType: 'soup', cuisine: 'bulgarian' },
+  gyuvech: { dishType: 'main', cuisine: 'bulgarian' },
+  kebapcheta: { dishType: 'main', cuisine: 'bulgarian' },
+  kyufteta: { dishType: 'main', cuisine: 'bulgarian' },
+  'shopski-kebap': { dishType: 'main', cuisine: 'bulgarian' },
+  banichki: { dishType: 'breakfast', cuisine: 'bulgarian' },
+  tikvenik: { dishType: 'dessert', cuisine: 'bulgarian' },
+  palachinki: { dishType: 'dessert', cuisine: 'international' },
+  mekitsi: { dishType: 'breakfast', cuisine: 'bulgarian' },
+  'sirene-po-shopski': { dishType: 'appetizer', cuisine: 'bulgarian' },
+  'chushki-burek': { dishType: 'appetizer', cuisine: 'bulgarian' },
+  patatnik: { dishType: 'main', cuisine: 'bulgarian' },
+  kapama: { dishType: 'main', cuisine: 'bulgarian' },
+  'tarama-salad': { dishType: 'appetizer', cuisine: 'bulgarian' },
+  'chicken-fricassee': { dishType: 'main', cuisine: 'french' },
+  'lentil-soup': { dishType: 'soup', cuisine: 'international' },
+  'green-beans-stew': { dishType: 'main', cuisine: 'bulgarian' },
+  'imam-bayildi': { dishType: 'main', cuisine: 'turkish' },
+  ratatouille: { dishType: 'main', cuisine: 'french' },
+  'spaghetti-bolognese': { dishType: 'main', cuisine: 'italian' },
+  'risotto-mushroom': { dishType: 'main', cuisine: 'italian' },
+  'chicken-curry': { dishType: 'main', cuisine: 'asian' },
+  'beef-stroganoff': { dishType: 'main', cuisine: 'international' },
+  paella: { dishType: 'main', cuisine: 'spanish' },
+  'fish-tacos': { dishType: 'main', cuisine: 'mexican' },
+  cheesecake: { dishType: 'dessert', cuisine: 'international' },
+  'stuffed-peppers': { dishType: 'main', cuisine: 'bulgarian' },
+  'chicken-soup': { dishType: 'soup', cuisine: 'bulgarian' },
+  'ribs-with-honey': { dishType: 'main', cuisine: 'international' },
+};
 
 const PRESET_RECIPE_META: RecipeMetaMap = {
   kunefe: {
@@ -701,11 +750,15 @@ function getDefaultRecipeMeta(): RecipeMeta {
     status: 'approved',
     ownerId: 'admin-user-1',
     ownerRole: 'admin',
+    dishType: 'main',
+    cuisine: 'international',
   };
 }
 
 function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
-  const meta = map[recipe.id] ?? PRESET_RECIPE_META[recipe.id] ?? getDefaultRecipeMeta();
+  const defaultMeta = getDefaultRecipeMeta();
+  const presetTags = PRESET_RECIPE_TAGS[recipe.id];
+  const meta = map[recipe.id] ?? PRESET_RECIPE_META[recipe.id] ?? defaultMeta;
 
   return {
     ...recipe,
@@ -714,6 +767,8 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
     ownerId: meta.ownerId,
     ownerRole: meta.ownerRole,
     complexity: meta.complexity,
+    dishType: meta.dishType ?? presetTags?.dishType ?? defaultMeta.dishType,
+    cuisine: meta.cuisine ?? presetTags?.cuisine ?? defaultMeta.cuisine,
     ingredients: normalizeStringList(meta.ingredients),
     steps: normalizeStringList(meta.steps),
     photoUrls: normalizeStringList(meta.photoUrls),
@@ -728,6 +783,8 @@ function persistRecipeMeta(id: string, patch: Partial<RecipeMeta>): RecipeMeta {
     ...current,
     ...patch,
     reviewComment: patch.reviewComment ?? current.reviewComment,
+    dishType: patch.dishType ?? current.dishType,
+    cuisine: patch.cuisine ?? current.cuisine,
     ingredients: normalizeStringList(patch.ingredients ?? current.ingredients),
     steps: normalizeStringList(patch.steps ?? current.steps),
     photoUrls: normalizeStringList(patch.photoUrls ?? current.photoUrls),
@@ -840,6 +897,8 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
     ownerId: input.ownerId ?? 'admin-user-1',
     ownerRole: input.ownerRole ?? 'admin',
     complexity: input.complexity,
+    dishType: input.dishType,
+    cuisine: input.cuisine,
     ingredients: input.ingredients,
     steps: input.steps,
     photoUrls: input.photoUrls,
@@ -910,6 +969,8 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
     ownerId: input.ownerId,
     ownerRole: input.ownerRole,
     complexity: input.complexity,
+    dishType: input.dishType,
+    cuisine: input.cuisine,
     ingredients: input.ingredients,
     steps: input.steps,
     photoUrls: input.photoUrls,

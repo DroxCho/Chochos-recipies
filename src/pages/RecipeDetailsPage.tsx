@@ -5,6 +5,7 @@ import { useUserRole } from '../auth/useUserRole';
 import { updateRecipe } from '../data/recipes';
 import { useRecipeDetails } from '../hooks/useRecipes';
 import { getLocalizedRecipe } from '../i18n/recipeContent';
+import type { TranslationKey } from '../i18n/translations';
 import { useLanguage } from '../i18n/useLanguage';
 import { addUserMessage } from '../lib/userMessages';
 import type { Recipe } from '../types/recipe';
@@ -67,6 +68,8 @@ export function RecipeDetailsPage() {
         prepMinutes: currentRecipe.prepMinutes,
         servings: currentRecipe.servings,
         complexity: currentRecipe.complexity,
+        dishType: currentRecipe.dishType,
+        cuisine: currentRecipe.cuisine,
         ingredients: currentRecipe.ingredients,
         steps: currentRecipe.steps,
         photoUrls: currentRecipe.photoUrls,
@@ -103,6 +106,8 @@ export function RecipeDetailsPage() {
         prepMinutes: currentRecipe.prepMinutes,
         servings: currentRecipe.servings,
         complexity: currentRecipe.complexity,
+        dishType: currentRecipe.dishType,
+        cuisine: currentRecipe.cuisine,
         ingredients: currentRecipe.ingredients,
         steps: currentRecipe.steps,
         photoUrls: currentRecipe.photoUrls,
@@ -145,6 +150,8 @@ export function RecipeDetailsPage() {
         prepMinutes: currentRecipe.prepMinutes,
         servings: currentRecipe.servings,
         complexity: currentRecipe.complexity,
+        dishType: currentRecipe.dishType,
+        cuisine: currentRecipe.cuisine,
         ingredients: currentRecipe.ingredients,
         steps: currentRecipe.steps,
         photoUrls: currentRecipe.photoUrls,
@@ -195,6 +202,7 @@ export function RecipeDetailsPage() {
   const localizedRecipe = getLocalizedRecipe(currentRecipe, language);
   const canEditCurrentRecipe = canEditRecipe(role, currentRecipe, userId);
   const canApproveCurrentRecipe = canApproveRecipe(role) && currentRecipe.status === 'pending';
+  const canSeeStatus = role === 'admin' || currentRecipe.ownerId === userId;
   const statusLabel =
     currentRecipe.status === 'pending'
       ? t('pendingStatus')
@@ -204,6 +212,35 @@ export function RecipeDetailsPage() {
       ? t('changesRequestedStatus')
       : t('approvedStatus');
   const complexityStars = complexityToStars(currentRecipe.complexity);
+  const dishTypeLabelKey: TranslationKey =
+    currentRecipe.dishType === 'dessert'
+      ? 'dishTypeDessert'
+      : currentRecipe.dishType === 'soup'
+      ? 'dishTypeSoup'
+      : currentRecipe.dishType === 'salad'
+      ? 'dishTypeSalad'
+      : currentRecipe.dishType === 'appetizer'
+      ? 'dishTypeAppetizer'
+      : currentRecipe.dishType === 'breakfast'
+      ? 'dishTypeBreakfast'
+      : 'dishTypeMain';
+
+  const cuisineLabelKey: TranslationKey =
+    currentRecipe.cuisine === 'bulgarian'
+      ? 'cuisineBulgarian'
+      : currentRecipe.cuisine === 'french'
+      ? 'cuisineFrench'
+      : currentRecipe.cuisine === 'asian'
+      ? 'cuisineAsian'
+      : currentRecipe.cuisine === 'italian'
+      ? 'cuisineItalian'
+      : currentRecipe.cuisine === 'mexican'
+      ? 'cuisineMexican'
+      : currentRecipe.cuisine === 'spanish'
+      ? 'cuisineSpanish'
+      : currentRecipe.cuisine === 'turkish'
+      ? 'cuisineTurkish'
+      : 'cuisineInternational';
   const recipeIngredients = currentRecipe.ingredients?.map((item) => item.trim()).filter(Boolean) ?? [];
   const recipeSteps = currentRecipe.steps?.map((item) => item.trim()).filter(Boolean) ?? [];
   const recipePhotos = currentRecipe.photoUrls?.map((url) => url.trim()).filter(Boolean) ?? [];
@@ -227,9 +264,19 @@ export function RecipeDetailsPage() {
       {error && <p className="mt-2 text-sm text-amber-700">{error}</p>}
       {approvalError && <p className="mt-2 text-sm text-amber-700">{approvalError}</p>}
       <p className="mt-3 text-sm text-slate-600">{localizedRecipe.description}</p>
-      <p className="mt-2 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-        {statusLabel}
-      </p>
+      {canSeeStatus && (
+        <p className="mt-2 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+          {statusLabel}
+        </p>
+      )}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+          {t(dishTypeLabelKey)}
+        </span>
+        <span className="inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
+          {t(cuisineLabelKey)}
+        </span>
+      </div>
       {currentRecipe.reviewComment && (
         <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">{currentRecipe.reviewComment}</p>
       )}
