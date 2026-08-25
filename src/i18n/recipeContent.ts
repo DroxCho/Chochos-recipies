@@ -37,6 +37,16 @@ const localizedRecipeContentById: Record<string, Record<Language, LocalizedRecip
       description: 'Cold yogurt soup with cucumber, dill, and garlic.',
     },
   },
+  kunefe: {
+    bg: {
+      title: 'Кюнефе',
+      description: 'Хрупкав кадаиф с разтопено сирене и ароматен сироп.',
+    },
+    en: {
+      title: 'Kunefe',
+      description: 'Crispy kadaif pastry with melted cheese and fragrant syrup.',
+    },
+  },
 };
 
 export function getLocalizedRecipe(recipe: Recipe, language: Language): Recipe {

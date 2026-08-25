@@ -32,6 +32,16 @@ export const recipes: Recipe[] = [
     ownerId: 'admin-user-1',
     ownerRole: 'admin',
   },
+  {
+    id: 'kunefe',
+    title: 'Kunefe',
+    description: 'Crispy kadaif pastry with melted cheese and fragrant syrup.',
+    prepMinutes: 45,
+    servings: 6,
+    status: 'approved',
+    ownerId: 'admin-user-1',
+    ownerRole: 'admin',
+  },
 ];
 
 const RECIPE_META_KEY = 'recipes_meta_v1';
@@ -53,7 +63,18 @@ function readLocalRecipes(): Recipe[] {
 
   try {
     const parsed = JSON.parse(raw) as Recipe[];
-    return parsed.length > 0 ? parsed : recipes;
+    if (parsed.length === 0) {
+      return recipes;
+    }
+
+    const byId = new Map(parsed.map((recipe) => [recipe.id, recipe]));
+    for (const seededRecipe of recipes) {
+      if (!byId.has(seededRecipe.id)) {
+        byId.set(seededRecipe.id, seededRecipe);
+      }
+    }
+
+    return Array.from(byId.values());
   } catch {
     return recipes;
   }
@@ -91,6 +112,32 @@ interface RecipeMeta {
 }
 
 type RecipeMetaMap = Record<string, RecipeMeta>;
+
+const PRESET_RECIPE_META: RecipeMetaMap = {
+  kunefe: {
+    status: 'approved',
+    ownerId: 'admin-user-1',
+    ownerRole: 'admin',
+    complexity: 'hard',
+    ingredients: [
+      '400 г кадаиф',
+      '250 г моцарела или кашкавал без сол',
+      '180 г масло',
+      '250 г захар',
+      '250 мл вода',
+      '1 ч.л. лимонов сок',
+      'Шамфъстък за поръсване',
+    ],
+    steps: [
+      'Приготви сироп от вода, захар и лимонов сок, после го остави да изстине.',
+      'Раздели кадаифа, смеси с разтопено масло и покрий дъното на тавата с половината.',
+      'Добави настърганото сирене по средата и покрий с останалия кадаиф.',
+      'Печи до златисто от двете страни, след което залей с изстиналия сироп.',
+      'Остави 10 минути да поеме и сервирай с шамфъстък.',
+    ],
+    photoUrls: ['https://images.unsplash.com/photo-1551024601-bec78aea704b'],
+  },
+};
 
 function normalizeRecipeId(title: string): string {
   return title
@@ -146,7 +193,7 @@ function getDefaultRecipeMeta(): RecipeMeta {
 }
 
 function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
-  const meta = map[recipe.id] ?? getDefaultRecipeMeta();
+  const meta = map[recipe.id] ?? PRESET_RECIPE_META[recipe.id] ?? getDefaultRecipeMeta();
 
   return {
     ...recipe,
@@ -163,7 +210,7 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
 
 function persistRecipeMeta(id: string, patch: Partial<RecipeMeta>): RecipeMeta {
   const map = readRecipeMetaMap();
-  const current = map[id] ?? getDefaultRecipeMeta();
+  const current = map[id] ?? PRESET_RECIPE_META[id] ?? getDefaultRecipeMeta();
 
   const next: RecipeMeta = {
     ...current,
