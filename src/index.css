@@ -13,3 +13,12 @@
     @apply m-0 bg-slate-50 text-slate-900 antialiased;
   }
 }
+
+@layer utilities {
+  .text-clamp-3 {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+}

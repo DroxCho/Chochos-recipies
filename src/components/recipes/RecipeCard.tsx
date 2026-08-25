@@ -29,6 +29,10 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
   const { t, language } = useLanguage();
   const { role, userId } = useUserRole();
   const localizedRecipe = getLocalizedRecipe(recipe, language);
+  const trimmedDescription =
+    localizedRecipe.description.length > 140
+      ? `${localizedRecipe.description.slice(0, 137).trimEnd()}...`
+      : localizedRecipe.description;
   const recipeImage = recipe.photoUrls?.[0]?.trim();
   const complexityStars = complexityToStars(recipe.complexity);
   const canSeeStatus = role === 'admin' || recipe.ownerId === userId;
@@ -73,10 +77,10 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
 
   return (
     <Link
-      className="group block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+      className="group block h-full rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
       to={`/recipes/${recipe.id}`}
     >
-      <article className="flex min-h-[500px] flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-transform duration-200 ease-out group-hover:scale-[1.02] group-hover:shadow-md">
+      <article className="flex h-full min-h-[520px] flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-transform duration-200 ease-out group-hover:scale-[1.02] group-hover:shadow-md">
       {recipeImage && (
         <img
           alt={localizedRecipe.title}
@@ -104,7 +108,7 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
         </p>
       </div>
       <h3 className="text-lg font-semibold text-slate-900">{localizedRecipe.title}</h3>
-      <p className="mt-2 text-sm text-slate-600">{localizedRecipe.description}</p>
+      <p className="mt-2 min-h-[60px] text-clamp-3 text-sm text-slate-600">{trimmedDescription}</p>
       {complexityStars > 0 && (
         <p className="mt-3 text-sm text-amber-500" aria-label={`${t('complexity')} ${complexityStars}`}>
           {'★'.repeat(complexityStars)}
