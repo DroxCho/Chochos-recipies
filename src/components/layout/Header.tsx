@@ -22,6 +22,9 @@ export function Header() {
           <NavLink to="/recipes" className={linkClass}>
             {t('navRecipes')}
           </NavLink>
+          <NavLink to="/recipes/new" className={linkClass}>
+            {t('navAddRecipe')}
+          </NavLink>
           </nav>
           <LanguageToggle />
         </div>

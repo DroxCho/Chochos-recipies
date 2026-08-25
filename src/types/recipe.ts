@@ -11,4 +11,8 @@ export interface CreateRecipeInput {
   description: string;
   prepMinutes: number;
   servings: number;
+  complexity?: 'easy' | 'medium' | 'hard';
+  ingredients?: string[];
+  steps?: string[];
+  photoUrls?: string[];
 }
