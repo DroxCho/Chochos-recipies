@@ -239,16 +239,29 @@ function mapRecipeRow(row: RecipeRow): Recipe {
   };
 }
 
+function mergeRecipesById(primary: Recipe[], secondary: Recipe[]): Recipe[] {
+  const byId = new Map(primary.map((recipe) => [recipe.id, recipe]));
+
+  for (const recipe of secondary) {
+    if (!byId.has(recipe.id)) {
+      byId.set(recipe.id, recipe);
+    }
+  }
+
+  return Array.from(byId.values());
+}
+
 export async function fetchRecipes(): Promise<Recipe[]> {
   const metaMap = readRecipeMetaMap();
+  const localRecipes = readLocalRecipes();
 
   if (!hasSupabaseAnonKey) {
-    return readLocalRecipes().map((recipe) => applyMeta(recipe, metaMap));
+    return localRecipes.map((recipe) => applyMeta(recipe, metaMap));
   }
 
   const supabase = getSupabaseClient();
   if (!supabase) {
-    return readLocalRecipes().map((recipe) => applyMeta(recipe, metaMap));
+    return localRecipes.map((recipe) => applyMeta(recipe, metaMap));
   }
 
   const { data, error } = await supabase
@@ -260,11 +273,10 @@ export async function fetchRecipes(): Promise<Recipe[]> {
     throw error;
   }
 
-  if (!data || data.length === 0) {
-    return readLocalRecipes().map((recipe) => applyMeta(recipe, metaMap));
-  }
+  const supabaseRecipes = (data as RecipeRow[] | null | undefined)?.map((row) => mapRecipeRow(row)) ?? [];
+  const mergedRecipes = mergeRecipesById(supabaseRecipes, localRecipes);
 
-  return (data as RecipeRow[]).map((row) => applyMeta(mapRecipeRow(row), metaMap));
+  return mergedRecipes.map((recipe) => applyMeta(recipe, metaMap));
 }
 
 export async function fetchRecipeById(id: string): Promise<Recipe | undefined> {
