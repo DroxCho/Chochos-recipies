@@ -367,6 +367,66 @@ const localizedRecipeContentById: Record<string, Record<Language, LocalizedRecip
       description: 'Oven-baked pork ribs with honey and mustard glaze.',
     },
   },
+  'vegan-buddha-bowl': {
+    bg: {
+      title: 'Веган буда боул',
+      description: 'Киноа с нахут, авокадо и таханов дресинг.',
+    },
+    en: {
+      title: 'Vegan Buddha Bowl',
+      description: 'Quinoa bowl with roasted chickpeas, avocado and tahini dressing.',
+    },
+  },
+  'vegan-lentil-dahl': {
+    bg: {
+      title: 'Веган дал от леща',
+      description: 'Кремообразен дал от червена леща с кокосово мляко и подправки.',
+    },
+    en: {
+      title: 'Vegan Lentil Dahl',
+      description: 'Creamy red lentil dahl with coconut milk, tomato and warm spices.',
+    },
+  },
+  'vegan-tofu-stir-fry': {
+    bg: {
+      title: 'Веган тофу стър-фрай',
+      description: 'Хрупкаво тофу със зеленчуци в соево-джинджифилов сос.',
+    },
+    en: {
+      title: 'Vegan Tofu Stir-Fry',
+      description: 'Crispy tofu with mixed vegetables in soy-ginger sauce.',
+    },
+  },
+  'vegetarian-spinach-lasagna': {
+    bg: {
+      title: 'Вегетарианска лазаня със спанак',
+      description: 'Лазаня със спанак, рикота и доматен сос.',
+    },
+    en: {
+      title: 'Vegetarian Spinach Lasagna',
+      description: 'Layered lasagna with spinach, ricotta and rich tomato sauce.',
+    },
+  },
+  'vegetarian-mushroom-risotto': {
+    bg: {
+      title: 'Вегетарианско ризото с гъби',
+      description: 'Кремообразно ризото с гъби и пармезан.',
+    },
+    en: {
+      title: 'Vegetarian Mushroom Risotto',
+      description: 'Creamy arborio risotto with sauteed mushrooms and parmesan.',
+    },
+  },
+  'vegetarian-greek-pie': {
+    bg: {
+      title: 'Вегетариански гръцки пай',
+      description: 'Хрупкав пай с кори, спанак, билки и сирене фета.',
+    },
+    en: {
+      title: 'Vegetarian Greek Pie',
+      description: 'Crispy filo pie filled with spinach, herbs and feta cheese.',
+    },
+  },
 };
 
 export function getLocalizedRecipe(recipe: Recipe, language: Language): Recipe {

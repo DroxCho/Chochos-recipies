@@ -370,6 +370,66 @@ export const recipes: Recipe[] = [
     ownerId: 'admin-user-1',
     ownerRole: 'admin',
   },
+  {
+    id: 'vegan-buddha-bowl',
+    title: 'Vegan Buddha Bowl',
+    description: 'Quinoa bowl with roasted chickpeas, avocado and tahini dressing.',
+    prepMinutes: 30,
+    servings: 3,
+    status: 'approved',
+    ownerId: 'admin-user-1',
+    ownerRole: 'admin',
+  },
+  {
+    id: 'vegan-lentil-dahl',
+    title: 'Vegan Lentil Dahl',
+    description: 'Creamy red lentil dahl with coconut milk, tomato and warm spices.',
+    prepMinutes: 40,
+    servings: 4,
+    status: 'approved',
+    ownerId: 'admin-user-1',
+    ownerRole: 'admin',
+  },
+  {
+    id: 'vegan-tofu-stir-fry',
+    title: 'Vegan Tofu Stir-Fry',
+    description: 'Crispy tofu with mixed vegetables in soy-ginger sauce.',
+    prepMinutes: 25,
+    servings: 3,
+    status: 'approved',
+    ownerId: 'admin-user-1',
+    ownerRole: 'admin',
+  },
+  {
+    id: 'vegetarian-spinach-lasagna',
+    title: 'Vegetarian Spinach Lasagna',
+    description: 'Layered lasagna with spinach, ricotta and rich tomato sauce.',
+    prepMinutes: 65,
+    servings: 6,
+    status: 'approved',
+    ownerId: 'admin-user-1',
+    ownerRole: 'admin',
+  },
+  {
+    id: 'vegetarian-mushroom-risotto',
+    title: 'Vegetarian Mushroom Risotto',
+    description: 'Creamy arborio risotto with sauteed mushrooms and parmesan.',
+    prepMinutes: 45,
+    servings: 4,
+    status: 'approved',
+    ownerId: 'admin-user-1',
+    ownerRole: 'admin',
+  },
+  {
+    id: 'vegetarian-greek-pie',
+    title: 'Vegetarian Greek Pie',
+    description: 'Crispy filo pie filled with spinach, herbs and feta cheese.',
+    prepMinutes: 55,
+    servings: 6,
+    status: 'approved',
+    ownerId: 'admin-user-1',
+    ownerRole: 'admin',
+  },
 ];
 
 const RECIPE_META_KEY = 'recipes_meta_v1';
@@ -480,6 +540,12 @@ const PRESET_RECIPE_TAGS: Record<string, { dishType: RecipeDishType; cuisine: Re
   'stuffed-peppers': { dishType: 'main', cuisine: 'bulgarian' },
   'chicken-soup': { dishType: 'soup', cuisine: 'bulgarian' },
   'ribs-with-honey': { dishType: 'main', cuisine: 'international' },
+  'vegan-buddha-bowl': { dishType: 'main', cuisine: 'vegan' },
+  'vegan-lentil-dahl': { dishType: 'soup', cuisine: 'vegan' },
+  'vegan-tofu-stir-fry': { dishType: 'main', cuisine: 'vegan' },
+  'vegetarian-spinach-lasagna': { dishType: 'main', cuisine: 'vegetarian' },
+  'vegetarian-mushroom-risotto': { dishType: 'main', cuisine: 'vegetarian' },
+  'vegetarian-greek-pie': { dishType: 'main', cuisine: 'vegetarian' },
 };
 
 const PRESET_RECIPE_META: RecipeMetaMap = {
@@ -698,6 +764,24 @@ const PRESET_RECIPE_META: RecipeMetaMap = {
     steps: ['Мариновай ребрата.', 'Печи покрити до омекване.', 'Глазирай и запечи до карамелизация.'],
     photoUrls: ['https://images.unsplash.com/photo-1529692236671-f1dc99fe1f4e'],
   },
+  'vegan-buddha-bowl': {
+    status: 'approved', ownerId: 'admin-user-1', ownerRole: 'admin', complexity: 'easy',
+  },
+  'vegan-lentil-dahl': {
+    status: 'approved', ownerId: 'admin-user-1', ownerRole: 'admin', complexity: 'medium',
+  },
+  'vegan-tofu-stir-fry': {
+    status: 'approved', ownerId: 'admin-user-1', ownerRole: 'admin', complexity: 'easy',
+  },
+  'vegetarian-spinach-lasagna': {
+    status: 'approved', ownerId: 'admin-user-1', ownerRole: 'admin', complexity: 'medium',
+  },
+  'vegetarian-mushroom-risotto': {
+    status: 'approved', ownerId: 'admin-user-1', ownerRole: 'admin', complexity: 'medium',
+  },
+  'vegetarian-greek-pie': {
+    status: 'approved', ownerId: 'admin-user-1', ownerRole: 'admin', complexity: 'medium',
+  },
 };
 
 function normalizeRecipeId(title: string): string {
@@ -750,8 +834,6 @@ function getDefaultRecipeMeta(): RecipeMeta {
     status: 'approved',
     ownerId: 'admin-user-1',
     ownerRole: 'admin',
-    dishType: 'main',
-    cuisine: 'international',
   };
 }
 
@@ -766,9 +848,9 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
     reviewComment: meta.reviewComment,
     ownerId: meta.ownerId,
     ownerRole: meta.ownerRole,
-    complexity: meta.complexity,
-    dishType: meta.dishType ?? presetTags?.dishType ?? defaultMeta.dishType,
-    cuisine: meta.cuisine ?? presetTags?.cuisine ?? defaultMeta.cuisine,
+    complexity: meta.complexity ?? PRESET_RECIPE_META[recipe.id]?.complexity ?? 'medium',
+    dishType: meta.dishType ?? presetTags?.dishType ?? 'main',
+    cuisine: meta.cuisine ?? presetTags?.cuisine ?? 'international',
     ingredients: normalizeStringList(meta.ingredients),
     steps: normalizeStringList(meta.steps),
     photoUrls: normalizeStringList(meta.photoUrls),

@@ -102,6 +102,10 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
       ? 'cuisineSpanish'
       : recipe.cuisine === 'turkish'
       ? 'cuisineTurkish'
+      : recipe.cuisine === 'vegan'
+      ? 'cuisineVegan'
+      : recipe.cuisine === 'vegetarian'
+      ? 'cuisineVegetarian'
       : 'cuisineInternational';
 
   return (
@@ -182,15 +186,15 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
       </div>
       <h3 className="text-lg font-semibold text-slate-900">{localizedRecipe.title}</h3>
       <p className="mt-2 min-h-[60px] text-clamp-3 text-sm text-slate-600">{trimmedDescription}</p>
-      {complexityStars > 0 && (
-        <p className="mt-3 text-sm text-amber-500" aria-label={`${t('complexity')} ${complexityStars}`}>
-          {'★'.repeat(complexityStars)}
-          <span className="ml-1 text-slate-500">({complexityStars}/5)</span>
-        </p>
-      )}
       <div className="mt-4 flex items-center gap-3 text-xs text-slate-500">
         <span>{recipe.prepMinutes} {t('minutesShort')}</span>
         <span>{recipe.servings} {t('servingsShort')}</span>
+        {complexityStars > 0 && (
+          <span className="inline-flex items-center gap-1 text-amber-500" aria-label={`${t('complexity')} ${complexityStars}`}>
+            {'★'.repeat(complexityStars)}
+            <span className="text-slate-500">({complexityStars}/5)</span>
+          </span>
+        )}
       </div>
       <span className="mt-auto pt-4 inline-flex text-sm font-medium text-slate-900 underline underline-offset-4">
         {t('viewDetails')}

@@ -245,6 +245,10 @@ export function RecipeDetailsPage() {
       ? 'cuisineSpanish'
       : currentRecipe.cuisine === 'turkish'
       ? 'cuisineTurkish'
+      : currentRecipe.cuisine === 'vegan'
+      ? 'cuisineVegan'
+      : currentRecipe.cuisine === 'vegetarian'
+      ? 'cuisineVegetarian'
       : 'cuisineInternational';
   const recipeIngredients = currentRecipe.ingredients?.map((item) => item.trim()).filter(Boolean) ?? [];
   const recipeSteps = currentRecipe.steps?.map((item) => item.trim()).filter(Boolean) ?? [];

@@ -1,7 +1,17 @@
 export type RecipeStatus = 'pending' | 'approved' | 'rejected' | 'changes_requested';
 export type RecipeOwnerRole = 'registered' | 'admin';
 export type RecipeDishType = 'main' | 'dessert' | 'soup' | 'salad' | 'appetizer' | 'breakfast';
-export type RecipeCuisine = 'bulgarian' | 'french' | 'asian' | 'italian' | 'mexican' | 'spanish' | 'turkish' | 'international';
+export type RecipeCuisine =
+  | 'bulgarian'
+  | 'french'
+  | 'asian'
+  | 'italian'
+  | 'mexican'
+  | 'spanish'
+  | 'turkish'
+  | 'vegan'
+  | 'vegetarian'
+  | 'international';
 
 export interface Recipe {
   id: string;

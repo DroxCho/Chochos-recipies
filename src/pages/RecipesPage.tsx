@@ -15,6 +15,8 @@ const CUISINE_VALUES: RecipeCuisine[] = [
   'mexican',
   'spanish',
   'turkish',
+  'vegan',
+  'vegetarian',
   'international',
 ];
 
@@ -56,6 +58,8 @@ export function RecipesPage() {
     { value: 'mexican', label: t('cuisineMexican') },
     { value: 'spanish', label: t('cuisineSpanish') },
     { value: 'turkish', label: t('cuisineTurkish') },
+    { value: 'vegan', label: t('cuisineVegan') },
+    { value: 'vegetarian', label: t('cuisineVegetarian') },
     { value: 'international', label: t('cuisineInternational') },
   ];
 

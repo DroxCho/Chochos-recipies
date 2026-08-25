@@ -135,6 +135,8 @@ export function RecipeForm({
     { value: 'mexican', label: 'cuisineMexican' },
     { value: 'spanish', label: 'cuisineSpanish' },
     { value: 'turkish', label: 'cuisineTurkish' },
+    { value: 'vegan', label: 'cuisineVegan' },
+    { value: 'vegetarian', label: 'cuisineVegetarian' },
     { value: 'international', label: 'cuisineInternational' },
   ];
 
