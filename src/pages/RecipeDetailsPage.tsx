@@ -14,6 +14,22 @@ interface RecipeDetailsLocationState {
   updated?: boolean;
 }
 
+function complexityToStars(complexity?: Recipe['complexity']): number {
+  if (complexity === 'easy') {
+    return 2;
+  }
+
+  if (complexity === 'medium') {
+    return 3;
+  }
+
+  if (complexity === 'hard') {
+    return 5;
+  }
+
+  return 0;
+}
+
 export function RecipeDetailsPage() {
   const { id } = useParams();
   const location = useLocation();
@@ -187,6 +203,10 @@ export function RecipeDetailsPage() {
       : currentRecipe.status === 'changes_requested'
       ? t('changesRequestedStatus')
       : t('approvedStatus');
+  const complexityStars = complexityToStars(currentRecipe.complexity);
+  const recipeIngredients = currentRecipe.ingredients?.map((item) => item.trim()).filter(Boolean) ?? [];
+  const recipeSteps = currentRecipe.steps?.map((item) => item.trim()).filter(Boolean) ?? [];
+  const recipePhotos = currentRecipe.photoUrls?.map((url) => url.trim()).filter(Boolean) ?? [];
 
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-6">
@@ -210,13 +230,57 @@ export function RecipeDetailsPage() {
       <p className="mt-2 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
         {statusLabel}
       </p>
+      {complexityStars > 0 && (
+        <p className="mt-3 text-sm text-amber-500" aria-label={`${t('complexity')} ${complexityStars}`}>
+          {'★'.repeat(complexityStars)}
+          <span className="ml-1 text-slate-500">({complexityStars}/5)</span>
+        </p>
+      )}
       {currentRecipe.reviewComment && (
         <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">{currentRecipe.reviewComment}</p>
+      )}
+      {recipePhotos.length > 0 && (
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {recipePhotos.map((photoUrl, index) => (
+            <img
+              key={`${currentRecipe.id}-photo-${index}`}
+              alt={`${localizedRecipe.title} ${index + 1}`}
+              className="h-40 w-full rounded-lg border border-slate-200 object-cover"
+              loading="lazy"
+              src={photoUrl}
+            />
+          ))}
+        </div>
+      )}
+      {recipePhotos.length === 0 && (
+        <div className="mt-4 flex h-44 w-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
+          {t('noPhotoPlaceholder')}
+        </div>
       )}
       <div className="mt-6 flex items-center gap-4 text-sm text-slate-500">
         <span>{t('prepLabel')}: {currentRecipe.prepMinutes} {t('minutesShort')}</span>
         <span>{t('servingsLabel')}: {currentRecipe.servings}</span>
       </div>
+      {recipeIngredients.length > 0 && (
+        <section className="mt-6">
+          <h3 className="text-base font-semibold text-slate-900">{t('ingredients')}</h3>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+            {recipeIngredients.map((ingredient, index) => (
+              <li key={`${currentRecipe.id}-ingredient-${index}`}>{ingredient}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {recipeSteps.length > 0 && (
+        <section className="mt-6">
+          <h3 className="text-base font-semibold text-slate-900">{t('steps')}</h3>
+          <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-slate-700">
+            {recipeSteps.map((step, index) => (
+              <li key={`${currentRecipe.id}-step-${index}`}>{step}</li>
+            ))}
+          </ol>
+        </section>
+      )}
       <div className="mt-4 flex items-center gap-3">
         {canEditCurrentRecipe && (
           <Link className="inline-flex text-sm text-slate-700 underline" to={`/recipes/${currentRecipe.id}/edit`}>
