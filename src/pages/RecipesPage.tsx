@@ -1,18 +1,40 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { RecipeList } from '../components/recipes/RecipeList';
 import { useRecipes } from '../hooks/useRecipes';
 import { getLocalizedRecipe } from '../i18n/recipeContent';
 import { useLanguage } from '../i18n/useLanguage';
 import type { RecipeCuisine, RecipeDishType } from '../types/recipe';
 
+const DISH_TYPE_VALUES: RecipeDishType[] = ['main', 'dessert', 'soup', 'salad', 'appetizer', 'breakfast'];
+const CUISINE_VALUES: RecipeCuisine[] = [
+  'bulgarian',
+  'french',
+  'asian',
+  'italian',
+  'mexican',
+  'spanish',
+  'turkish',
+  'international',
+];
+
+function parseDishTypeFilter(value: string | null): 'all' | RecipeDishType {
+  return value && DISH_TYPE_VALUES.includes(value as RecipeDishType) ? (value as RecipeDishType) : 'all';
+}
+
+function parseCuisineFilter(value: string | null): 'all' | RecipeCuisine {
+  return value && CUISINE_VALUES.includes(value as RecipeCuisine) ? (value as RecipeCuisine) : 'all';
+}
+
 export function RecipesPage() {
   const { t, language } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { recipes, isLoading, error } = useRecipes();
   const pageSize = 12;
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDishType, setSelectedDishType] = useState<'all' | RecipeDishType>('all');
-  const [selectedCuisine, setSelectedCuisine] = useState<'all' | RecipeCuisine>('all');
+  const selectedDishType = parseDishTypeFilter(searchParams.get('dishType'));
+  const selectedCuisine = parseCuisineFilter(searchParams.get('cuisine'));
   const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
 
   const dishTypeOptions: Array<{ value: 'all' | RecipeDishType; label: string }> = [
@@ -123,7 +145,18 @@ export function RecipesPage() {
           <span>{t('dishType')}</span>
           <select
             className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
-            onChange={(event) => setSelectedDishType(event.target.value as 'all' | RecipeDishType)}
+            onChange={(event) => {
+              const value = event.target.value as 'all' | RecipeDishType;
+              const nextParams = new URLSearchParams(searchParams);
+
+              if (value === 'all') {
+                nextParams.delete('dishType');
+              } else {
+                nextParams.set('dishType', value);
+              }
+
+              setSearchParams(nextParams, { replace: true });
+            }}
             value={selectedDishType}
           >
             {dishTypeOptions.map((option) => (
@@ -138,7 +171,18 @@ export function RecipesPage() {
           <span>{t('cuisineType')}</span>
           <select
             className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
-            onChange={(event) => setSelectedCuisine(event.target.value as 'all' | RecipeCuisine)}
+            onChange={(event) => {
+              const value = event.target.value as 'all' | RecipeCuisine;
+              const nextParams = new URLSearchParams(searchParams);
+
+              if (value === 'all') {
+                nextParams.delete('cuisine');
+              } else {
+                nextParams.set('cuisine', value);
+              }
+
+              setSearchParams(nextParams, { replace: true });
+            }}
             value={selectedCuisine}
           >
             {cuisineOptions.map((option) => (

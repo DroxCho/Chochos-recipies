@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getLocalizedRecipe } from '../../i18n/recipeContent';
 import type { TranslationKey } from '../../i18n/translations';
 import { useUserRole } from '../../auth/useUserRole';
@@ -28,6 +28,8 @@ function complexityToStars(complexity?: Recipe['complexity']): number {
 export function RecipeCard({ recipe }: RecipeCardProps) {
   const { t, language } = useLanguage();
   const { role, userId } = useUserRole();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const localizedRecipe = getLocalizedRecipe(recipe, language);
   const trimmedDescription =
     localizedRecipe.description.length > 140
@@ -36,6 +38,10 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
   const recipeImage = recipe.photoUrls?.[0]?.trim();
   const complexityStars = complexityToStars(recipe.complexity);
   const canSeeStatus = role === 'admin' || recipe.ownerId === userId;
+  const selectedDishType = searchParams.get('dishType');
+  const selectedCuisine = searchParams.get('cuisine');
+  const isDishTypeActive = selectedDishType === (recipe.dishType ?? 'main');
+  const isCuisineActive = selectedCuisine === (recipe.cuisine ?? 'international');
   const statusLabel =
     recipe.status === 'pending'
       ? t('pendingStatus')
@@ -100,11 +106,55 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
             {statusLabel}
           </p>
         )}
-        <p className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-          {t(dishTypeLabelKey)}
+        <p
+          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+            isDishTypeActive ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-700'
+          }`}
+        >
+          <span
+            className="cursor-pointer"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              navigate(`/recipes?dishType=${recipe.dishType ?? 'main'}`);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                event.stopPropagation();
+                navigate(`/recipes?dishType=${recipe.dishType ?? 'main'}`);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            {t(dishTypeLabelKey)}
+          </span>
         </p>
-        <p className="inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
-          {t(cuisineLabelKey)}
+        <p
+          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+            isCuisineActive ? 'bg-sky-700 text-white' : 'bg-sky-50 text-sky-700'
+          }`}
+        >
+          <span
+            className="cursor-pointer"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              navigate(`/recipes?cuisine=${recipe.cuisine ?? 'international'}`);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                event.stopPropagation();
+                navigate(`/recipes?cuisine=${recipe.cuisine ?? 'international'}`);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            {t(cuisineLabelKey)}
+          </span>
         </p>
       </div>
       <h3 className="text-lg font-semibold text-slate-900">{localizedRecipe.title}</h3>

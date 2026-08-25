@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { canApproveRecipe, canEditRecipe } from '../auth/roles';
 import { useUserRole } from '../auth/useUserRole';
 import { updateRecipe } from '../data/recipes';
@@ -33,6 +33,7 @@ function complexityToStars(complexity?: Recipe['complexity']): number {
 
 export function RecipeDetailsPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const location = useLocation();
   const { t, language } = useLanguage();
   const { role, userId } = useUserRole();
@@ -203,6 +204,10 @@ export function RecipeDetailsPage() {
   const canEditCurrentRecipe = canEditRecipe(role, currentRecipe, userId);
   const canApproveCurrentRecipe = canApproveRecipe(role) && currentRecipe.status === 'pending';
   const canSeeStatus = role === 'admin' || currentRecipe.ownerId === userId;
+  const activeDishType = new URLSearchParams(location.search).get('dishType');
+  const activeCuisine = new URLSearchParams(location.search).get('cuisine');
+  const isDishTypeActive = activeDishType === (currentRecipe.dishType ?? 'main');
+  const isCuisineActive = activeCuisine === (currentRecipe.cuisine ?? 'international');
   const statusLabel =
     currentRecipe.status === 'pending'
       ? t('pendingStatus')
@@ -270,12 +275,24 @@ export function RecipeDetailsPage() {
         </p>
       )}
       <div className="mt-3 flex flex-wrap gap-2">
-        <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+        <button
+          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+            isDishTypeActive ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-700'
+          }`}
+          onClick={() => navigate(`/recipes?dishType=${currentRecipe.dishType ?? 'main'}`)}
+          type="button"
+        >
           {t(dishTypeLabelKey)}
-        </span>
-        <span className="inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
+        </button>
+        <button
+          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+            isCuisineActive ? 'bg-sky-700 text-white' : 'bg-sky-50 text-sky-700'
+          }`}
+          onClick={() => navigate(`/recipes?cuisine=${currentRecipe.cuisine ?? 'international'}`)}
+          type="button"
+        >
           {t(cuisineLabelKey)}
-        </span>
+        </button>
       </div>
       {currentRecipe.reviewComment && (
         <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">{currentRecipe.reviewComment}</p>
