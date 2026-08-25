@@ -5,6 +5,8 @@ import { useLanguage } from '../../i18n/useLanguage';
 import type { CreateRecipeInput } from '../../types/recipe';
 import type { TranslationKey } from '../../i18n/translations';
 
+type ComplexityValue = '' | 'easy' | 'medium' | 'hard';
+
 interface RecipeFormProps {
   onCreate: (input: CreateRecipeInput) => Promise<void>;
   isSubmitting: boolean;
@@ -25,7 +27,8 @@ export function RecipeForm({
   const [description, setDescription] = useState(initialValues?.description ?? '');
   const [prepMinutes, setPrepMinutes] = useState(initialValues?.prepMinutes ?? 15);
   const [servings, setServings] = useState(initialValues?.servings ?? 2);
-  const [complexity, setComplexity] = useState<'easy' | 'medium' | 'hard'>(initialValues?.complexity ?? 'medium');
+  const [complexity, setComplexity] = useState<ComplexityValue>(initialValues?.complexity ?? '');
+  const [selectedComplexityStars, setSelectedComplexityStars] = useState(complexityToStars(initialValues?.complexity ?? ''));
   const [ingredients, setIngredients] = useState<string[]>(
     initialValues?.ingredients && initialValues.ingredients.length > 0 ? initialValues.ingredients : ['', '', ''],
   );
@@ -49,14 +52,85 @@ export function RecipeForm({
     setter((current) => [...current, '']);
   }
 
+  function resolveComplexityFromStars(stars: number): ComplexityValue {
+    if (stars <= 2) {
+      return 'easy';
+    }
+
+    if (stars === 3) {
+      return 'medium';
+    }
+
+    return 'hard';
+  }
+
+  function complexityToStars(value: ComplexityValue): number {
+    if (value === 'easy') {
+      return 2;
+    }
+
+    if (value === 'medium') {
+      return 3;
+    }
+
+    if (value === 'hard') {
+      return 5;
+    }
+
+    return 0;
+  }
+
+  function isValidHttpUrl(url: string): boolean {
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }
+
+  function complexityLabelByStars(stars: number): TranslationKey {
+    if (stars === 1) {
+      return 'complexityStar1';
+    }
+
+    if (stars === 2) {
+      return 'complexityStar2';
+    }
+
+    if (stars === 3) {
+      return 'complexityStar3';
+    }
+
+    if (stars === 4) {
+      return 'complexityStar4';
+    }
+
+    if (stars === 5) {
+      return 'complexityStar5';
+    }
+
+    return 'complexityRequiredHint';
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const trimmedTitle = title.trim();
     const trimmedDescription = description.trim();
 
+    if (!trimmedTitle) {
+      setError(t('validationRequiredField'));
+      return;
+    }
+
     if (trimmedTitle.length < 2) {
       setError(t('validationTitleMin'));
+      return;
+    }
+
+    if (!trimmedDescription) {
+      setError(t('validationRequiredField'));
       return;
     }
 
@@ -75,6 +149,34 @@ export function RecipeForm({
       return;
     }
 
+    if (!complexity) {
+      setError(t('validationComplexityRequired'));
+      return;
+    }
+
+    const normalizedIngredients = ingredients.map((item) => item.trim());
+    if (normalizedIngredients.some((item) => item.length === 0)) {
+      setError(t('validationIngredientsRequired'));
+      return;
+    }
+
+    const normalizedSteps = steps.map((item) => item.trim());
+    if (normalizedSteps.some((item) => item.length === 0)) {
+      setError(t('validationStepsRequired'));
+      return;
+    }
+
+    const normalizedPhotoUrls = photoUrls.map((item) => item.trim());
+    if (normalizedPhotoUrls.some((item) => item.length === 0)) {
+      setError(t('validationPhotosRequired'));
+      return;
+    }
+
+    if (normalizedPhotoUrls.some((item) => !isValidHttpUrl(item))) {
+      setError(t('validationPhotosUrl'));
+      return;
+    }
+
     setError(null);
 
     try {
@@ -84,9 +186,9 @@ export function RecipeForm({
         prepMinutes,
         servings,
         complexity,
-        ingredients: ingredients.map((item) => item.trim()).filter(Boolean),
-        steps: steps.map((item) => item.trim()).filter(Boolean),
-        photoUrls: photoUrls.map((item) => item.trim()).filter(Boolean),
+        ingredients: normalizedIngredients,
+        steps: normalizedSteps,
+        photoUrls: normalizedPhotoUrls,
       });
     } catch {
       setError(t('errorCreateRecipe'));
@@ -98,7 +200,8 @@ export function RecipeForm({
       setDescription('');
       setPrepMinutes(15);
       setServings(2);
-      setComplexity('medium');
+      setComplexity('');
+      setSelectedComplexityStars(0);
       setIngredients(['', '', '']);
       setSteps(['', '', '']);
       setPhotoUrls(['']);
@@ -119,6 +222,7 @@ export function RecipeForm({
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder={t('titlePlaceholder')}
+            required
           />
         </label>
 
@@ -129,6 +233,7 @@ export function RecipeForm({
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             placeholder={t('descriptionPlaceholder')}
+            required
           />
         </label>
 
@@ -141,6 +246,7 @@ export function RecipeForm({
               min={1}
               value={prepMinutes}
               onChange={(event) => setPrepMinutes(Number(event.target.value))}
+              required
             />
           </label>
 
@@ -152,21 +258,36 @@ export function RecipeForm({
               min={1}
               value={servings}
               onChange={(event) => setServings(Number(event.target.value))}
+              required
             />
           </label>
 
-          <label className="flex flex-col gap-1 text-sm text-slate-700">
-            {t('complexity')}
-            <select
-              className="rounded-md border border-slate-300 px-3 py-2"
-              value={complexity}
-              onChange={(event) => setComplexity(event.target.value as 'easy' | 'medium' | 'hard')}
-            >
-              <option value="easy">{t('complexityEasy')}</option>
-              <option value="medium">{t('complexityMedium')}</option>
-              <option value="hard">{t('complexityHard')}</option>
-            </select>
-          </label>
+          <div className="flex flex-col gap-1 text-sm text-slate-700">
+            <span>{t('complexity')}</span>
+            <div className="flex items-center gap-1" role="group" aria-label={t('complexity')}>
+              {[1, 2, 3, 4, 5].map((stars) => {
+                const selected = selectedComplexityStars >= stars;
+
+                return (
+                  <button
+                    key={`complexity-star-${stars}`}
+                    aria-label={`${t('complexity')} ${stars}`}
+                    className={`text-2xl leading-none ${selected ? 'text-amber-400' : 'text-slate-300'}`}
+                    onClick={() => {
+                      setSelectedComplexityStars(stars);
+                      setComplexity(resolveComplexityFromStars(stars));
+                    }}
+                    type="button"
+                  >
+                    ★
+                  </button>
+                );
+              })}
+            </div>
+            <span className="text-xs text-slate-500">
+              {t(complexityLabelByStars(selectedComplexityStars))}
+            </span>
+          </div>
         </div>
 
         <div className="sm:col-span-2">
@@ -180,6 +301,7 @@ export function RecipeForm({
                   value={ingredient}
                   onChange={(event) => updateListValue(setIngredients, index, event.target.value)}
                   placeholder={t('ingredientPlaceholder')}
+                  required
                 />
               </label>
             ))}
@@ -204,6 +326,7 @@ export function RecipeForm({
                   value={step}
                   onChange={(event) => updateListValue(setSteps, index, event.target.value)}
                   placeholder={t('stepPlaceholder')}
+                  required
                 />
               </label>
             ))}
@@ -229,6 +352,7 @@ export function RecipeForm({
                   onChange={(event) => updateListValue(setPhotoUrls, index, event.target.value)}
                   placeholder={t('photoPlaceholder')}
                   type="url"
+                  required
                 />
               </label>
             ))}
