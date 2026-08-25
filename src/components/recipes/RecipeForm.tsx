@@ -1,0 +1,117 @@
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+import type { CreateRecipeInput } from '../../types/recipe';
+
+interface RecipeFormProps {
+  onCreate: (input: CreateRecipeInput) => Promise<void>;
+  isSubmitting: boolean;
+}
+
+export function RecipeForm({ onCreate, isSubmitting }: RecipeFormProps) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [prepMinutes, setPrepMinutes] = useState(15);
+  const [servings, setServings] = useState(2);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmedTitle = title.trim();
+    const trimmedDescription = description.trim();
+
+    if (trimmedTitle.length < 2) {
+      setError('Title must be at least 2 characters.');
+      return;
+    }
+
+    if (trimmedDescription.length < 10) {
+      setError('Description must be at least 10 characters.');
+      return;
+    }
+
+    if (prepMinutes <= 0) {
+      setError('Prep time must be greater than 0.');
+      return;
+    }
+
+    if (servings <= 0) {
+      setError('Servings must be greater than 0.');
+      return;
+    }
+
+    setError(null);
+
+    await onCreate({
+      title: trimmedTitle,
+      description: trimmedDescription,
+      prepMinutes,
+      servings,
+    });
+
+    setTitle('');
+    setDescription('');
+    setPrepMinutes(15);
+    setServings(2);
+  }
+
+  return (
+    <form className="mb-6 rounded-xl border border-slate-200 bg-white p-4" onSubmit={handleSubmit}>
+      <h3 className="text-base font-semibold text-slate-900">Add recipe</h3>
+
+      {error && <p className="mt-3 text-sm text-rose-700">{error}</p>}
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <label className="flex flex-col gap-1 text-sm text-slate-700 sm:col-span-2">
+          Title
+          <input
+            className="rounded-md border border-slate-300 px-3 py-2"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="e.g. Mekitsi"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm text-slate-700 sm:col-span-2">
+          Description
+          <textarea
+            className="min-h-24 rounded-md border border-slate-300 px-3 py-2"
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            placeholder="Short recipe description"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm text-slate-700">
+          Prep minutes
+          <input
+            className="rounded-md border border-slate-300 px-3 py-2"
+            type="number"
+            min={1}
+            value={prepMinutes}
+            onChange={(event) => setPrepMinutes(Number(event.target.value))}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm text-slate-700">
+          Servings
+          <input
+            className="rounded-md border border-slate-300 px-3 py-2"
+            type="number"
+            min={1}
+            value={servings}
+            onChange={(event) => setServings(Number(event.target.value))}
+          />
+        </label>
+      </div>
+
+      <button
+        className="mt-4 inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        disabled={isSubmitting}
+        type="submit"
+      >
+        {isSubmitting ? 'Saving...' : 'Create recipe'}
+      </button>
+    </form>
+  );
+}

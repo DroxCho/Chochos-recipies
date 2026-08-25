@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react';
-import { fetchRecipeById, fetchRecipes, recipes as sampleRecipes } from '../data/recipes';
-import type { Recipe } from '../types/recipe';
+import {
+  fetchRecipeById,
+  fetchRecipes,
+  insertRecipe,
+  recipes as sampleRecipes,
+} from '../data/recipes';
+import type { CreateRecipeInput, Recipe } from '../types/recipe';
 
 export function useRecipes() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,7 +42,21 @@ export function useRecipes() {
     };
   }, []);
 
-  return { recipes, isLoading, error };
+  async function createRecipe(input: CreateRecipeInput) {
+    setIsCreating(true);
+    try {
+      const createdRecipe = await insertRecipe(input);
+      setRecipes((prev) => [createdRecipe, ...prev]);
+      setError(null);
+    } catch {
+      setError('Could not create recipe. Please try again.');
+      throw new Error('Create recipe failed');
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
+  return { recipes, isLoading, isCreating, error, createRecipe };
 }
 
 export function useRecipeDetails(id: string | undefined) {

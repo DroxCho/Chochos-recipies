@@ -5,3 +5,10 @@ export interface Recipe {
   prepMinutes: number;
   servings: number;
 }
+
+export interface CreateRecipeInput {
+  title: string;
+  description: string;
+  prepMinutes: number;
+  servings: number;
+}

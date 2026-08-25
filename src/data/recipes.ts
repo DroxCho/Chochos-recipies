@@ -1,4 +1,4 @@
-import type { Recipe } from '../types/recipe';
+import type { CreateRecipeInput, Recipe } from '../types/recipe';
 import { hasSupabaseAnonKey, supabase } from '../lib/supabase';
 
 export const recipes: Recipe[] = [
@@ -35,6 +35,21 @@ interface RecipeRow {
   description: string | null;
   prep_minutes: number | null;
   servings: number | null;
+}
+
+function normalizeRecipeId(title: string): string {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
+function buildRecipeId(title: string): string {
+  const base = normalizeRecipeId(title);
+  const fallback = `recipe-${Date.now()}`;
+  return base.length > 0 ? `${base}-${Date.now()}` : fallback;
 }
 
 function mapRecipeRow(row: RecipeRow): Recipe {
@@ -85,6 +100,40 @@ export async function fetchRecipeById(id: string): Promise<Recipe | undefined> {
 
   if (!data) {
     return getRecipeById(id);
+  }
+
+  return mapRecipeRow(data as RecipeRow);
+}
+
+export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
+  const id = buildRecipeId(input.title);
+
+  const payload = {
+    id,
+    title: input.title,
+    description: input.description,
+    prep_minutes: input.prepMinutes,
+    servings: input.servings,
+  };
+
+  if (!hasSupabaseAnonKey) {
+    return {
+      id,
+      title: input.title,
+      description: input.description,
+      prepMinutes: input.prepMinutes,
+      servings: input.servings,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from('recipes')
+    .insert(payload)
+    .select('id,title,description,prep_minutes,servings')
+    .single();
+
+  if (error) {
+    throw error;
   }
 
   return mapRecipeRow(data as RecipeRow);
