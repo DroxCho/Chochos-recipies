@@ -31,9 +31,23 @@ export function AddRecipePage() {
 
   return (
     <section aria-label="add-recipe-page" className="min-h-[320px]">
-      <h2 className="mb-4 text-xl font-semibold text-slate-900">{t('addRecipe')}</h2>
-      {error && <p className="mb-3 text-sm text-amber-700">{error}</p>}
-      <RecipeForm onCreate={handleCreateRecipe} isSubmitting={isCreating} />
+      <div className="fixed inset-0 z-40 bg-slate-900/40" onClick={() => navigate('/recipes')} aria-hidden="true" />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <h2 className="text-xl font-semibold text-slate-900">{t('addRecipe')}</h2>
+            <button
+              className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
+              onClick={() => navigate('/recipes')}
+              type="button"
+            >
+              {t('cancel')}
+            </button>
+          </div>
+          {error && <p className="mb-3 text-sm text-amber-700">{error}</p>}
+          <RecipeForm onCreate={handleCreateRecipe} isSubmitting={isCreating} multiStep />
+        </div>
+      </div>
     </section>
   );
 }
