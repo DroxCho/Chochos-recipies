@@ -38,17 +38,17 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
       : t('approvedStatus');
 
   return (
-    <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <article className="flex min-h-[500px] flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       {recipeImage && (
         <img
           alt={localizedRecipe.title}
-          className="mb-3 h-44 w-full rounded-lg object-cover"
+          className="mb-3 h-56 w-full rounded-lg object-cover"
           loading="lazy"
           src={recipeImage}
         />
       )}
       {!recipeImage && (
-        <div className="mb-3 flex h-44 w-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
+        <div className="mb-3 flex h-56 w-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
           {t('noPhotoPlaceholder')}
         </div>
       )}
@@ -68,7 +68,7 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
         <span>{recipe.servings} {t('servingsShort')}</span>
       </div>
       <Link
-        className="mt-4 inline-flex text-sm font-medium text-slate-900 underline underline-offset-4"
+        className="mt-auto pt-4 inline-flex text-sm font-medium text-slate-900 underline underline-offset-4"
         to={`/recipes/${recipe.id}`}
       >
         {t('viewDetails')}
