@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { canApproveRecipe, canEditRecipe } from '../auth/roles';
 import { useUserRole } from '../auth/useUserRole';
-import { updateRecipe } from '../data/recipes';
+import { deleteRecipeById, updateRecipe } from '../data/recipes';
 import { useRecipeDetails } from '../hooks/useRecipes';
 import { getLocalizedRecipe } from '../i18n/recipeContent';
 import type { TranslationKey } from '../i18n/translations';
@@ -42,8 +42,12 @@ export function RecipeDetailsPage() {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
+  const [isUnpublishing, setIsUnpublishing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isSendingAuthorMessage, setIsSendingAuthorMessage] = useState(false);
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [reviewComment, setReviewComment] = useState('');
+  const [authorMessage, setAuthorMessage] = useState('');
   const [reviewSuccess, setReviewSuccess] = useState<string | null>(null);
   const [approvalError, setApprovalError] = useState<string | null>(null);
   const locationState = location.state as RecipeDetailsLocationState | null;
@@ -177,6 +181,91 @@ export function RecipeDetailsPage() {
       setApprovalError(t('errorUpdateRecipe'));
     } finally {
       setIsReturning(false);
+    }
+  }
+
+  async function handleUnpublish() {
+    if (!currentRecipe || role !== 'admin') {
+      return;
+    }
+
+    setIsUnpublishing(true);
+    setApprovalError(null);
+    setReviewSuccess(null);
+
+    try {
+      const updatedRecipe = await updateRecipe({
+        id: currentRecipe.id,
+        title: currentRecipe.title,
+        description: currentRecipe.description,
+        prepMinutes: currentRecipe.prepMinutes,
+        servings: currentRecipe.servings,
+        complexity: currentRecipe.complexity,
+        dishType: currentRecipe.dishType,
+        cuisine: currentRecipe.cuisine,
+        ingredients: currentRecipe.ingredients,
+        steps: currentRecipe.steps,
+        photoUrls: currentRecipe.photoUrls,
+        ownerId: currentRecipe.ownerId,
+        ownerRole: currentRecipe.ownerRole,
+        status: 'pending',
+        reviewComment: undefined,
+        metaOnly: true,
+      });
+
+      setApprovalOverride(updatedRecipe);
+      setReviewSuccess(t('reviewActionSuccess'));
+    } catch {
+      setApprovalError(t('errorUpdateRecipe'));
+    } finally {
+      setIsUnpublishing(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!currentRecipe || role !== 'admin') {
+      return;
+    }
+
+    if (!window.confirm(t('deleteRecipeConfirm'))) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setApprovalError(null);
+    setReviewSuccess(null);
+
+    try {
+      await deleteRecipeById(currentRecipe.id);
+      navigate('/recipes', { state: { deleted: true } });
+    } catch {
+      setApprovalError(t('errorUpdateRecipe'));
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  async function handleSendAuthorMessage() {
+    if (!currentRecipe || role !== 'admin') {
+      return;
+    }
+
+    const trimmedMessage = authorMessage.trim();
+    if (!trimmedMessage) {
+      setApprovalError(t('authorMessageRequired'));
+      return;
+    }
+
+    setIsSendingAuthorMessage(true);
+    setApprovalError(null);
+    setReviewSuccess(null);
+
+    try {
+      addUserMessage(currentRecipe.ownerId, currentRecipe.id, trimmedMessage);
+      setAuthorMessage('');
+      setReviewSuccess(t('authorMessageSent'));
+    } finally {
+      setIsSendingAuthorMessage(false);
     }
   }
 
@@ -399,11 +488,31 @@ export function RecipeDetailsPage() {
             </button>
             <button
               className="inline-flex items-center rounded-md bg-amber-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60"
-              disabled={isApproving || isRejecting || isReturning}
+              disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting}
               onClick={() => setShowReturnDialog(true)}
               type="button"
             >
               {t('returnForEdit')}
+            </button>
+          </>
+        )}
+        {role === 'admin' && (
+          <>
+            <button
+              className="inline-flex items-center rounded-md bg-slate-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60"
+              disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting || currentRecipe.status === 'pending'}
+              onClick={handleUnpublish}
+              type="button"
+            >
+              {t('unpublishRecipe')}
+            </button>
+            <button
+              className="inline-flex items-center rounded-md bg-rose-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60"
+              disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting}
+              onClick={handleDelete}
+              type="button"
+            >
+              {t('deleteRecipe')}
             </button>
           </>
         )}
@@ -437,6 +546,29 @@ export function RecipeDetailsPage() {
               type="button"
             >
               {t('cancel')}
+            </button>
+          </div>
+        </div>
+      )}
+      {role === 'admin' && (
+        <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <label className="flex flex-col gap-2 text-sm text-slate-700">
+            {t('messageAuthorLabel')}
+            <textarea
+              className="min-h-24 rounded-md border border-slate-300 bg-white px-3 py-2"
+              onChange={(event) => setAuthorMessage(event.target.value)}
+              placeholder={t('messageAuthorPlaceholder')}
+              value={authorMessage}
+            />
+          </label>
+          <div className="mt-3 flex items-center gap-2">
+            <button
+              className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60"
+              disabled={isSendingAuthorMessage}
+              onClick={handleSendAuthorMessage}
+              type="button"
+            >
+              {t('sendAuthorMessage')}
             </button>
           </div>
         </div>

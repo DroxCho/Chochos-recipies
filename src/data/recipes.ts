@@ -829,6 +829,16 @@ function writeRecipeMetaMap(map: RecipeMetaMap): void {
   localStorage.setItem(RECIPE_META_KEY, JSON.stringify(map));
 }
 
+function removeRecipeMeta(id: string): void {
+  const map = readRecipeMetaMap();
+  if (!map[id]) {
+    return;
+  }
+
+  delete map[id];
+  writeRecipeMetaMap(map);
+}
+
 function getDefaultRecipeMeta(): RecipeMeta {
   return {
     status: 'approved',
@@ -1124,4 +1134,28 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
 
   persistRecipeMeta(input.id, metaPatch);
   return applyMeta(mapRecipeRow(data as RecipeRow), readRecipeMetaMap());
+}
+
+export async function deleteRecipeById(id: string): Promise<void> {
+  const localRecipes = readLocalRecipes();
+  writeLocalRecipes(localRecipes.filter((recipe) => recipe.id !== id));
+  removeRecipeMeta(id);
+
+  if (!hasSupabaseAnonKey) {
+    return;
+  }
+
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from('recipes')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    throw error;
+  }
 }
