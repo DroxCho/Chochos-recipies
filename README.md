@@ -21,7 +21,12 @@ Configured URL:
 
 - `https://bpgfxnwlrrgntzhjxqdr.supabase.co`
 
-Create a `.env` file based on `.env.example` and set your anon key.
+Create a `.env` file based on `.env.example` and set both variables:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+For Netlify, set the same two names in Site settings -> Environment variables.
 
 ## Scripts
 
