@@ -35,9 +35,40 @@ export const recipes: Recipe[] = [
 ];
 
 const RECIPE_META_KEY = 'recipes_meta_v1';
+const LOCAL_RECIPES_KEY = 'recipes_local_v1';
 
 export function getRecipeById(id: string): Recipe | undefined {
   return recipes.find((recipe) => recipe.id === id);
+}
+
+function readLocalRecipes(): Recipe[] {
+  if (typeof window === 'undefined') {
+    return recipes;
+  }
+
+  const raw = localStorage.getItem(LOCAL_RECIPES_KEY);
+  if (!raw) {
+    return recipes;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Recipe[];
+    return parsed.length > 0 ? parsed : recipes;
+  } catch {
+    return recipes;
+  }
+}
+
+function writeLocalRecipes(localRecipes: Recipe[]): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  localStorage.setItem(LOCAL_RECIPES_KEY, JSON.stringify(localRecipes));
+}
+
+function getRecipeByIdFromLocal(id: string): Recipe | undefined {
+  return readLocalRecipes().find((recipe) => recipe.id === id);
 }
 
 interface RecipeRow {
@@ -50,6 +81,7 @@ interface RecipeRow {
 
 interface RecipeMeta {
   status: RecipeStatus;
+  reviewComment?: string;
   ownerId: string;
   ownerRole: RecipeOwnerRole;
   complexity?: 'easy' | 'medium' | 'hard';
@@ -119,6 +151,7 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
   return {
     ...recipe,
     status: meta.status,
+    reviewComment: meta.reviewComment,
     ownerId: meta.ownerId,
     ownerRole: meta.ownerRole,
     complexity: meta.complexity,
@@ -135,6 +168,7 @@ function persistRecipeMeta(id: string, patch: Partial<RecipeMeta>): RecipeMeta {
   const next: RecipeMeta = {
     ...current,
     ...patch,
+    reviewComment: patch.reviewComment ?? current.reviewComment,
     ingredients: normalizeStringList(patch.ingredients ?? current.ingredients),
     steps: normalizeStringList(patch.steps ?? current.steps),
     photoUrls: normalizeStringList(patch.photoUrls ?? current.photoUrls),
@@ -162,12 +196,12 @@ export async function fetchRecipes(): Promise<Recipe[]> {
   const metaMap = readRecipeMetaMap();
 
   if (!hasSupabaseAnonKey) {
-    return recipes.map((recipe) => applyMeta(recipe, metaMap));
+    return readLocalRecipes().map((recipe) => applyMeta(recipe, metaMap));
   }
 
   const supabase = getSupabaseClient();
   if (!supabase) {
-    return recipes.map((recipe) => applyMeta(recipe, metaMap));
+    return readLocalRecipes().map((recipe) => applyMeta(recipe, metaMap));
   }
 
   const { data, error } = await supabase
@@ -180,7 +214,7 @@ export async function fetchRecipes(): Promise<Recipe[]> {
   }
 
   if (!data || data.length === 0) {
-    return recipes.map((recipe) => applyMeta(recipe, metaMap));
+    return readLocalRecipes().map((recipe) => applyMeta(recipe, metaMap));
   }
 
   return (data as RecipeRow[]).map((row) => applyMeta(mapRecipeRow(row), metaMap));
@@ -190,13 +224,13 @@ export async function fetchRecipeById(id: string): Promise<Recipe | undefined> {
   const metaMap = readRecipeMetaMap();
 
   if (!hasSupabaseAnonKey) {
-    const fallbackRecipe = getRecipeById(id);
+    const fallbackRecipe = getRecipeByIdFromLocal(id);
     return fallbackRecipe ? applyMeta(fallbackRecipe, metaMap) : undefined;
   }
 
   const supabase = getSupabaseClient();
   if (!supabase) {
-    const fallbackRecipe = getRecipeById(id);
+    const fallbackRecipe = getRecipeByIdFromLocal(id);
     return fallbackRecipe ? applyMeta(fallbackRecipe, metaMap) : undefined;
   }
 
@@ -211,7 +245,7 @@ export async function fetchRecipeById(id: string): Promise<Recipe | undefined> {
   }
 
   if (!data) {
-    const fallbackRecipe = getRecipeById(id);
+    const fallbackRecipe = getRecipeByIdFromLocal(id);
     return fallbackRecipe ? applyMeta(fallbackRecipe, metaMap) : undefined;
   }
 
@@ -231,6 +265,7 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
 
   const metaPatch: Partial<RecipeMeta> = {
     status: input.status ?? 'approved',
+    reviewComment: input.reviewComment,
     ownerId: input.ownerId ?? 'admin-user-1',
     ownerRole: input.ownerRole ?? 'admin',
     complexity: input.complexity,
@@ -251,6 +286,8 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
       ownerRole: 'admin',
     };
 
+    const localRecipes = readLocalRecipes();
+    writeLocalRecipes([createdRecipe, ...localRecipes.filter((recipe) => recipe.id !== createdRecipe.id)]);
     persistRecipeMeta(id, metaPatch);
     return applyMeta(createdRecipe, readRecipeMetaMap());
   }
@@ -268,6 +305,8 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
       ownerRole: 'admin',
     };
 
+    const localRecipes = readLocalRecipes();
+    writeLocalRecipes([createdRecipe, ...localRecipes.filter((recipe) => recipe.id !== createdRecipe.id)]);
     persistRecipeMeta(id, metaPatch);
     return applyMeta(createdRecipe, readRecipeMetaMap());
   }
@@ -296,6 +335,7 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
 
   const metaPatch: Partial<RecipeMeta> = {
     status: input.status,
+    reviewComment: input.reviewComment,
     ownerId: input.ownerId,
     ownerRole: input.ownerRole,
     complexity: input.complexity,
@@ -304,8 +344,18 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
     photoUrls: input.photoUrls,
   };
 
+  if (input.metaOnly) {
+    const currentRecipe = await fetchRecipeById(input.id);
+    if (!currentRecipe) {
+      throw new Error('Recipe not found');
+    }
+
+    persistRecipeMeta(input.id, metaPatch);
+    return applyMeta(currentRecipe, readRecipeMetaMap());
+  }
+
   if (!hasSupabaseAnonKey) {
-    const fallback = getRecipeById(input.id);
+    const fallback = getRecipeByIdFromLocal(input.id);
     const updatedFallback: Recipe = {
       id: input.id,
       title: input.title,
@@ -317,13 +367,17 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
       ownerRole: fallback?.ownerRole ?? 'admin',
     };
 
+    const localRecipes = readLocalRecipes().map((recipe) =>
+      recipe.id === input.id ? updatedFallback : recipe,
+    );
+    writeLocalRecipes(localRecipes);
     persistRecipeMeta(input.id, metaPatch);
     return applyMeta(updatedFallback, readRecipeMetaMap());
   }
 
   const supabase = getSupabaseClient();
   if (!supabase) {
-    const fallback = getRecipeById(input.id);
+    const fallback = getRecipeByIdFromLocal(input.id);
     const updatedFallback: Recipe = {
       id: input.id,
       title: input.title,
@@ -335,6 +389,10 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
       ownerRole: fallback?.ownerRole ?? 'admin',
     };
 
+    const localRecipes = readLocalRecipes().map((recipe) =>
+      recipe.id === input.id ? updatedFallback : recipe,
+    );
+    writeLocalRecipes(localRecipes);
     persistRecipeMeta(input.id, metaPatch);
     return applyMeta(updatedFallback, readRecipeMetaMap());
   }

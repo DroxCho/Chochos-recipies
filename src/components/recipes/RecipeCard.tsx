@@ -10,11 +10,19 @@ interface RecipeCardProps {
 export function RecipeCard({ recipe }: RecipeCardProps) {
   const { t, language } = useLanguage();
   const localizedRecipe = getLocalizedRecipe(recipe, language);
+  const statusLabel =
+    recipe.status === 'pending'
+      ? t('pendingStatus')
+      : recipe.status === 'rejected'
+      ? t('rejectedStatus')
+      : recipe.status === 'changes_requested'
+      ? t('changesRequestedStatus')
+      : t('approvedStatus');
 
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <p className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-        {recipe.status === 'pending' ? t('pendingStatus') : t('approvedStatus')}
+        {statusLabel}
       </p>
       <h3 className="text-lg font-semibold text-slate-900">{localizedRecipe.title}</h3>
       <p className="mt-2 text-sm text-slate-600">{localizedRecipe.description}</p>

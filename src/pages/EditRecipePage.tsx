@@ -31,7 +31,8 @@ export function EditRecipePage() {
       photoUrls: input.photoUrls,
       ownerId: recipe.ownerId,
       ownerRole: recipe.ownerRole,
-      status: recipe.status,
+      status: role === 'registered' ? 'pending' : recipe.status,
+      reviewComment: undefined,
     });
 
     navigate(`/recipes/${updatedRecipe.id}`, { state: { updated: true } });

@@ -1,4 +1,4 @@
-export type RecipeStatus = 'pending' | 'approved';
+export type RecipeStatus = 'pending' | 'approved' | 'rejected' | 'changes_requested';
 export type RecipeOwnerRole = 'registered' | 'admin';
 
 export interface Recipe {
@@ -12,6 +12,7 @@ export interface Recipe {
   steps?: string[];
   photoUrls?: string[];
   status: RecipeStatus;
+  reviewComment?: string;
   ownerId: string;
   ownerRole: RecipeOwnerRole;
 }
@@ -26,10 +27,13 @@ export interface CreateRecipeInput {
   steps?: string[];
   photoUrls?: string[];
   status?: RecipeStatus;
+  reviewComment?: string;
   ownerId?: string;
   ownerRole?: RecipeOwnerRole;
 }
 
 export interface UpdateRecipeInput extends CreateRecipeInput {
   id: string;
+  reviewComment?: string;
+  metaOnly?: boolean;
 }
