@@ -250,6 +250,29 @@ export function RecipeDetailsPage() {
   const recipeSteps = currentRecipe.steps?.map((item) => item.trim()).filter(Boolean) ?? [];
   const recipePhotos = currentRecipe.photoUrls?.map((url) => url.trim()).filter(Boolean) ?? [];
 
+  function navigateWithMergedFilters(nextDishType?: string, nextCuisine?: string) {
+    const nextParams = new URLSearchParams(location.search);
+
+    if (nextDishType) {
+      if (nextParams.get('dishType') === nextDishType) {
+        nextParams.delete('dishType');
+      } else {
+        nextParams.set('dishType', nextDishType);
+      }
+    }
+
+    if (nextCuisine) {
+      if (nextParams.get('cuisine') === nextCuisine) {
+        nextParams.delete('cuisine');
+      } else {
+        nextParams.set('cuisine', nextCuisine);
+      }
+    }
+
+    const query = nextParams.toString();
+    navigate(`/recipes${query ? `?${query}` : ''}`);
+  }
+
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-6">
       {showCreatedMessage && (
@@ -279,7 +302,7 @@ export function RecipeDetailsPage() {
           className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
             isDishTypeActive ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-700'
           }`}
-          onClick={() => navigate(`/recipes?dishType=${currentRecipe.dishType ?? 'main'}`)}
+          onClick={() => navigateWithMergedFilters(currentRecipe.dishType ?? 'main')}
           type="button"
         >
           {t(dishTypeLabelKey)}
@@ -288,7 +311,7 @@ export function RecipeDetailsPage() {
           className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
             isCuisineActive ? 'bg-sky-700 text-white' : 'bg-sky-50 text-sky-700'
           }`}
-          onClick={() => navigate(`/recipes?cuisine=${currentRecipe.cuisine ?? 'international'}`)}
+          onClick={() => navigateWithMergedFilters(undefined, currentRecipe.cuisine ?? 'international')}
           type="button"
         >
           {t(cuisineLabelKey)}

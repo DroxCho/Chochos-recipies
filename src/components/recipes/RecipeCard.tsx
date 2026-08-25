@@ -42,6 +42,29 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
   const selectedCuisine = searchParams.get('cuisine');
   const isDishTypeActive = selectedDishType === (recipe.dishType ?? 'main');
   const isCuisineActive = selectedCuisine === (recipe.cuisine ?? 'international');
+
+  function navigateWithMergedFilters(nextDishType?: string, nextCuisine?: string) {
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (nextDishType) {
+      if (nextParams.get('dishType') === nextDishType) {
+        nextParams.delete('dishType');
+      } else {
+        nextParams.set('dishType', nextDishType);
+      }
+    }
+
+    if (nextCuisine) {
+      if (nextParams.get('cuisine') === nextCuisine) {
+        nextParams.delete('cuisine');
+      } else {
+        nextParams.set('cuisine', nextCuisine);
+      }
+    }
+
+    const query = nextParams.toString();
+    navigate(`/recipes${query ? `?${query}` : ''}`);
+  }
   const statusLabel =
     recipe.status === 'pending'
       ? t('pendingStatus')
@@ -116,13 +139,13 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
-              navigate(`/recipes?dishType=${recipe.dishType ?? 'main'}`);
+              navigateWithMergedFilters(recipe.dishType ?? 'main');
             }}
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
                 event.stopPropagation();
-                navigate(`/recipes?dishType=${recipe.dishType ?? 'main'}`);
+                navigateWithMergedFilters(recipe.dishType ?? 'main');
               }
             }}
             role="button"
@@ -141,13 +164,13 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
-              navigate(`/recipes?cuisine=${recipe.cuisine ?? 'international'}`);
+              navigateWithMergedFilters(undefined, recipe.cuisine ?? 'international');
             }}
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
                 event.stopPropagation();
-                navigate(`/recipes?cuisine=${recipe.cuisine ?? 'international'}`);
+                navigateWithMergedFilters(undefined, recipe.cuisine ?? 'international');
               }
             }}
             role="button"
