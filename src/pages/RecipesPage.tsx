@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { RecipeList } from '../components/recipes/RecipeList';
 import { useRecipes } from '../hooks/useRecipes';
 import { useLanguage } from '../i18n/useLanguage';
@@ -9,6 +9,7 @@ export function RecipesPage() {
   const pageSizeOptions = [6, 12, 24];
   const [pageSize, setPageSize] = useState<number>(pageSizeOptions[0]);
   const [currentPage, setCurrentPage] = useState(1);
+  const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(recipes.length / pageSize));
 
@@ -22,9 +23,36 @@ export function RecipesPage() {
     }
   }, [currentPage, totalPages]);
 
+  useEffect(() => {
+    const trigger = loadMoreTriggerRef.current;
+    if (!trigger || isLoading || currentPage >= totalPages) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (!entry?.isIntersecting) {
+          return;
+        }
+
+        setCurrentPage((page) => Math.min(totalPages, page + 1));
+      },
+      {
+        root: null,
+        rootMargin: '120px',
+        threshold: 0,
+      },
+    );
+
+    observer.observe(trigger);
+
+    return () => observer.disconnect();
+  }, [currentPage, isLoading, totalPages]);
+
   const paginatedRecipes = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return recipes.slice(start, start + pageSize);
+    const end = currentPage * pageSize;
+    return recipes.slice(0, end);
   }, [currentPage, pageSize, recipes]);
 
   return (
@@ -63,6 +91,14 @@ export function RecipesPage() {
       )}
 
       <RecipeList recipes={paginatedRecipes} />
+
+      {!isLoading && currentPage < totalPages && (
+        <div className="mt-4 flex justify-center">
+          <span className="text-sm text-slate-500">{t('loadingRecipes')}</span>
+        </div>
+      )}
+
+      <div ref={loadMoreTriggerRef} className="h-6 w-full" aria-hidden="true" />
 
       {!isLoading && recipes.length > 0 && (
         <div className="mt-5 flex items-center gap-2">
