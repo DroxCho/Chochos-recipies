@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { useLanguage } from '../../i18n/useLanguage';
 import type { CreateRecipeInput } from '../../types/recipe';
 
 interface RecipeFormProps {
@@ -8,6 +9,7 @@ interface RecipeFormProps {
 }
 
 export function RecipeForm({ onCreate, isSubmitting }: RecipeFormProps) {
+  const { t } = useLanguage();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [prepMinutes, setPrepMinutes] = useState(15);
@@ -21,33 +23,38 @@ export function RecipeForm({ onCreate, isSubmitting }: RecipeFormProps) {
     const trimmedDescription = description.trim();
 
     if (trimmedTitle.length < 2) {
-      setError('Title must be at least 2 characters.');
+      setError(t('validationTitleMin'));
       return;
     }
 
     if (trimmedDescription.length < 10) {
-      setError('Description must be at least 10 characters.');
+      setError(t('validationDescriptionMin'));
       return;
     }
 
     if (prepMinutes <= 0) {
-      setError('Prep time must be greater than 0.');
+      setError(t('validationPrepMin'));
       return;
     }
 
     if (servings <= 0) {
-      setError('Servings must be greater than 0.');
+      setError(t('validationServingsMin'));
       return;
     }
 
     setError(null);
 
-    await onCreate({
-      title: trimmedTitle,
-      description: trimmedDescription,
-      prepMinutes,
-      servings,
-    });
+    try {
+      await onCreate({
+        title: trimmedTitle,
+        description: trimmedDescription,
+        prepMinutes,
+        servings,
+      });
+    } catch {
+      setError(t('errorCreateRecipe'));
+      return;
+    }
 
     setTitle('');
     setDescription('');
@@ -57,33 +64,33 @@ export function RecipeForm({ onCreate, isSubmitting }: RecipeFormProps) {
 
   return (
     <form className="mb-6 rounded-xl border border-slate-200 bg-white p-4" onSubmit={handleSubmit}>
-      <h3 className="text-base font-semibold text-slate-900">Add recipe</h3>
+      <h3 className="text-base font-semibold text-slate-900">{t('addRecipe')}</h3>
 
       {error && <p className="mt-3 text-sm text-rose-700">{error}</p>}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-sm text-slate-700 sm:col-span-2">
-          Title
+          {t('title')}
           <input
             className="rounded-md border border-slate-300 px-3 py-2"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="e.g. Mekitsi"
+            placeholder={t('titlePlaceholder')}
           />
         </label>
 
         <label className="flex flex-col gap-1 text-sm text-slate-700 sm:col-span-2">
-          Description
+          {t('description')}
           <textarea
             className="min-h-24 rounded-md border border-slate-300 px-3 py-2"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
-            placeholder="Short recipe description"
+            placeholder={t('descriptionPlaceholder')}
           />
         </label>
 
         <label className="flex flex-col gap-1 text-sm text-slate-700">
-          Prep minutes
+          {t('prepMinutes')}
           <input
             className="rounded-md border border-slate-300 px-3 py-2"
             type="number"
@@ -94,7 +101,7 @@ export function RecipeForm({ onCreate, isSubmitting }: RecipeFormProps) {
         </label>
 
         <label className="flex flex-col gap-1 text-sm text-slate-700">
-          Servings
+          {t('servings')}
           <input
             className="rounded-md border border-slate-300 px-3 py-2"
             type="number"
@@ -110,7 +117,7 @@ export function RecipeForm({ onCreate, isSubmitting }: RecipeFormProps) {
         disabled={isSubmitting}
         type="submit"
       >
-        {isSubmitting ? 'Saving...' : 'Create recipe'}
+        {isSubmitting ? t('saving') : t('createRecipe')}
       </button>
     </form>
   );

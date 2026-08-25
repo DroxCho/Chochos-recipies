@@ -1,6 +1,10 @@
 import { NavLink } from 'react-router-dom';
+import { useLanguage } from '../../i18n/useLanguage';
+import { LanguageToggle } from './LanguageToggle';
 
 export function Header() {
+  const { t } = useLanguage();
+
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive
       ? 'text-sm font-medium text-slate-900'
@@ -9,15 +13,18 @@ export function Header() {
   return (
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4">
-        <h1 className="text-lg font-semibold tracking-tight text-slate-900">Recipes</h1>
-        <nav className="flex items-center gap-4" aria-label="Main navigation">
+        <h1 className="text-lg font-semibold tracking-tight text-slate-900">{t('appTitle')}</h1>
+        <div className="flex items-center gap-4">
+          <nav className="flex items-center gap-4" aria-label={t('navAria')}>
           <NavLink to="/" end className={linkClass}>
-            Home
+            {t('navHome')}
           </NavLink>
           <NavLink to="/recipes" className={linkClass}>
-            Recipes
+            {t('navRecipes')}
           </NavLink>
-        </nav>
+          </nav>
+          <LanguageToggle />
+        </div>
       </div>
     </header>
   );

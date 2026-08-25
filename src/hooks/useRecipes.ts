@@ -6,8 +6,10 @@ import {
   recipes as sampleRecipes,
 } from '../data/recipes';
 import type { CreateRecipeInput, Recipe } from '../types/recipe';
+import { useLanguage } from '../i18n/useLanguage';
 
 export function useRecipes() {
+  const { t } = useLanguage();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -26,7 +28,7 @@ export function useRecipes() {
       } catch {
         if (isMounted) {
           setRecipes(sampleRecipes);
-          setError('Could not load recipes from Supabase. Showing sample recipes.');
+          setError(t('errorLoadRecipes'));
         }
       } finally {
         if (isMounted) {
@@ -40,7 +42,7 @@ export function useRecipes() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [t]);
 
   async function createRecipe(input: CreateRecipeInput) {
     setIsCreating(true);
@@ -48,8 +50,9 @@ export function useRecipes() {
       const createdRecipe = await insertRecipe(input);
       setRecipes((prev) => [createdRecipe, ...prev]);
       setError(null);
+      return createdRecipe;
     } catch {
-      setError('Could not create recipe. Please try again.');
+      setError(t('errorCreateRecipe'));
       throw new Error('Create recipe failed');
     } finally {
       setIsCreating(false);
@@ -63,6 +66,7 @@ export function useRecipeDetails(id: string | undefined) {
   const [recipe, setRecipe] = useState<Recipe | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     let isMounted = true;
@@ -70,7 +74,7 @@ export function useRecipeDetails(id: string | undefined) {
     async function load() {
       if (!id) {
         setRecipe(undefined);
-        setError('Missing recipe id.');
+        setError(t('errorMissingRecipeId'));
         setIsLoading(false);
         return;
       }
@@ -84,7 +88,7 @@ export function useRecipeDetails(id: string | undefined) {
       } catch {
         if (isMounted) {
           setRecipe(sampleRecipes.find((item) => item.id === id));
-          setError('Could not load recipe details from Supabase.');
+          setError(t('errorLoadRecipeDetails'));
         }
       } finally {
         if (isMounted) {
@@ -98,7 +102,7 @@ export function useRecipeDetails(id: string | undefined) {
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, t]);
 
   return { recipe, isLoading, error };
 }
