@@ -1,4 +1,5 @@
 import type { Recipe } from '../types/recipe';
+import { hasSupabaseAnonKey, supabase } from '../lib/supabase';
 
 export const recipes: Recipe[] = [
   {
@@ -26,4 +27,65 @@ export const recipes: Recipe[] = [
 
 export function getRecipeById(id: string): Recipe | undefined {
   return recipes.find((recipe) => recipe.id === id);
+}
+
+interface RecipeRow {
+  id: string;
+  title: string;
+  description: string | null;
+  prep_minutes: number | null;
+  servings: number | null;
+}
+
+function mapRecipeRow(row: RecipeRow): Recipe {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description ?? '',
+    prepMinutes: row.prep_minutes ?? 0,
+    servings: row.servings ?? 0,
+  };
+}
+
+export async function fetchRecipes(): Promise<Recipe[]> {
+  if (!hasSupabaseAnonKey) {
+    return recipes;
+  }
+
+  const { data, error } = await supabase
+    .from('recipes')
+    .select('id,title,description,prep_minutes,servings')
+    .order('title', { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data || data.length === 0) {
+    return recipes;
+  }
+
+  return (data as RecipeRow[]).map(mapRecipeRow);
+}
+
+export async function fetchRecipeById(id: string): Promise<Recipe | undefined> {
+  if (!hasSupabaseAnonKey) {
+    return getRecipeById(id);
+  }
+
+  const { data, error } = await supabase
+    .from('recipes')
+    .select('id,title,description,prep_minutes,servings')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    return getRecipeById(id);
+  }
+
+  return mapRecipeRow(data as RecipeRow);
 }
