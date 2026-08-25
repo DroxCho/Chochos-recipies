@@ -1,5 +1,5 @@
 import type { CreateRecipeInput, Recipe, RecipeOwnerRole, RecipeStatus, UpdateRecipeInput } from '../types/recipe';
-import { hasSupabaseAnonKey, supabase } from '../lib/supabase';
+import { getSupabaseClient, hasSupabaseAnonKey } from '../lib/supabase';
 
 export const recipes: Recipe[] = [
   {
@@ -165,6 +165,11 @@ export async function fetchRecipes(): Promise<Recipe[]> {
     return recipes.map((recipe) => applyMeta(recipe, metaMap));
   }
 
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return recipes.map((recipe) => applyMeta(recipe, metaMap));
+  }
+
   const { data, error } = await supabase
     .from('recipes')
     .select('id,title,description,prep_minutes,servings')
@@ -185,6 +190,12 @@ export async function fetchRecipeById(id: string): Promise<Recipe | undefined> {
   const metaMap = readRecipeMetaMap();
 
   if (!hasSupabaseAnonKey) {
+    const fallbackRecipe = getRecipeById(id);
+    return fallbackRecipe ? applyMeta(fallbackRecipe, metaMap) : undefined;
+  }
+
+  const supabase = getSupabaseClient();
+  if (!supabase) {
     const fallbackRecipe = getRecipeById(id);
     return fallbackRecipe ? applyMeta(fallbackRecipe, metaMap) : undefined;
   }
@@ -244,6 +255,23 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
     return applyMeta(createdRecipe, readRecipeMetaMap());
   }
 
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    const createdRecipe: Recipe = {
+      id,
+      title: input.title,
+      description: input.description,
+      prepMinutes: input.prepMinutes,
+      servings: input.servings,
+      status: 'approved',
+      ownerId: 'admin-user-1',
+      ownerRole: 'admin',
+    };
+
+    persistRecipeMeta(id, metaPatch);
+    return applyMeta(createdRecipe, readRecipeMetaMap());
+  }
+
   const { data, error } = await supabase
     .from('recipes')
     .insert(payload)
@@ -277,6 +305,24 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
   };
 
   if (!hasSupabaseAnonKey) {
+    const fallback = getRecipeById(input.id);
+    const updatedFallback: Recipe = {
+      id: input.id,
+      title: input.title,
+      description: input.description,
+      prepMinutes: input.prepMinutes,
+      servings: input.servings,
+      status: fallback?.status ?? 'approved',
+      ownerId: fallback?.ownerId ?? 'admin-user-1',
+      ownerRole: fallback?.ownerRole ?? 'admin',
+    };
+
+    persistRecipeMeta(input.id, metaPatch);
+    return applyMeta(updatedFallback, readRecipeMetaMap());
+  }
+
+  const supabase = getSupabaseClient();
+  if (!supabase) {
     const fallback = getRecipeById(input.id);
     const updatedFallback: Recipe = {
       id: input.id,

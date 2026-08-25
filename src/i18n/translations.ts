@@ -67,6 +67,8 @@ export const translations = {
     errorLoadRecipeDetails: 'Неуспешно зареждане на детайли от Supabase.',
     createSuccess: 'Рецептата е създадена успешно.',
     noAddRecipePermission: 'Само Registered user и Admin могат да добавят рецепти.',
+    appErrorTitle: 'Възникна проблем',
+    appErrorDescription: 'Временен проблем при зареждане на страницата. Опитай отново.',
   },
   en: {
     appTitle: 'Recipes',
@@ -134,6 +136,8 @@ export const translations = {
     errorLoadRecipeDetails: 'Could not load recipe details from Supabase.',
     createSuccess: 'Recipe created successfully.',
     noAddRecipePermission: 'Only Registered user and Admin can add recipes.',
+    appErrorTitle: 'Something went wrong',
+    appErrorDescription: 'Temporary issue while loading this page. Please try again.',
   },
 } as const;
 
