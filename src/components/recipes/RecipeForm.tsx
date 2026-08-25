@@ -273,6 +273,42 @@ export function RecipeForm({
           />
         </label>
 
+        <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+          <label className="flex flex-col gap-1 text-sm text-slate-700">
+            {t('dishType')}
+            <select
+              className="rounded-md border border-slate-300 px-3 py-2"
+              onChange={(event) => setDishType(event.target.value as DishTypeValue)}
+              required
+              value={dishType}
+            >
+              <option value="">{t('selectDishType')}</option>
+              {dishTypeOptions.map((option) => (
+                <option key={`dish-type-${option.value}`} value={option.value}>
+                  {t(option.label)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col gap-1 text-sm text-slate-700">
+            {t('cuisineType')}
+            <select
+              className="rounded-md border border-slate-300 px-3 py-2"
+              onChange={(event) => setCuisine(event.target.value as CuisineValue)}
+              required
+              value={cuisine}
+            >
+              <option value="">{t('selectCuisineType')}</option>
+              {cuisineOptions.map((option) => (
+                <option key={`cuisine-type-${option.value}`} value={option.value}>
+                  {t(option.label)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
         <div className="grid gap-3 sm:col-span-2 sm:grid-cols-3">
           <label className="flex flex-col gap-1 text-sm text-slate-700">
             {t('prepMinutes')}
@@ -324,42 +360,6 @@ export function RecipeForm({
               {t(complexityLabelByStars(selectedComplexityStars))}
             </span>
           </div>
-        </div>
-
-        <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm text-slate-700">
-            {t('dishType')}
-            <select
-              className="rounded-md border border-slate-300 px-3 py-2"
-              onChange={(event) => setDishType(event.target.value as DishTypeValue)}
-              required
-              value={dishType}
-            >
-              <option value="">{t('selectDishType')}</option>
-              {dishTypeOptions.map((option) => (
-                <option key={`dish-type-${option.value}`} value={option.value}>
-                  {t(option.label)}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-1 text-sm text-slate-700">
-            {t('cuisineType')}
-            <select
-              className="rounded-md border border-slate-300 px-3 py-2"
-              onChange={(event) => setCuisine(event.target.value as CuisineValue)}
-              required
-              value={cuisine}
-            >
-              <option value="">{t('selectCuisineType')}</option>
-              {cuisineOptions.map((option) => (
-                <option key={`cuisine-type-${option.value}`} value={option.value}>
-                  {t(option.label)}
-                </option>
-              ))}
-            </select>
-          </label>
         </div>
 
         <div className="sm:col-span-2">
