@@ -30,6 +30,7 @@ export function EditRecipePage() {
       cuisine: input.cuisine,
       ingredients: input.ingredients,
       steps: input.steps,
+      notes: input.notes,
       photoUrls: input.photoUrls,
       ownerId: recipe.ownerId,
       ownerRole: recipe.ownerRole,

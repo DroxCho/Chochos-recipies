@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react';
 import type { ReactNode } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
+import { useLanguage } from '../i18n/useLanguage';
 import { MainLayout } from '../layouts/MainLayout';
 import { RouteErrorPage } from '../pages/RouteErrorPage';
 
@@ -10,8 +11,13 @@ const AddRecipePage = lazy(() => import('../pages/AddRecipePage').then((module) 
 const RecipeDetailsPage = lazy(() => import('../pages/RecipeDetailsPage').then((module) => ({ default: module.RecipeDetailsPage })));
 const EditRecipePage = lazy(() => import('../pages/EditRecipePage').then((module) => ({ default: module.EditRecipePage })));
 
+function LoadingFallback() {
+  const { t } = useLanguage();
+  return <p className="text-sm text-slate-500">{t('loadingGeneric')}</p>;
+}
+
 function withSuspense(element: ReactNode) {
-  return <Suspense fallback={<p className="text-sm text-slate-500">Loading...</p>}>{element}</Suspense>;
+  return <Suspense fallback={<LoadingFallback />}>{element}</Suspense>;
 }
 
 export const router = createBrowserRouter([

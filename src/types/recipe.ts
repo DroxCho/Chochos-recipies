@@ -24,6 +24,7 @@ export interface Recipe {
   cuisine?: RecipeCuisine;
   ingredients?: string[];
   steps?: string[];
+  notes?: string;
   photoUrls?: string[];
   status: RecipeStatus;
   reviewComment?: string;
@@ -41,6 +42,7 @@ export interface CreateRecipeInput {
   cuisine?: RecipeCuisine;
   ingredients?: string[];
   steps?: string[];
+  notes?: string;
   photoUrls?: string[];
   status?: RecipeStatus;
   reviewComment?: string;

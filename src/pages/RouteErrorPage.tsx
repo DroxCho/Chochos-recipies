@@ -3,14 +3,17 @@ import { useLanguage } from '../i18n/useLanguage';
 
 export function RouteErrorPage() {
   const error = useRouteError();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
-  let details = 'Unexpected error';
+  let details = t('appErrorUnexpectedDetails');
 
   if (isRouteErrorResponse(error)) {
-    details = `${error.status} ${error.statusText}`;
+    details = `${t('appErrorHttpPrefix')} ${error.status}`;
+    if (language !== 'bg' && error.statusText) {
+      details = `${details}: ${error.statusText}`;
+    }
   } else if (error instanceof Error) {
-    details = error.message;
+    details = language === 'bg' ? t('appErrorUnexpectedDetails') : error.message;
   }
 
   return (

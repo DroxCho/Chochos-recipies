@@ -43,12 +43,13 @@ export function RecipeForm({
   const [steps, setSteps] = useState<string[]>(
     initialValues?.steps && initialValues.steps.length > 0 ? initialValues.steps : ['', '', ''],
   );
+  const [notes, setNotes] = useState(initialValues?.notes ?? '');
   const [photoUrls, setPhotoUrls] = useState<string[]>(
     initialValues?.photoUrls && initialValues.photoUrls.length > 0 ? initialValues.photoUrls : [''],
   );
   const [currentStep, setCurrentStep] = useState(1);
   const [error, setError] = useState<string | null>(null);
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   function updateListValue(
     setter: Dispatch<SetStateAction<string[]>>,
@@ -150,6 +151,7 @@ export function RecipeForm({
 
     const normalizedIngredients = ingredients.map((item) => item.trim()).filter(Boolean);
     const normalizedSteps = steps.map((item) => item.trim()).filter(Boolean);
+    const normalizedNotes = notes.trim();
     const normalizedPhotoUrls = photoUrls.map((item) => item.trim());
 
     function validateStepOne(): boolean {
@@ -200,7 +202,8 @@ export function RecipeForm({
     }
 
     function validateStepTwo(): boolean {
-      if (normalizedIngredients.length === 0) {
+      const firstIngredient = ingredients[0]?.trim() ?? '';
+      if (!firstIngredient) {
         setError(t('validationIngredientsRequired'));
         return false;
       }
@@ -209,7 +212,8 @@ export function RecipeForm({
     }
 
     function validateStepThree(): boolean {
-      if (normalizedSteps.length === 0) {
+      const firstStep = steps[0]?.trim() ?? '';
+      if (!firstStep) {
         setError(t('validationStepsRequired'));
         return false;
       }
@@ -218,6 +222,10 @@ export function RecipeForm({
     }
 
     function validateStepFour(): boolean {
+      return true;
+    }
+
+    function validateStepFive(): boolean {
       if (normalizedPhotoUrls.some((item) => item.length === 0)) {
         setError(t('validationPhotosRequired'));
         return false;
@@ -244,7 +252,11 @@ export function RecipeForm({
         return validateStepThree();
       }
 
-      return validateStepFour();
+      if (step === 4) {
+        return validateStepFour();
+      }
+
+      return validateStepFive();
     }
 
     if (multiStep && currentStep < totalSteps) {
@@ -285,6 +297,13 @@ export function RecipeForm({
       return;
     }
 
+    if (!validateStepFive()) {
+      if (multiStep) {
+        setCurrentStep(5);
+      }
+      return;
+    }
+
     setError(null);
 
     const finalComplexity = complexity as 'easy' | 'medium' | 'hard';
@@ -302,6 +321,7 @@ export function RecipeForm({
         cuisine: finalCuisine,
         ingredients: normalizedIngredients,
         steps: normalizedSteps,
+        notes: normalizedNotes,
         photoUrls: normalizedPhotoUrls,
       });
     } catch {
@@ -320,13 +340,14 @@ export function RecipeForm({
       setSelectedComplexityStars(0);
       setIngredients(['', '', '']);
       setSteps(['', '', '']);
+      setNotes('');
       setPhotoUrls(['']);
       setCurrentStep(1);
     }
   }
 
   return (
-    <form className="mb-6 rounded-xl border border-slate-200 bg-white p-4" onSubmit={handleSubmit}>
+    <form className="mb-6 rounded-xl border border-slate-200 bg-white p-4" noValidate onSubmit={handleSubmit}>
       <h3 className="text-base font-semibold text-slate-900">{t('addRecipe')}</h3>
 
       {error && <p className="mt-3 text-sm text-rose-700">{error}</p>}
@@ -343,7 +364,9 @@ export function RecipeForm({
               ? t('wizardStep2')
               : currentStep === 3
               ? t('wizardStep3')
-              : t('wizardStep4')}
+              : currentStep === 4
+              ? t('wizardStep4')
+              : t('wizardStep5')}
           </p>
         </div>
       )}
@@ -466,7 +489,7 @@ export function RecipeForm({
 
         {(!multiStep || currentStep === 2) && (
           <div className="sm:col-span-2">
-          <h4 className="text-sm font-semibold text-slate-900">{t('ingredients')} {requiredMark}</h4>
+          {!multiStep && <h4 className="text-sm font-semibold text-slate-900">{t('ingredients')} {requiredMark}</h4>}
           <div className="mt-2 grid gap-2">
             {ingredients.map((ingredient, index) => (
               <label key={`ingredient-${index}`} className="flex flex-col gap-1 text-sm text-slate-700">
@@ -495,7 +518,7 @@ export function RecipeForm({
 
         {(!multiStep || currentStep === 3) && (
           <div className="sm:col-span-2">
-          <h4 className="text-sm font-semibold text-slate-900">{t('steps')} {requiredMark}</h4>
+          {!multiStep && <h4 className="text-sm font-semibold text-slate-900">{t('steps')} {requiredMark}</h4>}
           <div className="mt-2 grid gap-2">
             {steps.map((step, index) => (
               <label key={`step-${index}`} className="flex flex-col gap-1 text-sm text-slate-700">
@@ -524,7 +547,21 @@ export function RecipeForm({
 
         {(!multiStep || currentStep === 4) && (
           <div className="sm:col-span-2">
-          <h4 className="text-sm font-semibold text-slate-900">{t('photos')} {requiredMark}</h4>
+            {!multiStep && <h4 className="text-sm font-semibold text-slate-900">{t('additionalNotes')}</h4>}
+            <div className="mt-2 grid gap-2">
+              <textarea
+                className="min-h-24 rounded-md border border-slate-300 px-3 py-2"
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder={t('additionalNotesPlaceholder')}
+                value={notes}
+              />
+            </div>
+          </div>
+        )}
+
+        {(!multiStep || currentStep === 5) && (
+          <div className="sm:col-span-2">
+          {!multiStep && <h4 className="text-sm font-semibold text-slate-900">{t('photos')} {requiredMark}</h4>}
           <div className="mt-2 grid gap-2">
             {photoUrls.map((photoUrl, index) => (
               <label key={`photo-${index}`} className="flex flex-col gap-1 text-sm text-slate-700">

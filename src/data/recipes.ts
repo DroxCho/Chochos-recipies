@@ -543,6 +543,7 @@ interface RecipeMeta {
   cuisine?: RecipeCuisine;
   ingredients?: string[];
   steps?: string[];
+  notes?: string;
   photoUrls?: string[];
 }
 
@@ -908,6 +909,7 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
     cuisine: meta.cuisine ?? presetTags?.cuisine ?? 'international',
     ingredients: normalizeStringList(meta.ingredients),
     steps: normalizeStringList(meta.steps),
+    notes: meta.notes?.trim() ? meta.notes.trim() : undefined,
     photoUrls: normalizeStringList(meta.photoUrls),
   };
 }
@@ -924,6 +926,7 @@ function persistRecipeMeta(id: string, patch: Partial<RecipeMeta>): RecipeMeta {
     cuisine: patch.cuisine ?? current.cuisine,
     ingredients: normalizeStringList(patch.ingredients ?? current.ingredients),
     steps: normalizeStringList(patch.steps ?? current.steps),
+    notes: patch.notes !== undefined ? (patch.notes.trim() ? patch.notes.trim() : undefined) : current.notes,
     photoUrls: normalizeStringList(patch.photoUrls ?? current.photoUrls),
   };
 
@@ -1038,6 +1041,7 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
     cuisine: input.cuisine,
     ingredients: input.ingredients,
     steps: input.steps,
+    notes: input.notes,
     photoUrls: input.photoUrls,
   };
 
@@ -1113,6 +1117,7 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
     cuisine: input.cuisine,
     ingredients: input.ingredients,
     steps: input.steps,
+    notes: input.notes,
     photoUrls: input.photoUrls,
   };
 

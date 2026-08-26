@@ -77,6 +77,7 @@ export function RecipeDetailsPage() {
         cuisine: currentRecipe.cuisine,
         ingredients: currentRecipe.ingredients,
         steps: currentRecipe.steps,
+        notes: currentRecipe.notes,
         photoUrls: currentRecipe.photoUrls,
         ownerId: currentRecipe.ownerId,
         ownerRole: currentRecipe.ownerRole,
@@ -115,6 +116,7 @@ export function RecipeDetailsPage() {
         cuisine: currentRecipe.cuisine,
         ingredients: currentRecipe.ingredients,
         steps: currentRecipe.steps,
+        notes: currentRecipe.notes,
         photoUrls: currentRecipe.photoUrls,
         ownerId: currentRecipe.ownerId,
         ownerRole: currentRecipe.ownerRole,
@@ -159,6 +161,7 @@ export function RecipeDetailsPage() {
         cuisine: currentRecipe.cuisine,
         ingredients: currentRecipe.ingredients,
         steps: currentRecipe.steps,
+        notes: currentRecipe.notes,
         photoUrls: currentRecipe.photoUrls,
         ownerId: currentRecipe.ownerId,
         ownerRole: currentRecipe.ownerRole,
@@ -205,6 +208,7 @@ export function RecipeDetailsPage() {
         cuisine: currentRecipe.cuisine,
         ingredients: currentRecipe.ingredients,
         steps: currentRecipe.steps,
+        notes: currentRecipe.notes,
         photoUrls: currentRecipe.photoUrls,
         ownerId: currentRecipe.ownerId,
         ownerRole: currentRecipe.ownerRole,
@@ -341,6 +345,7 @@ export function RecipeDetailsPage() {
       : 'cuisineInternational';
   const recipeIngredients = currentRecipe.ingredients?.map((item) => item.trim()).filter(Boolean) ?? [];
   const recipeSteps = currentRecipe.steps?.map((item) => item.trim()).filter(Boolean) ?? [];
+  const recipeNotes = currentRecipe.notes?.trim() ?? '';
   const recipePhotos = currentRecipe.photoUrls?.map((url) => url.trim()).filter(Boolean) ?? [];
 
   function navigateWithMergedFilters(nextDishType?: string, nextCuisine?: string) {
@@ -460,6 +465,12 @@ export function RecipeDetailsPage() {
               <li key={`${currentRecipe.id}-step-${index}`}>{step}</li>
             ))}
           </ol>
+        </section>
+      )}
+      {recipeNotes.length > 0 && (
+        <section className="mt-6">
+          <h3 className="text-base font-semibold text-slate-900">{t('additionalNotes')}</h3>
+          <p className="mt-2 whitespace-pre-line text-sm text-slate-700">{recipeNotes}</p>
         </section>
       )}
       <div className="mt-4 flex items-center gap-3">

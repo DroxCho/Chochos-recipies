@@ -105,6 +105,7 @@ export function useRecipes() {
         cuisine: recipe.cuisine,
         ingredients: recipe.ingredients,
         steps: recipe.steps,
+        notes: recipe.notes,
         photoUrls: recipe.photoUrls,
         status: recipe.status,
         ownerId: recipe.ownerId,
