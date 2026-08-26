@@ -348,7 +348,7 @@ export function RecipeForm({
 
   return (
     <form className="mb-6 rounded-xl border border-slate-200 bg-white p-4" noValidate onSubmit={handleSubmit}>
-      <h3 className="text-base font-semibold text-slate-900">{t('addRecipe')}</h3>
+      {!multiStep && <h3 className="text-base font-semibold text-slate-900">{t('addRecipe')}</h3>}
 
       {error && <p className="mt-3 text-sm text-rose-700">{error}</p>}
 
