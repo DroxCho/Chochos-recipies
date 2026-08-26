@@ -3,6 +3,18 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --rustic-bg: #f6efe4;
+    --rustic-bg-soft: #fbf6ee;
+    --rustic-paper: #fff9f0;
+    --rustic-wood: #7a4f2c;
+    --rustic-wood-dark: #5f3a1f;
+    --rustic-accent: #8f6a37;
+    --rustic-border: #d9c3a5;
+    --rustic-text: #38281b;
+    --rustic-muted: #6f5c49;
+  }
+
   html,
   body,
   #root {
@@ -10,7 +22,137 @@
   }
 
   body {
-    @apply m-0 bg-slate-50 text-slate-900 antialiased;
+    margin: 0;
+    color: var(--rustic-text);
+    font-family: 'Trebuchet MS', 'Gill Sans', 'Segoe UI', sans-serif;
+    background-color: var(--rustic-bg);
+    background-image:
+      radial-gradient(circle at 12% 22%, rgb(255 255 255 / 65%) 0 8%, transparent 8.5%),
+      radial-gradient(circle at 90% 12%, rgb(255 248 235 / 70%) 0 10%, transparent 10.5%),
+      linear-gradient(165deg, #f3e7d7 0%, #f8f1e6 38%, #f2e8d9 100%);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+    letter-spacing: 0.01em;
+    color: var(--rustic-wood-dark);
+  }
+
+  a {
+    color: inherit;
+  }
+
+  header,
+  footer {
+    position: relative;
+    background: linear-gradient(180deg, #fffaf3 0%, #f6e9d7 100%);
+  }
+
+  header::after,
+  footer::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #8a5a30, #b78649, #8a5a30);
+  }
+
+  header::after {
+    bottom: -1px;
+  }
+
+  footer::before {
+    top: -1px;
+  }
+
+  input,
+  select,
+  textarea {
+    border-color: var(--rustic-border) !important;
+    background-color: var(--rustic-paper) !important;
+    color: var(--rustic-text) !important;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 75%);
+  }
+
+  button {
+    border-color: #ccaf89;
+  }
+
+  article {
+    border-color: var(--rustic-border) !important;
+    background: linear-gradient(180deg, #fffaf2 0%, #fff5e8 100%) !important;
+    box-shadow: 0 10px 24px rgb(93 61 31 / 9%) !important;
+  }
+
+  .rustic-shell {
+    color: var(--rustic-text);
+  }
+
+  .rustic-main {
+    position: relative;
+  }
+
+  .rustic-main::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border: 1px solid rgb(137 102 61 / 14%);
+    border-radius: 14px;
+    background: rgb(255 251 244 / 62%);
+    backdrop-filter: blur(1.5px);
+  }
+
+  .rustic-header,
+  .rustic-footer {
+    border-color: #d4b996 !important;
+  }
+
+  .bg-white {
+    background-color: var(--rustic-paper) !important;
+  }
+
+  .bg-slate-50 {
+    background-color: var(--rustic-bg-soft) !important;
+  }
+
+  .text-slate-900 {
+    color: var(--rustic-text) !important;
+  }
+
+  .text-slate-700,
+  .text-slate-600,
+  .text-slate-500 {
+    color: var(--rustic-muted) !important;
+  }
+
+  button.bg-slate-900,
+  a.bg-slate-900 {
+    background: linear-gradient(180deg, #8a5b32 0%, #6f4728 100%) !important;
+    border-color: #6f4728 !important;
+    color: #fff8ef !important;
+  }
+
+  button.bg-slate-900:hover,
+  a.bg-slate-900:hover {
+    background: linear-gradient(180deg, #96643a 0%, #7a4f2c 100%) !important;
+  }
+
+  button.bg-slate-900:focus-visible,
+  a.bg-slate-900:focus-visible {
+    outline: 2px solid #b78649;
+    outline-offset: 2px;
+  }
+
+  .border-slate-200,
+  .border-slate-300 {
+    border-color: var(--rustic-border) !important;
   }
 }
 
@@ -20,5 +162,32 @@
     overflow: hidden;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
+  }
+
+  .instant-tooltip:not(.absolute):not(.fixed):not(.relative):not(.sticky) {
+    position: relative;
+  }
+
+  .instant-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 6px);
+    transform: translateX(-50%);
+    z-index: 40;
+    border-radius: 0.25rem;
+    background-color: rgb(15 23 42);
+    padding: 0.25rem 0.5rem;
+    font-size: 11px;
+    line-height: 1;
+    color: white;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 75ms linear;
+  }
+
+  .instant-tooltip:is(:hover, :focus-visible, :focus-within)::after {
+    opacity: 1;
   }
 }

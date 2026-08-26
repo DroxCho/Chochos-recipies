@@ -22,10 +22,13 @@ export interface Recipe {
   complexity?: 'easy' | 'medium' | 'hard';
   dishType?: RecipeDishType;
   cuisine?: RecipeCuisine;
+  mainProduct?: string;
+  mainProducts?: string[];
   ingredients?: string[];
   steps?: string[];
   notes?: string;
   photoUrls?: string[];
+  photoOriginalUrl?: string;
   status: RecipeStatus;
   reviewComment?: string;
   ownerId: string;
@@ -40,10 +43,13 @@ export interface CreateRecipeInput {
   complexity?: 'easy' | 'medium' | 'hard';
   dishType?: RecipeDishType;
   cuisine?: RecipeCuisine;
+  mainProduct?: string;
+  mainProducts?: string[];
   ingredients?: string[];
   steps?: string[];
   notes?: string;
   photoUrls?: string[];
+  photoOriginalUrl?: string;
   status?: RecipeStatus;
   reviewComment?: string;
   ownerId?: string;

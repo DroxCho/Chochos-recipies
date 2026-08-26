@@ -103,6 +103,8 @@ export function useRecipes() {
         complexity: recipe.complexity,
         dishType: recipe.dishType,
         cuisine: recipe.cuisine,
+        mainProduct: recipe.mainProduct,
+        mainProducts: recipe.mainProducts,
         ingredients: recipe.ingredients,
         steps: recipe.steps,
         notes: recipe.notes,

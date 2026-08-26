@@ -541,10 +541,13 @@ interface RecipeMeta {
   complexity?: 'easy' | 'medium' | 'hard';
   dishType?: RecipeDishType;
   cuisine?: RecipeCuisine;
+  mainProduct?: string;
+  mainProducts?: string[];
   ingredients?: string[];
   steps?: string[];
   notes?: string;
   photoUrls?: string[];
+  photoOriginalUrl?: string;
 }
 
 type RecipeMetaMap = Record<string, RecipeMeta>;
@@ -875,6 +878,10 @@ function writeRecipeMetaMap(map: RecipeMetaMap): void {
   localStorage.setItem(RECIPE_META_KEY, JSON.stringify(map));
 }
 
+function isInlineImageDataUrl(value: string | undefined): boolean {
+  return Boolean(value && value.startsWith('data:image/'));
+}
+
 function removeRecipeMeta(id: string): void {
   const map = readRecipeMetaMap();
   if (!map[id]) {
@@ -897,6 +904,10 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
   const defaultMeta = getDefaultRecipeMeta();
   const presetTags = PRESET_RECIPE_TAGS[recipe.id];
   const meta = map[recipe.id] ?? PRESET_RECIPE_META[recipe.id] ?? defaultMeta;
+  const normalizedPhotoUrls = normalizeStringList(meta.photoUrls);
+  const normalizedPhotoOriginalUrl = meta.photoOriginalUrl?.trim()
+    ? meta.photoOriginalUrl.trim()
+    : normalizedPhotoUrls?.[0];
 
   return {
     ...recipe,
@@ -907,16 +918,20 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
     complexity: meta.complexity ?? PRESET_RECIPE_META[recipe.id]?.complexity ?? 'medium',
     dishType: meta.dishType ?? presetTags?.dishType ?? 'main',
     cuisine: meta.cuisine ?? presetTags?.cuisine ?? 'international',
+    mainProduct: meta.mainProduct ?? meta.mainProducts?.[0],
+    mainProducts: normalizeStringList(meta.mainProducts),
     ingredients: normalizeStringList(meta.ingredients),
     steps: normalizeStringList(meta.steps),
     notes: meta.notes?.trim() ? meta.notes.trim() : undefined,
-    photoUrls: normalizeStringList(meta.photoUrls),
+    photoUrls: normalizedPhotoUrls,
+    photoOriginalUrl: normalizedPhotoOriginalUrl,
   };
 }
 
 function persistRecipeMeta(id: string, patch: Partial<RecipeMeta>): RecipeMeta {
   const map = readRecipeMetaMap();
   const current = map[id] ?? PRESET_RECIPE_META[id] ?? getDefaultRecipeMeta();
+  const nextPhotoUrls = normalizeStringList(patch.photoUrls ?? current.photoUrls);
 
   const next: RecipeMeta = {
     ...current,
@@ -924,14 +939,50 @@ function persistRecipeMeta(id: string, patch: Partial<RecipeMeta>): RecipeMeta {
     reviewComment: patch.reviewComment ?? current.reviewComment,
     dishType: patch.dishType ?? current.dishType,
     cuisine: patch.cuisine ?? current.cuisine,
+    mainProduct: patch.mainProduct ?? current.mainProduct,
+    mainProducts: normalizeStringList(patch.mainProducts ?? current.mainProducts),
     ingredients: normalizeStringList(patch.ingredients ?? current.ingredients),
     steps: normalizeStringList(patch.steps ?? current.steps),
     notes: patch.notes !== undefined ? (patch.notes.trim() ? patch.notes.trim() : undefined) : current.notes,
-    photoUrls: normalizeStringList(patch.photoUrls ?? current.photoUrls),
+    photoUrls: nextPhotoUrls,
+    photoOriginalUrl:
+      patch.photoOriginalUrl !== undefined
+        ? (patch.photoOriginalUrl.trim() ? patch.photoOriginalUrl.trim() : undefined)
+        : (current.photoOriginalUrl?.trim() ? current.photoOriginalUrl.trim() : nextPhotoUrls?.[0]),
   };
 
   map[id] = next;
-  writeRecipeMetaMap(map);
+  try {
+    writeRecipeMetaMap(map);
+  } catch {
+    const fallbackMap: RecipeMetaMap = { ...map };
+    const fallbackForCurrent: RecipeMeta = {
+      ...next,
+      // Keep recipe save functional even if there is not enough space for base64 originals.
+      photoOriginalUrl: isInlineImageDataUrl(next.photoOriginalUrl) ? undefined : next.photoOriginalUrl,
+    };
+
+    fallbackMap[id] = fallbackForCurrent;
+
+    try {
+      writeRecipeMetaMap(fallbackMap);
+      return fallbackForCurrent;
+    } catch {
+      // Last fallback: strip inline original images for all recipes to free space.
+      const compactMap: RecipeMetaMap = {};
+
+      for (const [metaId, metaValue] of Object.entries(fallbackMap)) {
+        compactMap[metaId] = {
+          ...metaValue,
+          photoOriginalUrl: isInlineImageDataUrl(metaValue.photoOriginalUrl) ? undefined : metaValue.photoOriginalUrl,
+        };
+      }
+
+      writeRecipeMetaMap(compactMap);
+      return compactMap[id] ?? fallbackForCurrent;
+    }
+  }
+
   return next;
 }
 
@@ -963,6 +1014,7 @@ function mergeRecipesById(primary: Recipe[], secondary: Recipe[]): Recipe[] {
 export async function fetchRecipes(): Promise<Recipe[]> {
   const metaMap = readRecipeMetaMap();
   const localRecipes = readLocalRecipes();
+  const deletedIds = readDeletedRecipeIds();
 
   if (!hasSupabaseAnonKey) {
     return localRecipes.map((recipe) => applyMeta(recipe, metaMap));
@@ -982,7 +1034,8 @@ export async function fetchRecipes(): Promise<Recipe[]> {
     throw error;
   }
 
-  const supabaseRecipes = (data as RecipeRow[] | null | undefined)?.map((row) => mapRecipeRow(row)) ?? [];
+  const supabaseRecipes = ((data as RecipeRow[] | null | undefined)?.map((row) => mapRecipeRow(row)) ?? [])
+    .filter((recipe) => !deletedIds.has(recipe.id));
   const mergedRecipes = mergeRecipesById(supabaseRecipes, localRecipes);
 
   return mergedRecipes.map((recipe) => applyMeta(recipe, metaMap));
@@ -990,6 +1043,11 @@ export async function fetchRecipes(): Promise<Recipe[]> {
 
 export async function fetchRecipeById(id: string): Promise<Recipe | undefined> {
   const metaMap = readRecipeMetaMap();
+  const deletedIds = readDeletedRecipeIds();
+
+  if (deletedIds.has(id)) {
+    return undefined;
+  }
 
   if (!hasSupabaseAnonKey) {
     const fallbackRecipe = getRecipeByIdFromLocal(id);
@@ -1039,10 +1097,13 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
     complexity: input.complexity,
     dishType: input.dishType,
     cuisine: input.cuisine,
+    mainProduct: input.mainProduct,
+    mainProducts: input.mainProducts,
     ingredients: input.ingredients,
     steps: input.steps,
     notes: input.notes,
     photoUrls: input.photoUrls,
+    photoOriginalUrl: input.photoOriginalUrl,
   };
 
   if (!hasSupabaseAnonKey) {
@@ -1115,10 +1176,13 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
     complexity: input.complexity,
     dishType: input.dishType,
     cuisine: input.cuisine,
+    mainProduct: input.mainProduct,
+    mainProducts: input.mainProducts,
     ingredients: input.ingredients,
     steps: input.steps,
     notes: input.notes,
     photoUrls: input.photoUrls,
+    photoOriginalUrl: input.photoOriginalUrl,
   };
 
   if (input.metaOnly) {
@@ -1131,7 +1195,7 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
     return applyMeta(currentRecipe, readRecipeMetaMap());
   }
 
-  if (!hasSupabaseAnonKey) {
+  function persistLocalFallbackUpdate(): Recipe {
     const fallback = getRecipeByIdFromLocal(input.id);
     const updatedFallback: Recipe = {
       id: input.id,
@@ -1152,26 +1216,13 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
     return applyMeta(updatedFallback, readRecipeMetaMap());
   }
 
+  if (!hasSupabaseAnonKey) {
+    return persistLocalFallbackUpdate();
+  }
+
   const supabase = getSupabaseClient();
   if (!supabase) {
-    const fallback = getRecipeByIdFromLocal(input.id);
-    const updatedFallback: Recipe = {
-      id: input.id,
-      title: input.title,
-      description: input.description,
-      prepMinutes: input.prepMinutes,
-      servings: input.servings,
-      status: fallback?.status ?? 'approved',
-      ownerId: fallback?.ownerId ?? 'admin-user-1',
-      ownerRole: fallback?.ownerRole ?? 'admin',
-    };
-
-    const localRecipes = readLocalRecipes().map((recipe) =>
-      recipe.id === input.id ? updatedFallback : recipe,
-    );
-    writeLocalRecipes(localRecipes);
-    persistRecipeMeta(input.id, metaPatch);
-    return applyMeta(updatedFallback, readRecipeMetaMap());
+    return persistLocalFallbackUpdate();
   }
 
   const { data, error } = await supabase
@@ -1181,8 +1232,8 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
     .select('id,title,description,prep_minutes,servings')
     .single();
 
-  if (error) {
-    throw error;
+  if (error || !data) {
+    return persistLocalFallbackUpdate();
   }
 
   persistRecipeMeta(input.id, metaPatch);

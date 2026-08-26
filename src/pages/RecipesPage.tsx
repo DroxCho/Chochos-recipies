@@ -19,6 +19,45 @@ const CUISINE_VALUES: RecipeCuisine[] = [
   'vegetarian',
   'international',
 ];
+const MAIN_PRODUCT_OPTIONS = [
+  { value: 'agneshko-meso', label: 'Агнешко месо' },
+  { value: 'bebeshki-hrani', label: 'Бебешки храни' },
+  { value: 'divech', label: 'Дивеч' },
+  { value: 'zaeshko-meso', label: 'Заешко месо' },
+  { value: 'karantiya', label: 'Карантия' },
+  { value: 'mlechni-produkti', label: 'Млечни продукти и заместители' },
+  { value: 'morski-darove', label: 'Морски дарове' },
+  { value: 'pateshko-meso', label: 'Патешко месо' },
+  { value: 'pueshko-meso', label: 'Пуешко месо' },
+  { value: 'riba', label: 'Риба' },
+  { value: 'svinsko-meso', label: 'Свинско месо' },
+  { value: 'sladoled', label: 'Сладолед' },
+  { value: 'soleni-pechiva', label: 'Солени печива' },
+  { value: 'teleshko-meso', label: 'Телешко месо' },
+  { value: 'yastiya-s-yaitsa', label: 'Ястия с яйца' },
+] as const;
+
+type MainProductValue = (typeof MAIN_PRODUCT_OPTIONS)[number]['value'];
+
+const MAIN_PRODUCT_VALUES: MainProductValue[] = MAIN_PRODUCT_OPTIONS.map((option) => option.value);
+
+const MAIN_PRODUCT_KEYWORDS: Record<MainProductValue, string[]> = {
+  'agneshko-meso': ['агнешк'],
+  'bebeshki-hrani': ['бебешк'],
+  divech: ['дивеч', 'елен', 'сърна'],
+  'zaeshko-meso': ['заешк'],
+  karantiya: ['дроб', 'сърце', 'шкембе', 'карантия'],
+  'mlechni-produkti': ['мляко', 'сирене', 'кашкавал', 'извара', 'йогурт', 'сметана'],
+  'morski-darove': ['морски дар', 'скарида', 'миди', 'калмари', 'октопод'],
+  'pateshko-meso': ['патешк'],
+  'pueshko-meso': ['пуешк'],
+  riba: ['риба', 'сьомга', 'пъстърва', 'скумрия', 'тон'],
+  'svinsko-meso': ['свинск'],
+  sladoled: ['сладолед'],
+  'soleni-pechiva': ['солен', 'баниц', 'питка'],
+  'teleshko-meso': ['телешк', 'говежд'],
+  'yastiya-s-yaitsa': ['яйц', 'омлет'],
+};
 
 function parseDishTypeFilter(value: string | null): 'all' | RecipeDishType {
   return value && DISH_TYPE_VALUES.includes(value as RecipeDishType) ? (value as RecipeDishType) : 'all';
@@ -28,6 +67,24 @@ function parseCuisineFilter(value: string | null): 'all' | RecipeCuisine {
   return value && CUISINE_VALUES.includes(value as RecipeCuisine) ? (value as RecipeCuisine) : 'all';
 }
 
+function parseMainProductsFilter(value: string | null): MainProductValue[] {
+  if (!value) {
+    return [];
+  }
+
+  const values = value
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item): item is MainProductValue => MAIN_PRODUCT_VALUES.includes(item as MainProductValue));
+
+  return [...new Set(values)];
+}
+
+function recipeMatchesMainProduct(recipeText: string, mainProduct: MainProductValue): boolean {
+  const keywords = MAIN_PRODUCT_KEYWORDS[mainProduct] ?? [];
+  return keywords.some((keyword) => recipeText.includes(keyword));
+}
+
 export function RecipesPage() {
   const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,9 +92,13 @@ export function RecipesPage() {
   const pageSize = 12;
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMainProductMenuOpen, setIsMainProductMenuOpen] = useState(false);
   const selectedDishType = parseDishTypeFilter(searchParams.get('dishType'));
   const selectedCuisine = parseCuisineFilter(searchParams.get('cuisine'));
+  const mainProductsParam = searchParams.get('mainProducts');
+  const selectedMainProducts = useMemo(() => parseMainProductsFilter(mainProductsParam), [mainProductsParam]);
   const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
+  const mainProductMenuRef = useRef<HTMLDivElement | null>(null);
 
   const dishTypeOptions: Array<{ value: 'all' | RecipeDishType; label: string }> = [
     { value: 'all', label: t('allDishTypes') },
@@ -67,6 +128,8 @@ export function RecipesPage() {
     const query = searchQuery.trim().toLowerCase();
 
     return recipes.filter((recipe) => {
+      const localizedRecipe = getLocalizedRecipe(recipe, language);
+
       if (selectedDishType !== 'all' && recipe.dishType !== selectedDishType) {
         return false;
       }
@@ -75,21 +138,79 @@ export function RecipesPage() {
         return false;
       }
 
+      if (selectedMainProducts.length > 0) {
+        const savedMainProducts = (recipe.mainProducts && recipe.mainProducts.length > 0)
+          ? recipe.mainProducts
+          : recipe.mainProduct
+          ? [recipe.mainProduct]
+          : [];
+        const matchesBySavedMainProduct = savedMainProducts.some((item) =>
+          selectedMainProducts.includes(item as MainProductValue),
+        );
+        const recipeText = `${localizedRecipe.title} ${localizedRecipe.description} ${(recipe.ingredients ?? []).join(' ')}`.toLowerCase();
+        const matchesByKeywords = selectedMainProducts.some((mainProduct) => recipeMatchesMainProduct(recipeText, mainProduct));
+        const matchesMainProduct = matchesBySavedMainProduct || matchesByKeywords;
+
+        if (!matchesMainProduct) {
+          return false;
+        }
+      }
+
       if (!query) {
         return true;
       }
 
-      const localizedRecipe = getLocalizedRecipe(recipe, language);
       const haystack = `${localizedRecipe.title} ${localizedRecipe.description}`.toLowerCase();
       return haystack.includes(query);
     });
-  }, [language, recipes, searchQuery, selectedCuisine, selectedDishType]);
+  }, [language, recipes, searchQuery, selectedCuisine, selectedDishType, selectedMainProducts]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRecipes.length / pageSize));
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCuisine, selectedDishType]);
+  }, [searchQuery, selectedCuisine, selectedDishType, selectedMainProducts]);
+
+  useEffect(() => {
+    if (!isMainProductMenuOpen) {
+      return;
+    }
+
+    function handleClickOutside(event: MouseEvent) {
+      if (!mainProductMenuRef.current?.contains(event.target as Node)) {
+        setIsMainProductMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMainProductMenuOpen]);
+
+  function toggleMainProductSelection(productValue: MainProductValue) {
+    const nextParams = new URLSearchParams(searchParams);
+    const selected = new Set(selectedMainProducts);
+
+    if (selected.has(productValue)) {
+      selected.delete(productValue);
+    } else {
+      selected.add(productValue);
+    }
+
+    const nextValues = [...selected];
+    if (nextValues.length === 0) {
+      nextParams.delete('mainProducts');
+    } else {
+      nextParams.set('mainProducts', nextValues.join(','));
+    }
+
+    setSearchParams(nextParams, { replace: true });
+  }
+
+  function clearMainProductsFilter() {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('mainProducts');
+    setSearchParams(nextParams, { replace: true });
+  }
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -196,6 +317,56 @@ export function RecipesPage() {
             ))}
           </select>
         </label>
+
+        <div className="relative" ref={mainProductMenuRef}>
+          <span className="mr-2 text-sm text-slate-700">{t('mainIngredient')}</span>
+          <button
+            className="min-w-56 rounded-md border border-slate-300 bg-white px-3 py-1 text-left text-sm text-slate-700"
+            onClick={() => setIsMainProductMenuOpen((open) => !open)}
+            type="button"
+          >
+            {selectedMainProducts.length === 0
+              ? t('allMainIngredients')
+              : `${selectedMainProducts.length} ${t('selectedItems')}`}
+          </button>
+
+          {isMainProductMenuOpen && (
+            <div className="absolute left-0 top-full z-30 mt-1 w-80 rounded-md border border-slate-200 bg-white p-2 shadow-lg">
+              <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                {MAIN_PRODUCT_OPTIONS.map((option) => {
+                  const checked = selectedMainProducts.includes(option.value);
+
+                  return (
+                    <label key={`main-product-${option.value}`} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm text-slate-700 hover:bg-slate-50">
+                      <input
+                        checked={checked}
+                        onChange={() => toggleMainProductSelection(option.value)}
+                        type="checkbox"
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-2">
+                <button
+                  className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                  onClick={clearMainProductsFilter}
+                  type="button"
+                >
+                  {t('clearSelection')}
+                </button>
+                <button
+                  className="rounded-md bg-slate-900 px-2 py-1 text-xs text-white"
+                  onClick={() => setIsMainProductMenuOpen(false)}
+                  type="button"
+                >
+                  {t('done')}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {isLoading && <p className="text-sm text-slate-500">{t('loadingRecipes')}</p>}

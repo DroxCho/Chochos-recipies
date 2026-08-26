@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { UserRole } from './roles';
+import { getSupabaseClient } from '../lib/supabase';
 import { UserRoleContext } from './userRoleContext';
 
 const ROLE_STORAGE_KEY = 'recipes_user_role';
@@ -18,12 +19,49 @@ export function UserRoleProvider({ children }: UserRoleProviderProps) {
 
     return 'visitor';
   });
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
 
   useEffect(() => {
     localStorage.setItem(ROLE_STORAGE_KEY, role);
   }, [role]);
 
-  const userId = role === 'admin' ? 'admin-user-1' : role === 'registered' ? 'registered-user-1' : null;
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      return;
+    }
+
+    let isMounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!isMounted) {
+        return;
+      }
+
+      const id = data.session?.user?.id ?? null;
+      setAuthUserId(id);
+
+      if (id) {
+        setRole((previousRole) => (previousRole === 'visitor' ? 'registered' : previousRole));
+      }
+    });
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      const id = session?.user?.id ?? null;
+      setAuthUserId(id);
+
+      if (id) {
+        setRole((previousRole) => (previousRole === 'visitor' ? 'registered' : previousRole));
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.subscription.unsubscribe();
+    };
+  }, []);
+
+  const userId = role === 'admin' ? 'admin-user-1' : role === 'registered' ? authUserId ?? 'registered-user-1' : null;
 
   const value = useMemo(() => ({ role, setRole, userId }), [role, userId]);
 

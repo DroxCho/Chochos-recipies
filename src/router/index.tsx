@@ -7,6 +7,7 @@ import { RouteErrorPage } from '../pages/RouteErrorPage';
 
 const HomePage = lazy(() => import('../pages/HomePage').then((module) => ({ default: module.HomePage })));
 const RecipesPage = lazy(() => import('../pages/RecipesPage').then((module) => ({ default: module.RecipesPage })));
+const FavoritesPage = lazy(() => import('../pages/FavoritesPage').then((module) => ({ default: module.FavoritesPage })));
 const AddRecipePage = lazy(() => import('../pages/AddRecipePage').then((module) => ({ default: module.AddRecipePage })));
 const RecipeDetailsPage = lazy(() => import('../pages/RecipeDetailsPage').then((module) => ({ default: module.RecipeDetailsPage })));
 const EditRecipePage = lazy(() => import('../pages/EditRecipePage').then((module) => ({ default: module.EditRecipePage })));
@@ -33,6 +34,10 @@ export const router = createBrowserRouter([
       {
         path: 'recipes',
         element: withSuspense(<RecipesPage />),
+      },
+      {
+        path: 'favorites',
+        element: withSuspense(<FavoritesPage />),
       },
       {
         path: 'recipes/new',
