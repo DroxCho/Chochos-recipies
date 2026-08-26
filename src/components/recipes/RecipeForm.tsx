@@ -50,6 +50,9 @@ export function RecipeForm({
   const [currentStep, setCurrentStep] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const totalSteps = 5;
+  const wizardStepLabels: TranslationKey[] = ['wizardStep1', 'wizardStep2', 'wizardStep3', 'wizardStep4', 'wizardStep5'];
+  const progressPercent = ((currentStep - 1) / (totalSteps - 1)) * 100;
+  const isProgressComplete = progressPercent >= 100;
 
   function updateListValue(
     setter: Dispatch<SetStateAction<string[]>>,
@@ -354,20 +357,80 @@ export function RecipeForm({
 
       {multiStep && (
         <div className="mt-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            {t('wizardStepLabel')} {currentStep}/{totalSteps}
-          </p>
-          <p className="mt-1 text-sm font-semibold text-slate-900">
-            {currentStep === 1
-              ? t('wizardStep1')
-              : currentStep === 2
-              ? t('wizardStep2')
-              : currentStep === 3
-              ? t('wizardStep3')
-              : currentStep === 4
-              ? t('wizardStep4')
-              : t('wizardStep5')}
-          </p>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              {t('wizardStepLabel')} {currentStep}/{totalSteps}
+            </p>
+            <p className="text-xs font-medium text-slate-500">{Math.round(progressPercent)}%</p>
+          </div>
+
+          <div className="relative mb-2 h-10">
+            <div
+              aria-label="Wizard progress"
+              className="absolute inset-x-0 top-1/2 h-2 w-full -translate-y-1/2 overflow-hidden rounded-full bg-slate-200"
+              role="progressbar"
+              aria-valuemin={1}
+              aria-valuemax={totalSteps}
+              aria-valuenow={currentStep}
+            >
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  isProgressComplete ? 'bg-emerald-600' : 'bg-emerald-500'
+                }`}
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+
+            <ol className="pointer-events-none absolute inset-0 grid grid-cols-5">
+              {wizardStepLabels.map((stepLabel, index) => {
+                const stepNumber = index + 1;
+                const isCompleted = stepNumber < currentStep;
+                const isCurrent = stepNumber === currentStep;
+
+                return (
+                  <li key={`wizard-progress-dot-${stepLabel}`} className="relative">
+                    <span
+                      className={`absolute left-1/2 top-1/2 inline-flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border font-semibold transition-all duration-200 ${
+                        isCurrent ? 'h-10 w-10 text-base' : 'h-6 w-6 text-xs'
+                      } ${
+                        isCurrent
+                          ? 'border-sky-600 bg-sky-600 text-white'
+                          : isCompleted
+                          ? 'border-emerald-600 bg-emerald-600 text-white'
+                          : 'border-slate-300 bg-white text-slate-600'
+                      }`}
+                    >
+                      {stepNumber}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+
+          <ol className="mt-6 grid grid-cols-5 gap-2">
+            {wizardStepLabels.map((stepLabel, index) => {
+              const stepNumber = index + 1;
+              const isCompleted = stepNumber < currentStep;
+              const isCurrent = stepNumber === currentStep;
+
+              return (
+                <li key={`wizard-progress-label-${stepLabel}`} className="text-center">
+                  <span
+                    className={`${
+                      isCurrent
+                        ? 'text-base font-semibold text-sky-700'
+                        : isCompleted
+                        ? 'text-xs font-medium text-emerald-700'
+                        : 'text-xs text-slate-600'
+                    }`}
+                  >
+                    {t(stepLabel)}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
         </div>
       )}
 
