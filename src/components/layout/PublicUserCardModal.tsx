@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { readUserAdminControls } from '../../auth/userAdminControls';
 import { fetchRecipes } from '../../data/recipes';
 import supabaseUsersSnapshot from '../../data/supabaseUsersSnapshot.json';
@@ -66,6 +67,7 @@ function readProfiles(): LocalProfilesMap {
 
 export function PublicUserCardModal() {
   const { t, language } = useLanguage();
+  const location = useLocation();
   const [selectedUserId, setSelectedUserId] = useState('');
   const [profilesVersion, setProfilesVersion] = useState(0);
   const [controlsVersion, setControlsVersion] = useState(0);
@@ -205,7 +207,7 @@ export function PublicUserCardModal() {
             className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
             onClick={() => closePublicUserCard()}
           >
-            {t('cancel')}
+            Х
           </button>
         </div>
 
@@ -252,7 +254,7 @@ export function PublicUserCardModal() {
                 className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
                 onClick={() => setIsRecipesModalOpen(false)}
               >
-                {t('cancel')}
+                Х
               </button>
             </div>
 
@@ -266,12 +268,39 @@ export function PublicUserCardModal() {
               <div className="max-h-[55vh] space-y-2 overflow-y-auto">
                 {userRecipes.map((recipe) => {
                   const localizedRecipe = getLocalizedRecipe(recipe, language);
+                  const recipeImage = recipe.photoUrls?.[0]?.trim();
+                  const recipePath = `/recipes/${recipe.id}${location.search ? location.search : ''}`;
 
                   return (
-                    <div key={`user-recipe-${recipe.id}`} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-                      <p className="text-sm font-medium text-slate-900">{localizedRecipe.title}</p>
-                      <p className="text-xs text-slate-600">{localizedRecipe.description}</p>
-                    </div>
+                    <Link
+                      key={`user-recipe-${recipe.id}`}
+                      className="flex items-stretch gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 transition-colors hover:bg-slate-100"
+                      to={recipePath}
+                      onClick={() => {
+                        setIsRecipesModalOpen(false);
+                        closePublicUserCard();
+                      }}
+                    >
+                      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white">
+                        {recipeImage ? (
+                          <img
+                            alt={localizedRecipe.title}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                            src={recipeImage}
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center px-1 text-center text-[10px] text-slate-500">
+                            {t('noPhotoPlaceholder')}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-slate-900">{localizedRecipe.title}</p>
+                        <p className="text-xs text-slate-600">{localizedRecipe.description}</p>
+                      </div>
+                    </Link>
                   );
                 })}
               </div>
