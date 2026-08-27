@@ -3,14 +3,21 @@ import type { Language } from '../i18n/translations';
 export type MainProductValue =
   | 'agneshko-meso'
   | 'bebeshki-hrani'
+  | 'bob'
   | 'divech'
+  | 'zele'
+  | 'zelenchuci'
   | 'zaeshko-meso'
   | 'karantiya'
+  | 'leshta'
   | 'mlechni-produkti'
   | 'morski-darove'
   | 'pateshko-meso'
+  | 'pileshko-meso'
+  | 'plodove'
   | 'pueshko-meso'
   | 'riba'
+  | 'oriz'
   | 'svinsko-meso'
   | 'sladoled'
   | 'soleni-pechiva'
@@ -19,7 +26,14 @@ export type MainProductValue =
 
 export type MainProductIconType =
   | 'meat'
+  | 'chicken'
   | 'baby'
+  | 'beans'
+  | 'rice'
+  | 'lentils'
+  | 'cabbage'
+  | 'vegetables'
+  | 'fruits'
   | 'offal'
   | 'dairy'
   | 'seafood'
@@ -38,14 +52,21 @@ interface MainProductMeta {
 const MAIN_PRODUCT_META: Record<MainProductValue, MainProductMeta> = {
   'agneshko-meso': { icon: '🐑', iconType: 'meat', labelBg: 'Агнешко месо', labelEn: 'Lamb' },
   'bebeshki-hrani': { icon: '🍼', iconType: 'baby', labelBg: 'Бебешки храни', labelEn: 'Baby food' },
+  bob: { icon: '🫘', iconType: 'beans', labelBg: 'Боб', labelEn: 'Beans' },
   divech: { icon: '🦌', iconType: 'meat', labelBg: 'Дивеч', labelEn: 'Game meat' },
+  zele: { icon: '🥬', iconType: 'cabbage', labelBg: 'Зеле', labelEn: 'Cabbage' },
+  zelenchuci: { icon: '🥕', iconType: 'vegetables', labelBg: 'Зеленчуци', labelEn: 'Vegetables' },
   'zaeshko-meso': { icon: '🐇', iconType: 'meat', labelBg: 'Заешко месо', labelEn: 'Rabbit meat' },
   karantiya: { icon: '🫁', iconType: 'offal', labelBg: 'Карантия', labelEn: 'Offal' },
+  leshta: { icon: '🟤', iconType: 'lentils', labelBg: 'Леща', labelEn: 'Lentils' },
   'mlechni-produkti': { icon: '🧀', iconType: 'dairy', labelBg: 'Млечни продукти и заместители', labelEn: 'Dairy and alternatives' },
   'morski-darove': { icon: '🦐', iconType: 'seafood', labelBg: 'Морски дарове', labelEn: 'Seafood' },
   'pateshko-meso': { icon: '🦆', iconType: 'meat', labelBg: 'Патешко месо', labelEn: 'Duck meat' },
+  'pileshko-meso': { icon: '🐓', iconType: 'chicken', labelBg: 'Пилешко месо', labelEn: 'Chicken meat' },
+  plodove: { icon: '🍎', iconType: 'fruits', labelBg: 'Плодове', labelEn: 'Fruits' },
   'pueshko-meso': { icon: '🦃', iconType: 'meat', labelBg: 'Пуешко месо', labelEn: 'Turkey meat' },
   riba: { icon: '🐟', iconType: 'fish', labelBg: 'Риба', labelEn: 'Fish' },
+  oriz: { icon: '🍚', iconType: 'rice', labelBg: 'Ориз', labelEn: 'Rice' },
   'svinsko-meso': { icon: '🐖', iconType: 'meat', labelBg: 'Свинско месо', labelEn: 'Pork' },
   sladoled: { icon: '🍨', iconType: 'dessert', labelBg: 'Сладолед', labelEn: 'Ice cream' },
   'soleni-pechiva': { icon: '🥨', iconType: 'pastry', labelBg: 'Солени печива', labelEn: 'Savory pastries' },

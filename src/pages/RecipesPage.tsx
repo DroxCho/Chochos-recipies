@@ -4,6 +4,7 @@ import { RecipeList } from '../components/recipes/RecipeList';
 import { useRecipes } from '../hooks/useRecipes';
 import { getLocalizedRecipe } from '../i18n/recipeContent';
 import { useLanguage } from '../i18n/useLanguage';
+import { getMainProductMeta } from '../lib/mainProduct';
 import type { RecipeCuisine, RecipeDishType } from '../types/recipe';
 
 const DISH_TYPE_VALUES: RecipeDishType[] = ['main', 'dessert', 'soup', 'salad', 'appetizer', 'breakfast'];
@@ -22,14 +23,21 @@ const CUISINE_VALUES: RecipeCuisine[] = [
 const MAIN_PRODUCT_OPTIONS = [
   { value: 'agneshko-meso', label: 'Агнешко месо' },
   { value: 'bebeshki-hrani', label: 'Бебешки храни' },
+  { value: 'bob', label: 'Боб' },
   { value: 'divech', label: 'Дивеч' },
+  { value: 'zele', label: 'Зеле' },
+  { value: 'zelenchuci', label: 'Зеленчуци' },
   { value: 'zaeshko-meso', label: 'Заешко месо' },
   { value: 'karantiya', label: 'Карантия' },
+  { value: 'leshta', label: 'Леща' },
   { value: 'mlechni-produkti', label: 'Млечни продукти и заместители' },
   { value: 'morski-darove', label: 'Морски дарове' },
   { value: 'pateshko-meso', label: 'Патешко месо' },
+  { value: 'pileshko-meso', label: 'Пилешко месо' },
+  { value: 'plodove', label: 'Плодове' },
   { value: 'pueshko-meso', label: 'Пуешко месо' },
   { value: 'riba', label: 'Риба' },
+  { value: 'oriz', label: 'Ориз' },
   { value: 'svinsko-meso', label: 'Свинско месо' },
   { value: 'sladoled', label: 'Сладолед' },
   { value: 'soleni-pechiva', label: 'Солени печива' },
@@ -44,14 +52,21 @@ const MAIN_PRODUCT_VALUES: MainProductValue[] = MAIN_PRODUCT_OPTIONS.map((option
 const MAIN_PRODUCT_KEYWORDS: Record<MainProductValue, string[]> = {
   'agneshko-meso': ['агнешк'],
   'bebeshki-hrani': ['бебешк'],
+  bob: ['боб'],
   divech: ['дивеч', 'елен', 'сърна'],
+  zele: ['зеле'],
+  zelenchuci: ['зеленчук', 'морков', 'домати', 'краставиц', 'чушка'],
   'zaeshko-meso': ['заешк'],
   karantiya: ['дроб', 'сърце', 'шкембе', 'карантия'],
+  leshta: ['леща'],
   'mlechni-produkti': ['мляко', 'сирене', 'кашкавал', 'извара', 'йогурт', 'сметана'],
   'morski-darove': ['морски дар', 'скарида', 'миди', 'калмари', 'октопод'],
   'pateshko-meso': ['патешк'],
+  'pileshko-meso': ['пилешк', 'пиле'],
+  plodove: ['плод', 'ябълк', 'круш', 'банан', 'ягод', 'малин'],
   'pueshko-meso': ['пуешк'],
   riba: ['риба', 'сьомга', 'пъстърва', 'скумрия', 'тон'],
+  oriz: ['ориз'],
   'svinsko-meso': ['свинск'],
   sladoled: ['сладолед'],
   'soleni-pechiva': ['солен', 'баниц', 'питка'],
@@ -335,15 +350,19 @@ export function RecipesPage() {
               <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
                 {MAIN_PRODUCT_OPTIONS.map((option) => {
                   const checked = selectedMainProducts.includes(option.value);
+                  const optionMeta = getMainProductMeta(option.value, language);
+                  const icon = optionMeta?.icon ?? '•';
+                  const localizedLabel = optionMeta?.label ?? option.label;
 
                   return (
                     <label key={`main-product-${option.value}`} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm text-slate-700 hover:bg-slate-50">
+                      <span aria-hidden="true" className="text-base leading-none">{icon}</span>
                       <input
                         checked={checked}
                         onChange={() => toggleMainProductSelection(option.value)}
                         type="checkbox"
                       />
-                      <span>{option.label}</span>
+                      <span>{localizedLabel}</span>
                     </label>
                   );
                 })}

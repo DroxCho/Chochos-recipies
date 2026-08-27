@@ -7,6 +7,7 @@ import { useLanguage } from '../../i18n/useLanguage';
 import type { CreateRecipeInput } from '../../types/recipe';
 import type { TranslationKey } from '../../i18n/translations';
 import type { RecipeCuisine, RecipeDishType } from '../../types/recipe';
+import { getMainProductMeta } from '../../lib/mainProduct';
 
 type ComplexityValue = '' | 'easy' | 'medium' | 'hard';
 type DishTypeValue = '' | RecipeDishType;
@@ -15,14 +16,21 @@ type MainProductValue =
   | ''
   | 'agneshko-meso'
   | 'bebeshki-hrani'
+  | 'bob'
   | 'divech'
+  | 'zele'
+  | 'zelenchuci'
   | 'zaeshko-meso'
   | 'karantiya'
+  | 'leshta'
   | 'mlechni-produkti'
   | 'morski-darove'
   | 'pateshko-meso'
+  | 'pileshko-meso'
+  | 'plodove'
   | 'pueshko-meso'
   | 'riba'
+  | 'oriz'
   | 'svinsko-meso'
   | 'sladoled'
   | 'soleni-pechiva'
@@ -32,14 +40,21 @@ type MainProductValue =
 const MAIN_PRODUCT_VALUES: MainProductValue[] = [
   'agneshko-meso',
   'bebeshki-hrani',
+  'bob',
   'divech',
+  'zele',
+  'zelenchuci',
   'zaeshko-meso',
   'karantiya',
+  'leshta',
   'mlechni-produkti',
   'morski-darove',
   'pateshko-meso',
+  'pileshko-meso',
+  'plodove',
   'pueshko-meso',
   'riba',
+  'oriz',
   'svinsko-meso',
   'sladoled',
   'soleni-pechiva',
@@ -71,7 +86,7 @@ export function RecipeForm({
   multiStep = false,
   onTitleChange,
 }: RecipeFormProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const requiredMark = <span className="text-rose-600">*</span>;
   const [title, setTitle] = useState(initialValues?.title ?? '');
   const [description, setDescription] = useState(initialValues?.description ?? '');
@@ -608,14 +623,21 @@ export function RecipeForm({
   const mainProductOptions: Array<{ value: Exclude<MainProductValue, ''>; label: string }> = [
     { value: 'agneshko-meso', label: 'Агнешко месо' },
     { value: 'bebeshki-hrani', label: 'Бебешки храни' },
+    { value: 'bob', label: 'Боб' },
     { value: 'divech', label: 'Дивеч' },
+    { value: 'zele', label: 'Зеле' },
+    { value: 'zelenchuci', label: 'Зеленчуци' },
     { value: 'zaeshko-meso', label: 'Заешко месо' },
     { value: 'karantiya', label: 'Карантия' },
+    { value: 'leshta', label: 'Леща' },
     { value: 'mlechni-produkti', label: 'Млечни продукти и заместители' },
     { value: 'morski-darove', label: 'Морски дарове' },
     { value: 'pateshko-meso', label: 'Патешко месо' },
+    { value: 'pileshko-meso', label: 'Пилешко месо' },
+    { value: 'plodove', label: 'Плодове' },
     { value: 'pueshko-meso', label: 'Пуешко месо' },
     { value: 'riba', label: 'Риба' },
+    { value: 'oriz', label: 'Ориз' },
     { value: 'svinsko-meso', label: 'Свинско месо' },
     { value: 'sladoled', label: 'Сладолед' },
     { value: 'soleni-pechiva', label: 'Солени печива' },
@@ -627,7 +649,7 @@ export function RecipeForm({
     mainProducts.length === 0
       ? ''
       : mainProducts.length === 1
-      ? (mainProductOptions.find((option) => option.value === mainProducts[0])?.label ?? '')
+      ? (getMainProductMeta(mainProducts[0], language)?.label ?? '')
       : `${mainProducts.length} ${t('selectedItems')}`;
 
   useEffect(() => {
@@ -1045,9 +1067,13 @@ export function RecipeForm({
                   <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
                     {mainProductOptions.map((option) => {
                       const checked = mainProducts.includes(option.value);
+                      const optionMeta = getMainProductMeta(option.value, language);
+                      const icon = optionMeta?.icon ?? '•';
+                      const localizedLabel = optionMeta?.label ?? option.label;
 
                       return (
                         <label key={`main-product-form-${option.value}`} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm text-slate-700 hover:bg-slate-50">
+                          <span aria-hidden="true" className="text-base leading-none">{icon}</span>
                           <input
                             checked={checked}
                             onChange={() => {
@@ -1060,7 +1086,7 @@ export function RecipeForm({
                             }}
                             type="checkbox"
                           />
-                          <span>{option.label}</span>
+                          <span>{localizedLabel}</span>
                         </label>
                       );
                     })}

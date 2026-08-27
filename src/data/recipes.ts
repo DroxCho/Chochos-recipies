@@ -31,6 +31,16 @@ export const recipes: Recipe[] = [
     ownerRole: 'admin',
   },
   {
+    id: 'banitsa-sirene',
+    title: 'Баница със сирене',
+    description: 'Традиционна българска баница с кори, яйца, сирене и кисело мляко.',
+    prepMinutes: 55,
+    servings: 8,
+    status: 'approved',
+    ownerId: 'admin-user-1',
+    ownerRole: 'admin',
+  },
+  {
     id: 'tarator',
     title: 'Tarator',
     description: 'Cold yogurt soup with cucumber, dill, and garlic.',
@@ -550,11 +560,14 @@ interface RecipeMeta {
   photoOriginalUrl?: string;
 }
 
+const CHICKEN_WITH_RICE_IMAGE_URL = 'https://domashnivkusotii.com/wp-content/uploads/2022/01/2-298.jpg';
+
 type RecipeMetaMap = Record<string, RecipeMeta>;
 
 const PRESET_RECIPE_TAGS: Record<string, { dishType: RecipeDishType; cuisine: RecipeCuisine }> = {
   'shopska-salad': { dishType: 'salad', cuisine: 'bulgarian' },
   banitsa: { dishType: 'breakfast', cuisine: 'bulgarian' },
+  'banitsa-sirene': { dishType: 'breakfast', cuisine: 'bulgarian' },
   tarator: { dishType: 'soup', cuisine: 'bulgarian' },
   kunefe: { dishType: 'dessert', cuisine: 'turkish' },
   musaka: { dishType: 'main', cuisine: 'bulgarian' },
@@ -598,6 +611,60 @@ const PRESET_RECIPE_TAGS: Record<string, { dishType: RecipeDishType; cuisine: Re
 };
 
 const PRESET_RECIPE_META: RecipeMetaMap = {
+  banitsa: {
+    status: 'approved',
+    ownerId: 'admin-user-1',
+    ownerRole: 'admin',
+    complexity: 'medium',
+    mainProduct: 'mlechni-produkti',
+    mainProducts: ['mlechni-produkti', 'yastiya-s-yaitsa', 'soleni-pechiva'],
+    ingredients: [
+      '1 пакет кори за баница (около 400 г)',
+      '4 яйца',
+      '350 г бяло саламурено сирене',
+      '350 г кисело мляко',
+      '1 ч.л. сода бикарбонат',
+      '80 мл олио или 100 г разтопено масло',
+      'Щипка сол',
+    ],
+    steps: [
+      'Разбий яйцата, добави натрошеното сирене и киселото мляко със содата.',
+      'Намажи тавата и постави първи лист кори. Поръси с мазнина и добави от плънката.',
+      'Повтаряй ред кори, мазнина и плънка, докато продуктите свършат.',
+      'Завърши с кори отгоре и намажи с останалата мазнина.',
+      'Печи в предварително загрята фурна на 180°C за около 35-40 минути до златиста коричка.',
+      'Остави баницата да отпочине 10 минути и сервирай топла.',
+    ],
+    notes: 'За по-пухкава баница може да добавиш 100 мл газирана вода към плънката.',
+    photoUrls: ['https://upload.wikimedia.org/wikipedia/commons/5/5d/%D0%92%D0%BA%D1%83%D1%81%D0%BD%D0%B0_%D0%B4%D0%BE%D0%BC%D0%B0%D1%88%D0%BD%D0%B0_%D0%B1%D0%B0%D0%BD%D0%B8%D1%86%D0%B0.JPG'],
+  },
+  'banitsa-sirene': {
+    status: 'approved',
+    ownerId: 'admin-user-1',
+    ownerRole: 'admin',
+    complexity: 'medium',
+    mainProduct: 'mlechni-produkti',
+    mainProducts: ['mlechni-produkti', 'yastiya-s-yaitsa', 'soleni-pechiva'],
+    ingredients: [
+      '1 пакет кори за баница (около 400 г)',
+      '4 яйца',
+      '350 г бяло саламурено сирене',
+      '350 г кисело мляко',
+      '1 ч.л. сода бикарбонат',
+      '80 мл олио или 100 г разтопено масло',
+      'Щипка сол',
+    ],
+    steps: [
+      'Разбий яйцата, добави натрошеното сирене и киселото мляко със содата.',
+      'Намажи тавата и постави първи лист кори. Поръси с мазнина и добави от плънката.',
+      'Повтаряй ред кори, мазнина и плънка, докато продуктите свършат.',
+      'Завърши с кори отгоре и намажи с останалата мазнина.',
+      'Печи в предварително загрята фурна на 180°C за около 35-40 минути до златиста коричка.',
+      'Остави баницата да отпочине 10 минути и сервирай топла.',
+    ],
+    notes: 'За по-пухкава баница може да добавиш 100 мл газирана вода към плънката.',
+    photoUrls: ['https://upload.wikimedia.org/wikipedia/commons/5/5d/%D0%92%D0%BA%D1%83%D1%81%D0%BD%D0%B0_%D0%B4%D0%BE%D0%BC%D0%B0%D1%88%D0%BD%D0%B0_%D0%B1%D0%B0%D0%BD%D0%B8%D1%86%D0%B0.JPG'],
+  },
   kunefe: {
     status: 'approved',
     ownerId: 'admin-user-1',
@@ -909,7 +976,7 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
     ? meta.photoOriginalUrl.trim()
     : normalizedPhotoUrls?.[0];
 
-  return {
+  const withMeta: Recipe = {
     ...recipe,
     status: meta.status,
     reviewComment: meta.reviewComment,
@@ -925,6 +992,21 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
     notes: meta.notes?.trim() ? meta.notes.trim() : undefined,
     photoUrls: normalizedPhotoUrls,
     photoOriginalUrl: normalizedPhotoOriginalUrl,
+  };
+
+  const normalizedTitle = withMeta.title.trim().toLowerCase();
+  const isChickenWithRiceRecipe =
+    (normalizedTitle.includes('пиле') && normalizedTitle.includes('ориз'))
+    || (normalizedTitle.includes('chicken') && normalizedTitle.includes('rice'));
+
+  if (!isChickenWithRiceRecipe) {
+    return withMeta;
+  }
+
+  return {
+    ...withMeta,
+    photoUrls: [CHICKEN_WITH_RICE_IMAGE_URL],
+    photoOriginalUrl: CHICKEN_WITH_RICE_IMAGE_URL,
   };
 }
 

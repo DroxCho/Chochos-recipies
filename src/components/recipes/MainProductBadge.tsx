@@ -8,6 +8,10 @@ interface MainProductBadgeProps {
 }
 
 function ProductGlyph({ iconType }: { iconType: MainProductIconType }) {
+  if (iconType === 'chicken') {
+    return <span className="text-[15px] leading-none" aria-hidden="true">🐓</span>;
+  }
+
   if (iconType === 'baby') {
     return (
       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -17,6 +21,30 @@ function ProductGlyph({ iconType }: { iconType: MainProductIconType }) {
         <path d="M10 14h4" />
       </svg>
     );
+  }
+
+  if (iconType === 'beans') {
+    return <span className="text-[14px] leading-none" aria-hidden="true">🫘</span>;
+  }
+
+  if (iconType === 'rice') {
+    return <span className="text-[14px] leading-none" aria-hidden="true">🍚</span>;
+  }
+
+  if (iconType === 'lentils') {
+    return <span className="text-[14px] leading-none" aria-hidden="true">🟤</span>;
+  }
+
+  if (iconType === 'cabbage') {
+    return <span className="text-[14px] leading-none" aria-hidden="true">🥬</span>;
+  }
+
+  if (iconType === 'vegetables') {
+    return <span className="text-[14px] leading-none" aria-hidden="true">🥕</span>;
+  }
+
+  if (iconType === 'fruits') {
+    return <span className="text-[14px] leading-none" aria-hidden="true">🍎</span>;
   }
 
   if (iconType === 'dairy') {
@@ -100,7 +128,14 @@ function ProductGlyph({ iconType }: { iconType: MainProductIconType }) {
 }
 
 function toneClasses(iconType: MainProductIconType): string {
+  if (iconType === 'chicken') return 'border-amber-300 bg-amber-50 text-amber-700';
   if (iconType === 'baby') return 'border-cyan-300 bg-cyan-50 text-cyan-700';
+  if (iconType === 'beans') return 'border-emerald-300 bg-emerald-50 text-emerald-700';
+  if (iconType === 'rice') return 'border-stone-300 bg-stone-50 text-stone-700';
+  if (iconType === 'lentils') return 'border-orange-300 bg-orange-50 text-orange-700';
+  if (iconType === 'cabbage') return 'border-lime-300 bg-lime-50 text-lime-700';
+  if (iconType === 'vegetables') return 'border-green-300 bg-green-50 text-green-700';
+  if (iconType === 'fruits') return 'border-rose-300 bg-rose-50 text-rose-700';
   if (iconType === 'dairy') return 'border-indigo-300 bg-indigo-50 text-indigo-700';
   if (iconType === 'fish') return 'border-sky-300 bg-sky-50 text-sky-700';
   if (iconType === 'seafood') return 'border-teal-300 bg-teal-50 text-teal-700';

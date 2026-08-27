@@ -11,6 +11,7 @@ const FavoritesPage = lazy(() => import('../pages/FavoritesPage').then((module) 
 const AddRecipePage = lazy(() => import('../pages/AddRecipePage').then((module) => ({ default: module.AddRecipePage })));
 const RecipeDetailsPage = lazy(() => import('../pages/RecipeDetailsPage').then((module) => ({ default: module.RecipeDetailsPage })));
 const EditRecipePage = lazy(() => import('../pages/EditRecipePage').then((module) => ({ default: module.EditRecipePage })));
+const ProfilePage = lazy(() => import('../pages/ProfilePage').then((module) => ({ default: module.ProfilePage })));
 
 function LoadingFallback() {
   const { t } = useLanguage();
@@ -50,6 +51,10 @@ export const router = createBrowserRouter([
       {
         path: 'recipes/:id/edit',
         element: withSuspense(<EditRecipePage />),
+      },
+      {
+        path: 'profile',
+        element: withSuspense(<ProfilePage />),
       },
     ],
   },
