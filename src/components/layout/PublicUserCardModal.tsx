@@ -2,13 +2,18 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUserRole } from '../../auth/useUserRole';
-import { readUserAdminControls, writeUserAdminControls } from '../../auth/userAdminControls';
+import { readUserAdminControls, resolveManagedRole, writeUserAdminControls } from '../../auth/userAdminControls';
 import { deleteRecipeById } from '../../data/recipes';
 import { fetchRecipes } from '../../data/recipes';
 import supabaseUsersSnapshot from '../../data/supabaseUsersSnapshot.json';
 import { getLocalizedRecipe } from '../../i18n/recipeContent';
 import { useLanguage } from '../../i18n/useLanguage';
-import { CLOSE_PUBLIC_USER_CARD_EVENT, OPEN_PUBLIC_USER_CARD_EVENT, closePublicUserCard } from '../../lib/publicUserCard';
+import {
+  CLOSE_PUBLIC_USER_CARD_EVENT,
+  OPEN_PUBLIC_USER_CARD_EVENT,
+  closePublicUserCard,
+  openPublicUserCard,
+} from '../../lib/publicUserCard';
 import { getUserProfileLinkId } from '../../lib/userDisplay';
 import type { Recipe } from '../../types/recipe';
 
@@ -47,6 +52,12 @@ interface OpenPublicUserCardEventDetail {
   userId: string;
 }
 
+interface ManagedUserSummary {
+  id: string;
+  email: string;
+  role: 'registered' | 'admin' | 'blocked';
+}
+
 function normalizeRole(value: unknown): 'registered' | 'admin' {
   return value === 'admin' ? 'admin' : 'registered';
 }
@@ -76,6 +87,7 @@ export function PublicUserCardModal() {
   const [profilesVersion, setProfilesVersion] = useState(0);
   const [controlsVersion, setControlsVersion] = useState(0);
   const [isRecipesModalOpen, setIsRecipesModalOpen] = useState(false);
+  const [isUserManagementModalOpen, setIsUserManagementModalOpen] = useState(false);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
   const [deletingRecipeId, setDeletingRecipeId] = useState<string | null>(null);
   const [isDeletingAllRecipes, setIsDeletingAllRecipes] = useState(false);
@@ -92,12 +104,14 @@ export function PublicUserCardModal() {
       if (userId) {
         setSelectedUserId(userId);
         setIsRecipesModalOpen(false);
+        setIsUserManagementModalOpen(false);
       }
     }
 
     function handleClose() {
       setSelectedUserId('');
       setIsRecipesModalOpen(false);
+      setIsUserManagementModalOpen(false);
     }
 
     function handleStorage(event: StorageEvent) {
@@ -124,6 +138,11 @@ export function PublicUserCardModal() {
 
     function handleEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') {
+        if (isUserManagementModalOpen) {
+          setIsUserManagementModalOpen(false);
+          return;
+        }
+
         if (isRecipesModalOpen) {
           setIsRecipesModalOpen(false);
           return;
@@ -148,7 +167,7 @@ export function PublicUserCardModal() {
       window.removeEventListener('user-controls-updated', handleControlsUpdated);
       window.removeEventListener('keydown', handleEscape);
     };
-  }, [isRecipesModalOpen]);
+  }, [isRecipesModalOpen, isUserManagementModalOpen]);
 
   const selectedUser = useMemo(() => {
     if (!selectedUserId) {
@@ -177,6 +196,51 @@ export function PublicUserCardModal() {
       isDeleted: Boolean(control?.deleted),
     } satisfies UserCardSummary;
   }, [controlsVersion, profilesVersion, selectedUserId, snapshotUsers]);
+
+  const managedUsers = useMemo(() => {
+    if (role !== 'admin') {
+      return [] as ManagedUserSummary[];
+    }
+
+    void controlsVersion;
+
+    const controls = readUserAdminControls();
+
+    return snapshotUsers
+      .map((entry) => {
+        const managedRole = resolveManagedRole(controls[entry.id]);
+        const effectiveRole = managedRole ?? normalizeRole(entry.role);
+
+        return {
+          id: entry.id,
+          email: entry.email ?? '',
+          role: effectiveRole,
+        } satisfies ManagedUserSummary;
+      })
+      .sort((a, b) => {
+        if (a.role === b.role) {
+          return a.email.localeCompare(b.email);
+        }
+
+        if (a.role === 'admin') {
+          return -1;
+        }
+
+        if (b.role === 'admin') {
+          return 1;
+        }
+
+        if (a.role === 'blocked') {
+          return 1;
+        }
+
+        if (b.role === 'blocked') {
+          return -1;
+        }
+
+        return 0;
+      });
+  }, [controlsVersion, role, snapshotUsers]);
 
   if (!selectedUser) {
     return null;
@@ -344,28 +408,34 @@ export function PublicUserCardModal() {
                 <div className="mt-2 flex items-center gap-2 text-xs text-slate-600">
                   <span>{t('profileRoleLabel')}:</span>
                   {role === 'admin' ? (
-                    <>
-                      <select
-                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
-                        onChange={handleRoleChange}
-                        value={selectedRole}
-                      >
-                        <option value="registered">{t('roleRegistered')}</option>
-                        <option value="admin">{t('roleAdmin')}</option>
-                        <option value="blocked">{t('roleBlocked')}</option>
-                      </select>
-                      <Link
-                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100"
-                        to="/users"
-                        onClick={() => closePublicUserCard()}
-                      >
-                        {t('usersPageLink')}
-                      </Link>
-                    </>
+                    <select
+                      className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                      onChange={handleRoleChange}
+                      value={selectedRole}
+                    >
+                      <option value="registered">{t('roleRegistered')}</option>
+                      <option value="admin">{t('roleAdmin')}</option>
+                      <option value="blocked">{t('roleBlocked')}</option>
+                    </select>
                   ) : (
                     <span className="text-xs text-slate-700">{selectedRoleLabel}</span>
                   )}
                 </div>
+
+                {role === 'admin' ? (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100"
+                      onClick={() => {
+                        setIsRecipesModalOpen(false);
+                        setIsUserManagementModalOpen(true);
+                      }}
+                    >
+                      {t('adminUserManagementTitle')}
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
 
@@ -495,6 +565,56 @@ export function PublicUserCardModal() {
           </div>
         </div>
       )}
+
+      {isUserManagementModalOpen && role === 'admin' ? (
+        <div className="fixed inset-0 z-[101] flex items-center justify-center bg-slate-900/75 p-4" onClick={() => setIsUserManagementModalOpen(false)}>
+          <div className="w-full max-w-2xl rounded-xl bg-white p-4 shadow-xl" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h5 className="text-base font-semibold text-slate-900">{t('adminUserManagementTitle')}</h5>
+                <p className="text-xs text-slate-600">{t('adminUserManagementSubtitle')}</p>
+              </div>
+              <button
+                type="button"
+                className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
+                onClick={() => setIsUserManagementModalOpen(false)}
+              >
+                Х
+              </button>
+            </div>
+
+            <div className="max-h-[55vh] space-y-2 overflow-y-auto">
+              {managedUsers.map((entry) => {
+                const roleLabel = entry.role === 'admin'
+                  ? t('roleAdmin')
+                  : entry.role === 'blocked'
+                    ? t('roleBlocked')
+                    : t('roleRegistered');
+
+                return (
+                  <div
+                    key={`user-manage-${entry.id}`}
+                    className="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-slate-900">{entry.email || entry.id}</p>
+                      <p className="text-xs text-slate-600">{roleLabel}</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="shrink-0 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100"
+                      onClick={() => openPublicUserCard(entry.id, entry.role === 'admin' ? 'admin' : 'registered')}
+                    >
+                      {t('openUserCard')}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

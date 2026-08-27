@@ -101,6 +101,7 @@ export function ProfilePage() {
   const [isApplyingPhotoEdit, setIsApplyingPhotoEdit] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [isUserManagementModalOpen, setIsUserManagementModalOpen] = useState(false);
   const [photoError, setPhotoError] = useState<TranslationKey | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ photo?: boolean; fullName?: boolean; email?: boolean }>({});
   const [userControls, setUserControls] = useState<UserAdminControlMap>(() => readUserAdminControls());
@@ -719,8 +720,19 @@ export function ProfilePage() {
                 <span className="mt-3 px-4 text-center text-xs leading-4">{t('noPhotoPlaceholder')}</span>
               </div>
             )}
-            <div className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700">
-              {t('profileRoleLabel')}: {roleLabel}
+            <div className="flex flex-col items-start gap-2">
+              <div className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700">
+                {t('profileRoleLabel')}: {roleLabel}
+              </div>
+              {isAdmin ? (
+                <button
+                  type="button"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 hover:bg-slate-50"
+                  onClick={() => setIsUserManagementModalOpen(true)}
+                >
+                  {t('adminUserManagementTitle')}
+                </button>
+              ) : null}
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -854,96 +866,109 @@ export function ProfilePage() {
         {successMessage && <p className="text-sm text-emerald-700">{successMessage}</p>}
       </form>
 
-      {isAdmin && (
-        <section className="mt-8 rounded-xl border border-slate-200 bg-white p-4">
-          <h3 className="text-base font-semibold text-slate-900">{t('adminUserManagementTitle')}</h3>
-          <p className="mt-1 text-xs text-slate-500">{t('adminUserManagementSubtitle')}</p>
+      {isAdmin && isUserManagementModalOpen && (
+        <div className="fixed inset-0 z-[74] flex items-center justify-center bg-slate-900/70 p-4" onClick={() => setIsUserManagementModalOpen(false)}>
+          <div className="w-full max-w-4xl rounded-xl bg-white p-4 shadow-xl" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">{t('adminUserManagementTitle')}</h3>
+                <p className="mt-1 text-xs text-slate-500">{t('adminUserManagementSubtitle')}</p>
+              </div>
+              <button
+                type="button"
+                className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
+                onClick={() => setIsUserManagementModalOpen(false)}
+              >
+                {t('cancel')}
+              </button>
+            </div>
 
-          <label className="mt-3 block text-xs text-slate-600">
-            {t('adminUserSearchLabel')}
-            <input
-              type="text"
-              className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
-              placeholder={t('adminUserSearchPlaceholder')}
-              value={userSearchQuery}
-              onChange={(event) => setUserSearchQuery(event.target.value)}
-            />
-          </label>
+            <label className="mt-3 block text-xs text-slate-600">
+              {t('adminUserSearchLabel')}
+              <input
+                type="text"
+                className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+                placeholder={t('adminUserSearchPlaceholder')}
+                value={userSearchQuery}
+                onChange={(event) => setUserSearchQuery(event.target.value)}
+              />
+            </label>
 
-          <div className="mt-4 space-y-2">
-            {filteredManagedUsers.length === 0 && (
-              <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
-                {t('adminNoUsersFound')}
-              </p>
-            )}
+            <div className="mt-4 max-h-[60vh] space-y-2 overflow-y-auto">
+              {filteredManagedUsers.length === 0 && (
+                <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
+                  {t('adminNoUsersFound')}
+                </p>
+              )}
 
-            {filteredManagedUsers.map((entry) => {
-              const isCurrentUser = Boolean(userId) && entry.id === userId;
+              {filteredManagedUsers.map((entry) => {
+                const isCurrentUser = Boolean(userId) && entry.id === userId;
 
-              return (
-                <div key={entry.id} className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-[1.6fr_auto_auto_auto] md:items-center">
-                  <div>
-                    <p className="text-sm font-medium text-slate-800">{entry.fullName || entry.email || entry.id}</p>
-                    {entry.fullName && <p className="text-xs text-slate-600">{entry.email || '-'}</p>}
-                    <p className="text-xs text-slate-500">{t('profileFieldUserId')}: {entry.id}</p>
+                return (
+                  <div key={entry.id} className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-[1.6fr_auto_auto_auto] md:items-center">
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">{entry.fullName || entry.email || entry.id}</p>
+                      {entry.fullName && <p className="text-xs text-slate-600">{entry.email || '-'}</p>}
+                      <p className="text-xs text-slate-500">{t('profileFieldUserId')}: {entry.id}</p>
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-slate-500" htmlFor={`manage-role-${entry.id}`}>
+                        {t('profileRoleLabel')}
+                      </label>
+                      <select
+                        id={`manage-role-${entry.id}`}
+                        className="mt-1 block rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                        value={entry.selectedRole}
+                        onChange={(event) => handleManagedRoleChange(entry.id, event.target.value as ManagedUserRole)}
+                      >
+                        <option value="registered">{t('roleRegistered')}</option>
+                        <option value="admin">{t('roleAdmin')}</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-slate-500">{t('userStatusLabel')}</p>
+                      <p className={`mt-1 text-xs font-medium ${entry.isBlocked ? 'text-rose-700' : 'text-emerald-700'}`}>
+                        {entry.isBlocked ? t('userStatusBlocked') : t('userStatusActive')}
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100"
+                        onClick={() => openManagedUserCard(entry.id)}
+                      >
+                        {t('openUserCard')}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-60"
+                        onClick={() => handleToggleBlocked(entry.id)}
+                        disabled={isCurrentUser}
+                      >
+                        {entry.isBlocked ? t('unblockUser') : t('blockUser')}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-xs text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                        onClick={() => handleDeleteManagedUser(entry.id)}
+                        disabled={isCurrentUser}
+                      >
+                        {t('deleteUser')}
+                      </button>
+                    </div>
                   </div>
-
-                  <div>
-                    <label className="text-xs text-slate-500" htmlFor={`manage-role-${entry.id}`}>
-                      {t('profileRoleLabel')}
-                    </label>
-                    <select
-                      id={`manage-role-${entry.id}`}
-                      className="mt-1 block rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
-                      value={entry.selectedRole}
-                      onChange={(event) => handleManagedRoleChange(entry.id, event.target.value as ManagedUserRole)}
-                    >
-                      <option value="registered">{t('roleRegistered')}</option>
-                      <option value="admin">{t('roleAdmin')}</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-slate-500">{t('userStatusLabel')}</p>
-                    <p className={`mt-1 text-xs font-medium ${entry.isBlocked ? 'text-rose-700' : 'text-emerald-700'}`}>
-                      {entry.isBlocked ? t('userStatusBlocked') : t('userStatusActive')}
-                    </p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100"
-                      onClick={() => openManagedUserCard(entry.id)}
-                    >
-                      {t('openUserCard')}
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-60"
-                      onClick={() => handleToggleBlocked(entry.id)}
-                      disabled={isCurrentUser}
-                    >
-                      {entry.isBlocked ? t('unblockUser') : t('blockUser')}
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-xs text-rose-700 hover:bg-rose-100 disabled:opacity-60"
-                      onClick={() => handleDeleteManagedUser(entry.id)}
-                      disabled={isCurrentUser}
-                    >
-                      {t('deleteUser')}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </section>
+        </div>
       )}
 
       {isAdmin && selectedManagedUser && (
-        <div className="fixed inset-0 z-[65] flex items-center justify-center bg-slate-900/70 p-4" onClick={closeManagedUserCard}>
+        <div className="fixed inset-0 z-[75] flex items-center justify-center bg-slate-900/70 p-4" onClick={closeManagedUserCard}>
           <div
             className="w-full max-w-lg rounded-xl bg-white p-4 shadow-xl"
             onClick={(event) => event.stopPropagation()}
