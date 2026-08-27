@@ -12,6 +12,7 @@ const AddRecipePage = lazy(() => import('../pages/AddRecipePage').then((module) 
 const RecipeDetailsPage = lazy(() => import('../pages/RecipeDetailsPage').then((module) => ({ default: module.RecipeDetailsPage })));
 const EditRecipePage = lazy(() => import('../pages/EditRecipePage').then((module) => ({ default: module.EditRecipePage })));
 const ProfilePage = lazy(() => import('../pages/ProfilePage').then((module) => ({ default: module.ProfilePage })));
+const UsersPage = lazy(() => import('../pages/UsersPage').then((module) => ({ default: module.UsersPage })));
 
 function LoadingFallback() {
   const { t } = useLanguage();
@@ -55,6 +56,10 @@ export const router = createBrowserRouter([
       {
         path: 'profile',
         element: withSuspense(<ProfilePage />),
+      },
+      {
+        path: 'users',
+        element: withSuspense(<UsersPage />),
       },
     ],
   },

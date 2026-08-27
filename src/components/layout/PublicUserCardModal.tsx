@@ -344,15 +344,24 @@ export function PublicUserCardModal() {
                 <div className="mt-2 flex items-center gap-2 text-xs text-slate-600">
                   <span>{t('profileRoleLabel')}:</span>
                   {role === 'admin' ? (
-                    <select
-                      className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
-                      onChange={handleRoleChange}
-                      value={selectedRole}
-                    >
-                      <option value="registered">{t('roleRegistered')}</option>
-                      <option value="admin">{t('roleAdmin')}</option>
-                      <option value="blocked">{t('roleBlocked')}</option>
-                    </select>
+                    <>
+                      <select
+                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                        onChange={handleRoleChange}
+                        value={selectedRole}
+                      >
+                        <option value="registered">{t('roleRegistered')}</option>
+                        <option value="admin">{t('roleAdmin')}</option>
+                        <option value="blocked">{t('roleBlocked')}</option>
+                      </select>
+                      <Link
+                        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100"
+                        to="/users"
+                        onClick={() => closePublicUserCard()}
+                      >
+                        {t('usersPageLink')}
+                      </Link>
+                    </>
                   ) : (
                     <span className="text-xs text-slate-700">{selectedRoleLabel}</span>
                   )}
