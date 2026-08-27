@@ -5,9 +5,30 @@ import { getSupabaseClient } from '../lib/supabase';
 import { UserRoleContext } from './userRoleContext';
 
 const ROLE_STORAGE_KEY = 'recipes_user_role';
+const ADMIN_EMAIL = 'drumeshki@gmail.com';
 
 interface UserRoleProviderProps {
   children: ReactNode;
+}
+
+function resolveRoleForSession(
+  previousRole: UserRole,
+  userId: string | null,
+  userEmail: string | null | undefined,
+): UserRole {
+  if (!userId) {
+    return 'visitor';
+  }
+
+  if (userEmail?.toLowerCase() === ADMIN_EMAIL) {
+    return 'admin';
+  }
+
+  if (previousRole === 'admin') {
+    return 'registered';
+  }
+
+  return previousRole === 'visitor' ? 'registered' : previousRole;
 }
 
 export function UserRoleProvider({ children }: UserRoleProviderProps) {
@@ -39,24 +60,16 @@ export function UserRoleProvider({ children }: UserRoleProviderProps) {
       }
 
       const id = data.session?.user?.id ?? null;
+      const email = data.session?.user?.email;
       setAuthUserId(id);
-
-      if (id) {
-        setRole((previousRole) => (previousRole === 'visitor' ? 'registered' : previousRole));
-      } else {
-        setRole((previousRole) => (previousRole === 'registered' ? 'visitor' : previousRole));
-      }
+      setRole((previousRole) => resolveRoleForSession(previousRole, id, email));
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       const id = session?.user?.id ?? null;
+      const email = session?.user?.email;
       setAuthUserId(id);
-
-      if (id) {
-        setRole((previousRole) => (previousRole === 'visitor' ? 'registered' : previousRole));
-      } else {
-        setRole((previousRole) => (previousRole === 'registered' ? 'visitor' : previousRole));
-      }
+      setRole((previousRole) => resolveRoleForSession(previousRole, id, email));
     });
 
     return () => {
