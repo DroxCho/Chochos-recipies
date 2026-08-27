@@ -90,22 +90,46 @@ export function ProfilePage() {
   const [photoError, setPhotoError] = useState<TranslationKey | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ photo?: boolean; fullName?: boolean; email?: boolean }>({});
   const [userControls, setUserControls] = useState<UserAdminControlMap>(() => readUserAdminControls());
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [selectedManagedUserId, setSelectedManagedUserId] = useState<string | null>(null);
   const dragStartRef = useRef<{ x: number; y: number; startX: number; startY: number } | null>(null);
   const previousEditorZoomRef = useRef(1);
 
   const managedUsers = useMemo(() => {
+    const profiles = readProfiles();
+
     return snapshotUsers
       .filter((user) => !userControls[user.id]?.deleted)
       .map((user) => {
         const control = userControls[user.id];
+        const fullName = profiles[user.id]?.fullName?.trim() ?? '';
         return {
           ...user,
+          fullName,
           selectedRole: normalizeManagedRole(control?.role ?? user.role),
           isBlocked: Boolean(control?.blocked),
         };
       })
       .sort((left, right) => (left.email ?? '').localeCompare(right.email ?? ''));
   }, [snapshotUsers, userControls]);
+
+  const filteredManagedUsers = useMemo(() => {
+    const query = userSearchQuery.trim().toLowerCase();
+    if (!query) {
+      return managedUsers;
+    }
+
+    return managedUsers.filter((user) => {
+      const emailMatch = (user.email ?? '').toLowerCase().includes(query);
+      const nameMatch = user.fullName.toLowerCase().includes(query);
+      return emailMatch || nameMatch;
+    });
+  }, [managedUsers, userSearchQuery]);
+
+  const selectedManagedUser = useMemo(
+    () => managedUsers.find((user) => user.id === selectedManagedUserId) ?? null,
+    [managedUsers, selectedManagedUserId],
+  );
 
   function inputBorderClass(hasError: boolean): string {
     return hasError ? 'border-rose-500' : 'border-slate-300';
@@ -443,6 +467,18 @@ export function ProfilePage() {
       deleted: true,
       blocked: true,
     }));
+
+    if (selectedManagedUserId === userEntryId) {
+      setSelectedManagedUserId(null);
+    }
+  }
+
+  function openManagedUserCard(userEntryId: string) {
+    setSelectedManagedUserId(userEntryId);
+  }
+
+  function closeManagedUserCard() {
+    setSelectedManagedUserId(null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -750,14 +786,32 @@ export function ProfilePage() {
           <h3 className="text-base font-semibold text-slate-900">{t('adminUserManagementTitle')}</h3>
           <p className="mt-1 text-xs text-slate-500">{t('adminUserManagementSubtitle')}</p>
 
+          <label className="mt-3 block text-xs text-slate-600">
+            {t('adminUserSearchLabel')}
+            <input
+              type="text"
+              className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+              placeholder={t('adminUserSearchPlaceholder')}
+              value={userSearchQuery}
+              onChange={(event) => setUserSearchQuery(event.target.value)}
+            />
+          </label>
+
           <div className="mt-4 space-y-2">
-            {managedUsers.map((entry) => {
+            {filteredManagedUsers.length === 0 && (
+              <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
+                {t('adminNoUsersFound')}
+              </p>
+            )}
+
+            {filteredManagedUsers.map((entry) => {
               const isCurrentUser = Boolean(userId) && entry.id === userId;
 
               return (
                 <div key={entry.id} className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-[1.6fr_auto_auto_auto] md:items-center">
                   <div>
-                    <p className="text-sm font-medium text-slate-800">{entry.email || entry.id}</p>
+                    <p className="text-sm font-medium text-slate-800">{entry.fullName || entry.email || entry.id}</p>
+                    {entry.fullName && <p className="text-xs text-slate-600">{entry.email || '-'}</p>}
                     <p className="text-xs text-slate-500">{t('profileFieldUserId')}: {entry.id}</p>
                   </div>
 
@@ -786,6 +840,13 @@ export function ProfilePage() {
                   <div className="flex gap-2">
                     <button
                       type="button"
+                      className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100"
+                      onClick={() => openManagedUserCard(entry.id)}
+                    >
+                      {t('openUserCard')}
+                    </button>
+                    <button
+                      type="button"
                       className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-60"
                       onClick={() => handleToggleBlocked(entry.id)}
                       disabled={isCurrentUser}
@@ -806,6 +867,70 @@ export function ProfilePage() {
             })}
           </div>
         </section>
+      )}
+
+      {isAdmin && selectedManagedUser && (
+        <div className="fixed inset-0 z-[65] flex items-center justify-center bg-slate-900/70 p-4" onClick={closeManagedUserCard}>
+          <div
+            className="w-full max-w-lg rounded-xl bg-white p-4 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h4 className="text-base font-semibold text-slate-900">{t('userCardDetailsTitle')}</h4>
+              <button
+                type="button"
+                className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
+                onClick={closeManagedUserCard}
+              >
+                {t('cancel')}
+              </button>
+            </div>
+
+            <div className="space-y-3 text-sm text-slate-700">
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+                <p className="font-medium text-slate-900">{selectedManagedUser.fullName || selectedManagedUser.email || selectedManagedUser.id}</p>
+                {selectedManagedUser.fullName && <p className="text-xs text-slate-600">{selectedManagedUser.email || '-'}</p>}
+                <p className="mt-1 text-xs text-slate-500">{t('profileFieldUserId')}: {selectedManagedUser.id}</p>
+              </div>
+
+              <label className="block text-xs text-slate-500" htmlFor="selected-user-role">
+                {t('profileRoleLabel')}
+                <select
+                  id="selected-user-role"
+                  className="mt-1 block w-full rounded border border-slate-300 bg-white px-2 py-2 text-sm text-slate-700"
+                  value={selectedManagedUser.selectedRole}
+                  onChange={(event) => handleManagedRoleChange(selectedManagedUser.id, event.target.value as ManagedUserRole)}
+                >
+                  <option value="registered">{t('roleRegistered')}</option>
+                  <option value="admin">{t('roleAdmin')}</option>
+                </select>
+              </label>
+
+              <p className="text-xs text-slate-500">
+                {t('userStatusLabel')}: <span className={selectedManagedUser.isBlocked ? 'text-rose-700' : 'text-emerald-700'}>{selectedManagedUser.isBlocked ? t('userStatusBlocked') : t('userStatusActive')}</span>
+              </p>
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  type="button"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-60"
+                  onClick={() => handleToggleBlocked(selectedManagedUser.id)}
+                  disabled={selectedManagedUser.id === userId}
+                >
+                  {selectedManagedUser.isBlocked ? t('unblockUser') : t('blockUser')}
+                </button>
+                <button
+                  type="button"
+                  className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                  onClick={() => handleDeleteManagedUser(selectedManagedUser.id)}
+                  disabled={selectedManagedUser.id === userId}
+                >
+                  {t('deleteUser')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {isPhotoEditorOpen && (

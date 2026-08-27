@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getLocalizedRecipe } from '../../i18n/recipeContent';
 import type { TranslationKey } from '../../i18n/translations';
+import { canParticipate } from '../../auth/roles';
 import { useUserRole } from '../../auth/useUserRole';
 import { useLanguage } from '../../i18n/useLanguage';
 import { hasUserFavoritedRecipe, setUserRecipeFavorite } from '../../lib/recipeFavorites';
@@ -35,9 +36,9 @@ function complexityToStars(complexity?: Recipe['complexity']): number {
 export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardProps) {
   const { t, language } = useLanguage();
   const { role, userId } = useUserRole();
-  const canUseTried = role === 'registered' || role === 'admin';
-  const canUseFavorites = role === 'registered' || role === 'admin';
-  const canUseSocialRating = role === 'registered' || role === 'admin';
+  const canUseTried = canParticipate(role);
+  const canUseFavorites = canParticipate(role);
+  const canUseSocialRating = canParticipate(role);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const localizedRecipe = getLocalizedRecipe(recipe, language);

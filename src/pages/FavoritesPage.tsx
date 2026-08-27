@@ -1,4 +1,5 @@
 import { RecipeList } from '../components/recipes/RecipeList';
+import { canParticipate } from '../auth/roles';
 import { useUserRole } from '../auth/useUserRole';
 import { useRecipes } from '../hooks/useRecipes';
 import { useLanguage } from '../i18n/useLanguage';
@@ -8,7 +9,7 @@ export function FavoritesPage() {
   const { t } = useLanguage();
   const { role, userId } = useUserRole();
   const { recipes, isLoading, deletingRecipeId, error, deleteExistingRecipe } = useRecipes();
-  const canUseFavorites = role === 'registered' || role === 'admin';
+  const canUseFavorites = canParticipate(role);
 
   if (!canUseFavorites) {
     return (

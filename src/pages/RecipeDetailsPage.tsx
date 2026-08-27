@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { canApproveRecipe, canEditRecipe } from '../auth/roles';
+import { canApproveRecipe, canEditRecipe, canParticipate } from '../auth/roles';
 import { useUserRole } from '../auth/useUserRole';
 import { deleteRecipeById, updateRecipe } from '../data/recipes';
 import { useRecipeDetails } from '../hooks/useRecipes';
@@ -42,10 +42,10 @@ export function RecipeDetailsPage() {
   const location = useLocation();
   const { t, language } = useLanguage();
   const { role, userId } = useUserRole();
-  const canUseTried = role === 'registered' || role === 'admin';
-  const canUseSocialRating = role === 'registered' || role === 'admin';
-  const canMessageCreator = role === 'registered' || role === 'admin';
-  const canWriteComments = role === 'registered' || role === 'admin';
+  const canUseTried = canParticipate(role);
+  const canUseSocialRating = canParticipate(role);
+  const canMessageCreator = canParticipate(role);
+  const canWriteComments = canParticipate(role);
   const canReportComments = role === 'registered';
   const { recipe, isLoading, error } = useRecipeDetails(id);
   const [approvalOverride, setApprovalOverride] = useState<Recipe | null>(null);
