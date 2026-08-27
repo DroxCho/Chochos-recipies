@@ -50,6 +50,7 @@ export function ProfilePage() {
   const { t } = useLanguage();
   const { role, userId } = useUserRole();
   const canEditProfile = role === 'registered' || role === 'admin';
+  const roleLabel = role === 'admin' ? t('roleAdmin') : t('roleRegistered');
   const requiredMark = <span className="text-rose-600">*</span>;
 
   const [email, setEmail] = useState('');
@@ -501,28 +502,33 @@ export function ProfilePage() {
       <form className="max-w-2xl space-y-4" noValidate onSubmit={handleSubmit}>
         <div className="flex flex-col gap-2 text-sm text-slate-700">
           <span>{t('photoItem')} {requiredMark}</span>
-          {profilePhotoDataUrl ? (
-            <img
-              alt={t('photoItem')}
-              className={`rounded-full border object-cover ${inputBorderClass(Boolean(fieldErrors.photo))}`}
-              style={{ width: '150px', height: '150px' }}
-              src={profilePhotoDataUrl}
-            />
-          ) : (
-            <div
-              className={`flex flex-col items-center justify-center rounded-full border border-dashed bg-slate-50 text-slate-500 ${inputBorderClass(Boolean(fieldErrors.photo))}`}
-              style={{ width: '150px', height: '150px' }}
-            >
-              <span aria-hidden="true" className="flex h-28 w-28 items-center justify-center rounded-full border border-slate-300 bg-white">
-                <svg viewBox="0 0 24 24" className="h-16 w-16 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="9" />
-                  <circle cx="12" cy="9" r="2.5" />
-                  <path d="M7.5 17c1.2-2 2.8-3 4.5-3s3.3 1 4.5 3" />
-                </svg>
-              </span>
-              <span className="mt-3 px-4 text-center text-xs leading-4">{t('noPhotoPlaceholder')}</span>
+          <div className="flex flex-wrap items-center gap-4">
+            {profilePhotoDataUrl ? (
+              <img
+                alt={t('photoItem')}
+                className={`rounded-full border object-cover ${inputBorderClass(Boolean(fieldErrors.photo))}`}
+                style={{ width: '150px', height: '150px' }}
+                src={profilePhotoDataUrl}
+              />
+            ) : (
+              <div
+                className={`flex flex-col items-center justify-center rounded-full border border-dashed bg-slate-50 text-slate-500 ${inputBorderClass(Boolean(fieldErrors.photo))}`}
+                style={{ width: '150px', height: '150px' }}
+              >
+                <span aria-hidden="true" className="flex h-28 w-28 items-center justify-center rounded-full border border-slate-300 bg-white">
+                  <svg viewBox="0 0 24 24" className="h-16 w-16 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="9" />
+                    <circle cx="12" cy="9" r="2.5" />
+                    <path d="M7.5 17c1.2-2 2.8-3 4.5-3s3.3 1 4.5 3" />
+                  </svg>
+                </span>
+                <span className="mt-3 px-4 text-center text-xs leading-4">{t('noPhotoPlaceholder')}</span>
+              </div>
+            )}
+            <div className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700">
+              {t('profileRoleLabel')}: {roleLabel}
             </div>
-          )}
+          </div>
           <div className="flex items-center gap-3">
             <label className="inline-flex cursor-pointer items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
               <input

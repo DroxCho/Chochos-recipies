@@ -3,12 +3,22 @@ import type { ReactNode } from 'react';
 import type { UserRole } from './roles';
 import { getSupabaseClient } from '../lib/supabase';
 import { UserRoleContext } from './userRoleContext';
+import supabaseUsersSnapshot from '../data/supabaseUsersSnapshot.json';
 
 const ROLE_STORAGE_KEY = 'recipes_user_role';
 
 interface UserRoleProviderProps {
   children: ReactNode;
 }
+
+interface SnapshotUser {
+  id: string;
+  role: string;
+}
+
+const snapshotUsers = Array.isArray((supabaseUsersSnapshot as { users?: unknown[] }).users)
+  ? ((supabaseUsersSnapshot as { users: SnapshotUser[] }).users)
+  : [];
 
 function normalizeRole(value: unknown): UserRole | null {
   if (value === 'admin') {
@@ -45,6 +55,11 @@ async function resolveRoleForUser(userId: string, appMetaRole: unknown): Promise
   const profileRole = await fetchRoleFromProfile(userId);
   if (profileRole) {
     return profileRole;
+  }
+
+  const snapshotRole = normalizeRole(snapshotUsers.find((user) => user.id === userId)?.role);
+  if (snapshotRole) {
+    return snapshotRole;
   }
 
   const metadataRole = normalizeRole(appMetaRole);
