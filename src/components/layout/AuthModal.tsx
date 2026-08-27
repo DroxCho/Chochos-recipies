@@ -10,9 +10,10 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoggedIn: () => void;
+  initialTab?: 'login' | 'register';
 }
 
-export function AuthModal({ isOpen, onClose, onLoggedIn }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, onLoggedIn, initialTab = 'login' }: AuthModalProps) {
   const { t } = useLanguage();
   const [tab, setTab] = useState<AuthTab>('login');
   const [email, setEmail] = useState('');
@@ -39,7 +40,7 @@ export function AuthModal({ isOpen, onClose, onLoggedIn }: AuthModalProps) {
 
   useEffect(() => {
     if (!isOpen) {
-      setTab('login');
+      setTab(initialTab);
       setEmail('');
       setPassword('');
       setConfirmPassword('');
@@ -47,7 +48,15 @@ export function AuthModal({ isOpen, onClose, onLoggedIn }: AuthModalProps) {
       setSuccessMessage(null);
       setIsSubmitting(false);
     }
-  }, [isOpen]);
+  }, [initialTab, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    setTab(initialTab);
+  }, [initialTab, isOpen]);
 
   const tabTitle = useMemo(() => {
     if (tab === 'register') {

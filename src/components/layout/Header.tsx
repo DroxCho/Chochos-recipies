@@ -36,8 +36,10 @@ function readUserProfilePhoto(userId: string | null | undefined): string {
 export function Header() {
   const { t } = useLanguage();
   const { role, setRole, userId } = useUserRole();
+  const isSignedIn = role === 'registered' || role === 'admin';
   const [isAuthMenuOpen, setIsAuthMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalInitialTab, setAuthModalInitialTab] = useState<'login' | 'register'>('login');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [profilePhotoDataUrl, setProfilePhotoDataUrl] = useState('');
   const authMenuRef = useRef<HTMLDivElement | null>(null);
@@ -128,7 +130,7 @@ export function Header() {
             </NavLink>
           )}
           </nav>
-          {(role === 'registered' || role === 'admin') && (
+          {isSignedIn && (
             <NavLink
               aria-label={t('navFavorites')}
               className={({ isActive }) =>
@@ -165,7 +167,7 @@ export function Header() {
 
             {isAuthMenuOpen && (
               <div className="absolute right-0 top-full z-30 mt-2 min-w-[140px] rounded-md border border-slate-200 bg-white p-1 shadow-md" role="menu">
-                {(role === 'registered' || role === 'admin') && (
+                {isSignedIn && (
                   <button
                     className="block rounded px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                     onClick={() => {
@@ -178,29 +180,48 @@ export function Header() {
                     {t('profileMenuLink')}
                   </button>
                 )}
-                <a
-                  className="block rounded px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                  href="#"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    setIsAuthModalOpen(true);
-                    setIsAuthMenuOpen(false);
-                  }}
-                  role="menuitem"
-                >
-                  {t('loginLink')}
-                </a>
-                <a
-                  className="block rounded px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                  href="#"
-                  onClick={async (event) => {
-                    event.preventDefault();
-                    await handleLogout();
-                  }}
-                  role="menuitem"
-                >
-                  {t('logoutLink')}
-                </a>
+                {isSignedIn ? (
+                  <a
+                    className="block rounded px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                    href="#"
+                    onClick={async (event) => {
+                      event.preventDefault();
+                      await handleLogout();
+                    }}
+                    role="menuitem"
+                  >
+                    {t('logoutLink')}
+                  </a>
+                ) : (
+                  <>
+                    <a
+                      className="block rounded px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      href="#"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setAuthModalInitialTab('login');
+                        setIsAuthModalOpen(true);
+                        setIsAuthMenuOpen(false);
+                      }}
+                      role="menuitem"
+                    >
+                      {t('loginLink')}
+                    </a>
+                    <a
+                      className="block rounded px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      href="#"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setAuthModalInitialTab('register');
+                        setIsAuthModalOpen(true);
+                        setIsAuthMenuOpen(false);
+                      }}
+                      role="menuitem"
+                    >
+                      {t('authTabRegister')}
+                    </a>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -210,6 +231,7 @@ export function Header() {
       </div>
       <AuthModal
         isOpen={isAuthModalOpen}
+        initialTab={authModalInitialTab}
         onClose={() => setIsAuthModalOpen(false)}
         onLoggedIn={() => {
           setRole('registered');
