@@ -12,6 +12,7 @@ import { hasUserFavoritedRecipe, setUserRecipeFavorite } from '../lib/recipeFavo
 import { getMainProductMeta, getMainProductsMeta } from '../lib/mainProduct';
 import { getRecipeAverageRating, getUserRecipeRating, setUserRecipeRating } from '../lib/recipeRatings';
 import { hasUserTriedRecipe, setUserTriedRecipe } from '../lib/recipeTried';
+import { getUserDisplayName } from '../lib/userDisplay';
 import { addUserMessage } from '../lib/userMessages';
 import type { Recipe } from '../types/recipe';
 
@@ -81,6 +82,7 @@ export function RecipeDetailsPage() {
   const showUpdatedMessage = Boolean(locationState?.updated);
 
   const currentRecipe = approvalOverride && approvalOverride.id === recipe?.id ? approvalOverride : recipe;
+  const creatorName = currentRecipe ? getUserDisplayName(currentRecipe.ownerId, currentRecipe.ownerRole) : '';
 
   async function handleApprove() {
     if (!currentRecipe || !canApproveRecipe(role)) {
@@ -647,6 +649,7 @@ export function RecipeDetailsPage() {
       {error && <p className="mt-2 text-sm text-amber-700">{error}</p>}
       {approvalError && <p className="mt-2 text-sm text-amber-700">{approvalError}</p>}
       <p className="mt-3 text-sm text-slate-600">{localizedRecipe.description}</p>
+      <p className="mt-2 text-sm text-slate-500">{t('recipeCreatorLabel')}: {creatorName}</p>
       {canSeeStatus && (
         <p className="mt-2 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
           {statusLabel}

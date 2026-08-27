@@ -9,6 +9,7 @@ import { hasUserFavoritedRecipe, setUserRecipeFavorite } from '../../lib/recipeF
 import { getMainProductMeta, getMainProductsMeta } from '../../lib/mainProduct';
 import { getRecipeAverageRating, getUserRecipeRating } from '../../lib/recipeRatings';
 import { hasUserTriedRecipe } from '../../lib/recipeTried';
+import { getUserDisplayName } from '../../lib/userDisplay';
 import type { Recipe } from '../../types/recipe';
 
 interface RecipeCardProps {
@@ -95,6 +96,7 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
   }, [canUseSocialRating, recipe.id, userId]);
 
   const roundedAverageRating = Math.round((recipeRatingAverage || 0) * 2) / 2;
+  const creatorName = getUserDisplayName(recipe.ownerId, recipe.ownerRole);
 
   function navigateWithMergedFilters(nextDishType?: string, nextCuisine?: string) {
     const nextParams = new URLSearchParams(searchParams);
@@ -337,6 +339,7 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
         </p>
       </div>
       <h3 className="text-lg font-semibold text-slate-900">{localizedRecipe.title}</h3>
+      <p className="mt-1 text-xs text-slate-500">{t('recipeCreatorLabel')}: {creatorName}</p>
       <p className="mt-2 min-h-[60px] text-clamp-3 text-sm text-slate-600">{trimmedDescription}</p>
       <div className="mt-4 flex flex-wrap items-start gap-x-3 gap-y-2 text-xs text-slate-500">
         <span>{recipe.prepMinutes} {t('minutesShort')}</span>
