@@ -225,7 +225,20 @@ export function Header() {
               </div>
             )}
           </div>
-          <UserRoleToggle />
+          {role === 'visitor' ? (
+            <button
+              type="button"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
+              onClick={() => {
+                setAuthModalInitialTab('register');
+                setIsAuthModalOpen(true);
+              }}
+            >
+              {t('authTabRegister')}
+            </button>
+          ) : (
+            <UserRoleToggle />
+          )}
           <LanguageToggle />
         </div>
       </div>

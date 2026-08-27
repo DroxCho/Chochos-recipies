@@ -6,6 +6,10 @@ export function canParticipate(role: UserRole): boolean {
   return role === 'registered' || role === 'admin';
 }
 
+export function canViewFavorites(role: UserRole): boolean {
+  return role === 'registered' || role === 'admin' || role === 'blocked';
+}
+
 export function canCreateRecipe(role: UserRole): boolean {
   return canParticipate(role);
 }

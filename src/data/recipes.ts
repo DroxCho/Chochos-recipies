@@ -1021,16 +1021,16 @@ function removeRecipeMeta(id: string): void {
   writeRecipeMetaMap(map);
 }
 
-function getDefaultRecipeMeta(): RecipeMeta {
+function getDefaultRecipeMeta(recipe?: Partial<Pick<Recipe, 'status' | 'ownerId' | 'ownerRole'>>): RecipeMeta {
   return {
-    status: 'approved',
-    ownerId: 'admin-user-1',
-    ownerRole: 'admin',
+    status: recipe?.status ?? 'approved',
+    ownerId: recipe?.ownerId ?? 'admin-user-1',
+    ownerRole: recipe?.ownerRole ?? 'admin',
   };
 }
 
 function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
-  const defaultMeta = getDefaultRecipeMeta();
+  const defaultMeta = getDefaultRecipeMeta(recipe);
   const presetTags = PRESET_RECIPE_TAGS[recipe.id];
   const meta = map[recipe.id] ?? PRESET_RECIPE_META[recipe.id] ?? defaultMeta;
   const normalizedPhotoUrls = normalizeStringList(meta.photoUrls);
@@ -1074,7 +1074,8 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
 
 function persistRecipeMeta(id: string, patch: Partial<RecipeMeta>): RecipeMeta {
   const map = readRecipeMetaMap();
-  const current = map[id] ?? PRESET_RECIPE_META[id] ?? getDefaultRecipeMeta();
+  const fallbackRecipe = getRecipeByIdFromLocal(id);
+  const current = map[id] ?? PRESET_RECIPE_META[id] ?? getDefaultRecipeMeta(fallbackRecipe);
   const nextPhotoUrls = normalizeStringList(patch.photoUrls ?? current.photoUrls);
 
   const next: RecipeMeta = {
