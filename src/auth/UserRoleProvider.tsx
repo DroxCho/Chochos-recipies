@@ -43,6 +43,8 @@ export function UserRoleProvider({ children }: UserRoleProviderProps) {
 
       if (id) {
         setRole((previousRole) => (previousRole === 'visitor' ? 'registered' : previousRole));
+      } else {
+        setRole((previousRole) => (previousRole === 'registered' ? 'visitor' : previousRole));
       }
     });
 
@@ -52,6 +54,8 @@ export function UserRoleProvider({ children }: UserRoleProviderProps) {
 
       if (id) {
         setRole((previousRole) => (previousRole === 'visitor' ? 'registered' : previousRole));
+      } else {
+        setRole((previousRole) => (previousRole === 'registered' ? 'visitor' : previousRole));
       }
     });
 
@@ -61,7 +65,7 @@ export function UserRoleProvider({ children }: UserRoleProviderProps) {
     };
   }, []);
 
-  const userId = role === 'admin' ? 'admin-user-1' : role === 'registered' ? authUserId ?? 'registered-user-1' : null;
+  const userId = role === 'admin' ? 'admin-user-1' : role === 'registered' ? authUserId : null;
 
   const value = useMemo(() => ({ role, setRole, userId }), [role, userId]);
 

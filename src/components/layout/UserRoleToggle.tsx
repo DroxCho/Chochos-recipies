@@ -11,6 +11,14 @@ export function UserRoleToggle() {
     setRole(event.target.value as UserRole);
   }
 
+  if (role !== 'admin') {
+    const roleLabel = role === 'registered' ? t('roleRegistered') : t('roleVisitor');
+
+    return (
+      <span className="text-xs text-slate-600">{roleLabel}</span>
+    );
+  }
+
   return (
     <label className="flex items-center gap-2 text-xs text-slate-600">
       {t('userTypeLabel')}:
