@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { WheelEvent as ReactWheelEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useUserRole } from '../auth/useUserRole';
 import type { ManagedUserRole, UserAdminControlMap } from '../auth/userAdminControls';
 import { readUserAdminControls, writeUserAdminControls } from '../auth/userAdminControls';
@@ -27,6 +28,18 @@ interface SnapshotUser {
   id: string;
   email: string | null;
   role: string;
+}
+
+interface UserCardSummary {
+  id: string;
+  email: string;
+  fullName: string;
+  phone: string;
+  city: string;
+  bio: string;
+  profilePhotoDataUrl: string;
+  isBlocked: boolean;
+  isDeleted: boolean;
 }
 
 function normalizeManagedRole(value: unknown): ManagedUserRole {
@@ -62,6 +75,7 @@ function writeProfiles(value: UserProfileMap): void {
 export function ProfilePage() {
   const { t } = useLanguage();
   const { role, userId } = useUserRole();
+  const [searchParams, setSearchParams] = useSearchParams();
   const canEditProfile = role === 'registered' || role === 'admin';
   const isAdmin = role === 'admin';
   const roleLabel = role === 'admin' ? t('roleAdmin') : role === 'blocked' ? t('roleBlocked') : t('roleRegistered');
@@ -130,6 +144,55 @@ export function ProfilePage() {
     () => managedUsers.find((user) => user.id === selectedManagedUserId) ?? null,
     [managedUsers, selectedManagedUserId],
   );
+  const selectedPublicUserId = searchParams.get('viewUser')?.trim() ?? '';
+
+  const publicUserCards = useMemo(() => {
+    const profiles = readProfiles();
+    const ids = new Set<string>([...snapshotUsers.map((user) => user.id), ...Object.keys(profiles)]);
+
+    return Array.from(ids)
+      .map((id) => {
+        const snapshotUser = snapshotUsers.find((user) => user.id === id);
+        const profile = profiles[id];
+        const control = userControls[id];
+
+        return {
+          id,
+          email: snapshotUser?.email ?? '',
+          fullName: profile?.fullName?.trim() ?? '',
+          phone: profile?.phone?.trim() ?? '',
+          city: profile?.city?.trim() ?? '',
+          bio: profile?.bio?.trim() ?? '',
+          profilePhotoDataUrl: profile?.profilePhotoDataUrl ?? '',
+          isBlocked: Boolean(control?.blocked),
+          isDeleted: Boolean(control?.deleted),
+        } satisfies UserCardSummary;
+      })
+      .sort((left, right) => (left.email || left.id).localeCompare(right.email || right.id));
+  }, [snapshotUsers, userControls]);
+
+  const selectedPublicUser = useMemo(() => {
+    if (!selectedPublicUserId) {
+      return null;
+    }
+
+    const existing = publicUserCards.find((entry) => entry.id === selectedPublicUserId);
+    if (existing) {
+      return existing;
+    }
+
+    return {
+      id: selectedPublicUserId,
+      email: '',
+      fullName: '',
+      phone: '',
+      city: '',
+      bio: '',
+      profilePhotoDataUrl: '',
+      isBlocked: false,
+      isDeleted: false,
+    } satisfies UserCardSummary;
+  }, [publicUserCards, selectedPublicUserId]);
 
   function inputBorderClass(hasError: boolean): string {
     return hasError ? 'border-rose-500' : 'border-slate-300';
@@ -481,6 +544,16 @@ export function ProfilePage() {
     setSelectedManagedUserId(null);
   }
 
+  function closePublicUserCard() {
+    if (!selectedPublicUserId) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('viewUser');
+    setSearchParams(nextParams, { replace: true });
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -606,7 +679,7 @@ export function ProfilePage() {
     previousEditorZoomRef.current = editorZoom;
   }, [editorZoom, isPhotoEditorOpen, editorNaturalSize.width, editorNaturalSize.height]);
 
-  if (!canEditProfile) {
+  if (!canEditProfile && !selectedPublicUser) {
     return (
       <section className="min-h-[320px]" aria-label="profile-page">
         <h2 className="mb-3 text-xl font-semibold text-slate-900">{t('profileTitle')}</h2>
@@ -928,6 +1001,56 @@ export function ProfilePage() {
                   {t('deleteUser')}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!selectedManagedUser && selectedPublicUser && (
+        <div className="fixed inset-0 z-[65] flex items-center justify-center bg-slate-900/70 p-4" onClick={closePublicUserCard}>
+          <div
+            className="w-full max-w-lg rounded-xl bg-white p-4 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h4 className="text-base font-semibold text-slate-900">{t('userCardDetailsTitle')}</h4>
+              <button
+                type="button"
+                className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
+                onClick={closePublicUserCard}
+              >
+                {t('cancel')}
+              </button>
+            </div>
+
+            <div className="space-y-3 text-sm text-slate-700">
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+                {selectedPublicUser.profilePhotoDataUrl ? (
+                  <img
+                    alt={selectedPublicUser.fullName || selectedPublicUser.email || selectedPublicUser.id}
+                    className="mb-3 h-20 w-20 rounded-full border border-slate-200 object-cover"
+                    src={selectedPublicUser.profilePhotoDataUrl}
+                  />
+                ) : null}
+                <p className="font-medium text-slate-900">{selectedPublicUser.fullName || selectedPublicUser.email || selectedPublicUser.id}</p>
+                {selectedPublicUser.fullName && selectedPublicUser.email ? <p className="text-xs text-slate-600">{selectedPublicUser.email}</p> : null}
+                <p className="mt-1 text-xs text-slate-500">{t('profileFieldUserId')}: {selectedPublicUser.id}</p>
+              </div>
+
+              {selectedPublicUser.phone ? (
+                <p className="text-xs text-slate-600">{t('profileFieldPhone')}: {selectedPublicUser.phone}</p>
+              ) : null}
+              {selectedPublicUser.city ? (
+                <p className="text-xs text-slate-600">{t('profileFieldCity')}: {selectedPublicUser.city}</p>
+              ) : null}
+              {selectedPublicUser.bio ? (
+                <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">{selectedPublicUser.bio}</p>
+              ) : null}
+              {(selectedPublicUser.isBlocked || selectedPublicUser.isDeleted) ? (
+                <p className="text-xs text-rose-700">
+                  {selectedPublicUser.isDeleted ? t('deleteUser') : t('userStatusBlocked')}
+                </p>
+              ) : null}
             </div>
           </div>
         </div>

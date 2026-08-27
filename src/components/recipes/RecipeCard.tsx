@@ -7,6 +7,7 @@ import { useUserRole } from '../../auth/useUserRole';
 import { useLanguage } from '../../i18n/useLanguage';
 import { hasUserFavoritedRecipe, setUserRecipeFavorite } from '../../lib/recipeFavorites';
 import { getMainProductMeta, getMainProductsMeta } from '../../lib/mainProduct';
+import { openPublicUserCard } from '../../lib/publicUserCard';
 import { getRecipeAverageRating, getUserRecipeRating } from '../../lib/recipeRatings';
 import { hasUserTriedRecipe } from '../../lib/recipeTried';
 import { getUserDisplayName } from '../../lib/userDisplay';
@@ -339,7 +340,20 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
         </p>
       </div>
       <h3 className="text-lg font-semibold text-slate-900">{localizedRecipe.title}</h3>
-      <p className="mt-1 text-xs text-slate-500">{t('recipeCreatorLabel')}: {creatorName}</p>
+      <p className="mt-1 text-xs text-slate-500">
+        {t('recipeCreatorLabel')}:{' '}
+        <button
+          className="font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-800"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openPublicUserCard(recipe.ownerId, recipe.ownerRole);
+          }}
+          type="button"
+        >
+          {creatorName}
+        </button>
+      </p>
       <p className="mt-2 min-h-[60px] text-clamp-3 text-sm text-slate-600">{trimmedDescription}</p>
       <div className="mt-4 flex flex-wrap items-start gap-x-3 gap-y-2 text-xs text-slate-500">
         <span>{recipe.prepMinutes} {t('minutesShort')}</span>

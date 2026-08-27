@@ -11,9 +11,25 @@ type LocalProfilesMap = Record<string, LocalProfile>;
 interface SnapshotUser {
   id: string;
   email: string | null;
+  role?: string;
 }
 
 const snapshotUsers = ((supabaseUsersSnapshot as { users?: SnapshotUser[] }).users ?? []);
+
+function findCanonicalAdminUserId(): string | null {
+  const adminUser = snapshotUsers.find((user) => user.role === 'admin');
+  return adminUser?.id ?? null;
+}
+
+function resolveCanonicalUserId(userId: string, ownerRole?: 'registered' | 'admin'): string {
+  const isLegacyAdminId = userId === 'admin-user-1' || userId.startsWith('admin-user-');
+  if (!isLegacyAdminId && ownerRole !== 'admin') {
+    return userId;
+  }
+
+  const canonicalAdminId = findCanonicalAdminUserId();
+  return canonicalAdminId ?? userId;
+}
 
 function readLocalProfiles(): LocalProfilesMap {
   if (typeof window === 'undefined') {
@@ -37,20 +53,26 @@ export function getUserDisplayName(userId: string, ownerRole?: 'registered' | 'a
     return '';
   }
 
-  if (userId === 'admin-user-1' || ownerRole === 'admin') {
-    return 'Admin';
-  }
+  const canonicalUserId = resolveCanonicalUserId(userId, ownerRole);
 
   const profiles = readLocalProfiles();
-  const fullName = profiles[userId]?.fullName?.trim();
+  const fullName = profiles[canonicalUserId]?.fullName?.trim();
   if (fullName) {
     return fullName;
   }
 
-  const snapshotUser = snapshotUsers.find((user) => user.id === userId);
+  const snapshotUser = snapshotUsers.find((user) => user.id === canonicalUserId);
   if (snapshotUser?.email) {
     return snapshotUser.email;
   }
 
-  return userId;
+  return canonicalUserId;
+}
+
+export function getUserProfileLinkId(userId: string, ownerRole?: 'registered' | 'admin'): string {
+  if (!userId) {
+    return '';
+  }
+
+  return resolveCanonicalUserId(userId, ownerRole);
 }

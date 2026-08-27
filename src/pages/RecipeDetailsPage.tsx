@@ -10,6 +10,7 @@ import { useLanguage } from '../i18n/useLanguage';
 import { addRecipeComment, deleteRecipeComment, getRecipeComments, type RecipeComment, updateRecipeComment } from '../lib/recipeComments';
 import { hasUserFavoritedRecipe, setUserRecipeFavorite } from '../lib/recipeFavorites';
 import { getMainProductMeta, getMainProductsMeta } from '../lib/mainProduct';
+import { openPublicUserCard } from '../lib/publicUserCard';
 import { getRecipeAverageRating, getUserRecipeRating, setUserRecipeRating } from '../lib/recipeRatings';
 import { hasUserTriedRecipe, setUserTriedRecipe } from '../lib/recipeTried';
 import { getUserDisplayName } from '../lib/userDisplay';
@@ -649,7 +650,16 @@ export function RecipeDetailsPage() {
       {error && <p className="mt-2 text-sm text-amber-700">{error}</p>}
       {approvalError && <p className="mt-2 text-sm text-amber-700">{approvalError}</p>}
       <p className="mt-3 text-sm text-slate-600">{localizedRecipe.description}</p>
-      <p className="mt-2 text-sm text-slate-500">{t('recipeCreatorLabel')}: {creatorName}</p>
+      <p className="mt-2 text-sm text-slate-500">
+        {t('recipeCreatorLabel')}:{' '}
+        <button
+          className="font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-800"
+          onClick={() => openPublicUserCard(currentRecipe.ownerId, currentRecipe.ownerRole)}
+          type="button"
+        >
+          {creatorName}
+        </button>
+      </p>
       {canSeeStatus && (
         <p className="mt-2 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
           {statusLabel}

@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { Footer } from '../components/layout/Footer';
 import { Header } from '../components/layout/Header';
+import { PublicUserCardModal } from '../components/layout/PublicUserCardModal';
 import { UserMessagesBanner } from '../components/layout/UserMessagesBanner';
 
 export function MainLayout() {
@@ -11,6 +12,7 @@ export function MainLayout() {
         <UserMessagesBanner />
         <Outlet />
       </main>
+      <PublicUserCardModal />
       <Footer />
     </div>
   );
