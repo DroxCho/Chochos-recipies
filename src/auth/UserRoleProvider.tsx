@@ -10,10 +10,22 @@ interface UserRoleProviderProps {
   children: ReactNode;
 }
 
-async function fetchRoleFromProfile(userId: string): Promise<UserRole> {
+function normalizeRole(value: unknown): UserRole | null {
+  if (value === 'admin') {
+    return 'admin';
+  }
+
+  if (value === 'registered') {
+    return 'registered';
+  }
+
+  return null;
+}
+
+async function fetchRoleFromProfile(userId: string): Promise<UserRole | null> {
   const supabase = getSupabaseClient();
   if (!supabase) {
-    return 'registered';
+    return null;
   }
 
   const { data, error } = await supabase
@@ -23,11 +35,21 @@ async function fetchRoleFromProfile(userId: string): Promise<UserRole> {
     .maybeSingle<{ role: UserRole | null }>();
 
   if (error) {
-    return 'registered';
+    return null;
   }
 
-  if (data?.role === 'admin') {
-    return 'admin';
+  return normalizeRole(data?.role);
+}
+
+async function resolveRoleForUser(userId: string, appMetaRole: unknown): Promise<UserRole> {
+  const profileRole = await fetchRoleFromProfile(userId);
+  if (profileRole) {
+    return profileRole;
+  }
+
+  const metadataRole = normalizeRole(appMetaRole);
+  if (metadataRole) {
+    return metadataRole;
   }
 
   return 'registered';
@@ -69,7 +91,7 @@ export function UserRoleProvider({ children }: UserRoleProviderProps) {
         return;
       }
 
-      const resolvedRole = await fetchRoleFromProfile(id);
+      const resolvedRole = await resolveRoleForUser(id, data.session?.user?.app_metadata?.role);
       if (isMounted) {
         setRole(resolvedRole);
       }
@@ -84,7 +106,7 @@ export function UserRoleProvider({ children }: UserRoleProviderProps) {
         return;
       }
 
-      void fetchRoleFromProfile(id).then((resolvedRole) => {
+      void resolveRoleForUser(id, session?.user?.app_metadata?.role).then((resolvedRole) => {
         if (isMounted) {
           setRole(resolvedRole);
         }
