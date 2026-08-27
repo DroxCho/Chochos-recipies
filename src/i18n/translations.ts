@@ -57,7 +57,7 @@ export const translations = {
     ratingLabel: 'Рейтинг',
     myRatingLabel: 'Моят рейтинг',
     ratingNoVotes: 'няма оценки',
-    recipeCreatorLabel: 'Създател',
+    recipeCreatorLabel: 'Качил',
     userActionsSection: 'Регистриран потребител',
     adminActionsSection: 'Администраторски действия',
     deleteRecipeConfirm: 'Сигурен ли си, че искаш да изтриеш тази рецепта?',
