@@ -20,6 +20,28 @@ const CUISINE_VALUES: RecipeCuisine[] = [
   'vegetarian',
   'international',
 ];
+
+const DISH_TYPE_ICONS: Record<RecipeDishType, string> = {
+  main: '🍽️',
+  dessert: '🍰',
+  soup: '🍲',
+  salad: '🥗',
+  appetizer: '🥟',
+  breakfast: '🍳',
+};
+
+const CUISINE_ICONS: Record<RecipeCuisine, string> = {
+  bulgarian: '🇧🇬',
+  french: '🇫🇷',
+  asian: '🥢',
+  italian: '🇮🇹',
+  mexican: '🇲🇽',
+  spanish: '🇪🇸',
+  turkish: '🇹🇷',
+  vegan: '🌿',
+  vegetarian: '🥬',
+  international: '🌍',
+};
 const MAIN_PRODUCT_OPTIONS = [
   { value: 'agneshko-meso', label: 'Агнешко месо' },
   { value: 'bebeshki-hrani', label: 'Бебешки храни' },
@@ -117,26 +139,26 @@ export function RecipesPage() {
 
   const dishTypeOptions: Array<{ value: 'all' | RecipeDishType; label: string }> = [
     { value: 'all', label: t('allDishTypes') },
-    { value: 'main', label: t('dishTypeMain') },
-    { value: 'dessert', label: t('dishTypeDessert') },
-    { value: 'soup', label: t('dishTypeSoup') },
-    { value: 'salad', label: t('dishTypeSalad') },
-    { value: 'appetizer', label: t('dishTypeAppetizer') },
-    { value: 'breakfast', label: t('dishTypeBreakfast') },
+    { value: 'main', label: `${DISH_TYPE_ICONS.main} ${t('dishTypeMain')}` },
+    { value: 'dessert', label: `${DISH_TYPE_ICONS.dessert} ${t('dishTypeDessert')}` },
+    { value: 'soup', label: `${DISH_TYPE_ICONS.soup} ${t('dishTypeSoup')}` },
+    { value: 'salad', label: `${DISH_TYPE_ICONS.salad} ${t('dishTypeSalad')}` },
+    { value: 'appetizer', label: `${DISH_TYPE_ICONS.appetizer} ${t('dishTypeAppetizer')}` },
+    { value: 'breakfast', label: `${DISH_TYPE_ICONS.breakfast} ${t('dishTypeBreakfast')}` },
   ];
 
   const cuisineOptions: Array<{ value: 'all' | RecipeCuisine; label: string }> = [
     { value: 'all', label: t('allCuisines') },
-    { value: 'bulgarian', label: t('cuisineBulgarian') },
-    { value: 'french', label: t('cuisineFrench') },
-    { value: 'asian', label: t('cuisineAsian') },
-    { value: 'italian', label: t('cuisineItalian') },
-    { value: 'mexican', label: t('cuisineMexican') },
-    { value: 'spanish', label: t('cuisineSpanish') },
-    { value: 'turkish', label: t('cuisineTurkish') },
-    { value: 'vegan', label: t('cuisineVegan') },
-    { value: 'vegetarian', label: t('cuisineVegetarian') },
-    { value: 'international', label: t('cuisineInternational') },
+    { value: 'bulgarian', label: `${CUISINE_ICONS.bulgarian} ${t('cuisineBulgarian')}` },
+    { value: 'french', label: `${CUISINE_ICONS.french} ${t('cuisineFrench')}` },
+    { value: 'asian', label: `${CUISINE_ICONS.asian} ${t('cuisineAsian')}` },
+    { value: 'italian', label: `${CUISINE_ICONS.italian} ${t('cuisineItalian')}` },
+    { value: 'mexican', label: `${CUISINE_ICONS.mexican} ${t('cuisineMexican')}` },
+    { value: 'spanish', label: `${CUISINE_ICONS.spanish} ${t('cuisineSpanish')}` },
+    { value: 'turkish', label: `${CUISINE_ICONS.turkish} ${t('cuisineTurkish')}` },
+    { value: 'vegan', label: `${CUISINE_ICONS.vegan} ${t('cuisineVegan')}` },
+    { value: 'vegetarian', label: `${CUISINE_ICONS.vegetarian} ${t('cuisineVegetarian')}` },
+    { value: 'international', label: `${CUISINE_ICONS.international} ${t('cuisineInternational')}` },
   ];
 
   const filteredRecipes = useMemo(() => {
