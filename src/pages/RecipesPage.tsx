@@ -269,11 +269,11 @@ export function RecipesPage() {
     <section aria-label="recipes-page" className="min-h-[320px]">
       <h2 className="mb-4 text-xl font-semibold text-slate-900">{t('recipesTitle')}</h2>
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+      <div className="mb-4 flex flex-wrap items-center gap-3 lg:flex-nowrap">
+        <label className="order-1 flex items-center gap-2 text-sm text-slate-700 whitespace-nowrap">
           <span>{t('searchRecipes')}</span>
           <input
-            className="w-64 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+            className="w-52 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm xl:w-64"
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder={t('searchRecipesPlaceholder')}
             type="search"
@@ -281,7 +281,7 @@ export function RecipesPage() {
           />
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="order-2 flex items-center gap-2 text-sm text-slate-700 whitespace-nowrap">
           <span>{t('dishType')}</span>
           <select
             className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
@@ -307,7 +307,7 @@ export function RecipesPage() {
           </select>
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="order-3 flex items-center gap-2 text-sm text-slate-700 whitespace-nowrap">
           <span>{t('cuisineType')}</span>
           <select
             className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
@@ -333,10 +333,10 @@ export function RecipesPage() {
           </select>
         </label>
 
-        <div className="relative" ref={mainProductMenuRef}>
+        <div className="order-4 relative shrink-0 whitespace-nowrap" ref={mainProductMenuRef}>
           <span className="mr-2 text-sm text-slate-700">{t('mainIngredient')}</span>
           <button
-            className="min-w-56 rounded-md border border-slate-300 bg-white px-3 py-1 text-left text-sm text-slate-700"
+            className="min-w-48 rounded-md border border-slate-300 bg-white px-3 py-1 text-left text-sm text-slate-700"
             onClick={() => setIsMainProductMenuOpen((open) => !open)}
             type="button"
           >
