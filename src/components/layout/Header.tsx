@@ -36,7 +36,7 @@ function readUserProfilePhoto(userId: string | null | undefined): string {
 export function Header() {
   const { t } = useLanguage();
   const { role, setRole, userId } = useUserRole();
-  const isSignedIn = role === 'registered' || role === 'admin';
+  const isSignedIn = role !== 'visitor';
   const [isAuthMenuOpen, setIsAuthMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalInitialTab, setAuthModalInitialTab] = useState<'login' | 'register'>('login');

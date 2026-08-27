@@ -4,6 +4,7 @@ import type { UserRole } from './roles';
 import { getSupabaseClient } from '../lib/supabase';
 import { UserRoleContext } from './userRoleContext';
 import supabaseUsersSnapshot from '../data/supabaseUsersSnapshot.json';
+import { readUserAdminControls, resolveManagedRole } from './userAdminControls';
 
 const ROLE_STORAGE_KEY = 'recipes_user_role';
 
@@ -52,6 +53,11 @@ async function fetchRoleFromProfile(userId: string): Promise<UserRole | null> {
 }
 
 async function resolveRoleForUser(userId: string, appMetaRole: unknown): Promise<UserRole> {
+  const managedRole = resolveManagedRole(readUserAdminControls()[userId]);
+  if (managedRole) {
+    return managedRole;
+  }
+
   const profileRole = await fetchRoleFromProfile(userId);
   if (profileRole) {
     return profileRole;
@@ -73,7 +79,7 @@ async function resolveRoleForUser(userId: string, appMetaRole: unknown): Promise
 export function UserRoleProvider({ children }: UserRoleProviderProps) {
   const [role, setRole] = useState<UserRole>(() => {
     const storedRole = localStorage.getItem(ROLE_STORAGE_KEY);
-    if (storedRole === 'visitor' || storedRole === 'registered' || storedRole === 'admin') {
+    if (storedRole === 'visitor' || storedRole === 'registered' || storedRole === 'admin' || storedRole === 'blocked') {
       return storedRole;
     }
 
@@ -128,8 +134,39 @@ export function UserRoleProvider({ children }: UserRoleProviderProps) {
       });
     });
 
+    function handleUserControlsUpdated() {
+      const client = getSupabaseClient();
+      if (!client) {
+        return;
+      }
+
+      void client.auth.getSession().then(async ({ data }) => {
+        if (!isMounted) {
+          return;
+        }
+
+        const id = data.session?.user?.id ?? null;
+        setAuthUserId(id);
+
+        if (!id) {
+          setRole('visitor');
+          return;
+        }
+
+        const resolvedRole = await resolveRoleForUser(id, data.session?.user?.app_metadata?.role);
+        if (isMounted) {
+          setRole(resolvedRole);
+        }
+      });
+    }
+
+    window.addEventListener('user-controls-updated', handleUserControlsUpdated);
+    window.addEventListener('storage', handleUserControlsUpdated);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('user-controls-updated', handleUserControlsUpdated);
+      window.removeEventListener('storage', handleUserControlsUpdated);
       subscription.subscription.unsubscribe();
     };
   }, []);

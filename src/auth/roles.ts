@@ -1,9 +1,13 @@
 import type { Recipe } from '../types/recipe';
 
-export type UserRole = 'visitor' | 'registered' | 'admin';
+export type UserRole = 'visitor' | 'registered' | 'admin' | 'blocked';
+
+export function canParticipate(role: UserRole): boolean {
+  return role === 'registered' || role === 'admin';
+}
 
 export function canCreateRecipe(role: UserRole): boolean {
-  return role === 'registered' || role === 'admin';
+  return canParticipate(role);
 }
 
 export function canApproveRecipe(role: UserRole): boolean {
@@ -15,7 +19,7 @@ export function canEditRecipe(role: UserRole, recipe: Recipe, userId: string | n
     return true;
   }
 
-  if (role === 'registered' && userId) {
+  if (canParticipate(role) && userId) {
     return recipe.ownerId === userId;
   }
 
@@ -31,7 +35,7 @@ export function canViewRecipe(role: UserRole, recipe: Recipe, userId: string | n
     return true;
   }
 
-  if (role === 'registered' && userId) {
+  if (canParticipate(role) && userId) {
     return recipe.ownerId === userId;
   }
 

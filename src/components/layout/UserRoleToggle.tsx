@@ -12,7 +12,11 @@ export function UserRoleToggle() {
   }
 
   if (role !== 'admin') {
-    const roleLabel = role === 'registered' ? t('roleRegistered') : t('roleVisitor');
+    const roleLabel = role === 'registered'
+      ? t('roleRegistered')
+      : role === 'blocked'
+        ? t('roleBlocked')
+        : t('roleVisitor');
 
     return (
       <span className="text-xs text-slate-600">{roleLabel}</span>

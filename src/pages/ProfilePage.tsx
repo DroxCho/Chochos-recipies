@@ -1,11 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { WheelEvent as ReactWheelEvent } from 'react';
 import { useUserRole } from '../auth/useUserRole';
+import type { ManagedUserRole, UserAdminControlMap } from '../auth/userAdminControls';
+import { readUserAdminControls, writeUserAdminControls } from '../auth/userAdminControls';
 import { useLanguage } from '../i18n/useLanguage';
 import { getSupabaseClient } from '../lib/supabase';
 import type { TranslationKey } from '../i18n/translations';
+import supabaseUsersSnapshot from '../data/supabaseUsersSnapshot.json';
 
 interface UserProfileDetails {
   fullName: string;
@@ -19,6 +22,16 @@ type UserProfileMap = Record<string, UserProfileDetails>;
 
 const PROFILE_STORAGE_KEY = 'recipes_user_profiles_v1';
 const PHOTO_EDITOR_PREVIEW_SIZE = 288;
+
+interface SnapshotUser {
+  id: string;
+  email: string | null;
+  role: string;
+}
+
+function normalizeManagedRole(value: unknown): ManagedUserRole {
+  return value === 'admin' ? 'admin' : 'registered';
+}
 
 function readProfiles(): UserProfileMap {
   if (typeof window === 'undefined') {
@@ -50,8 +63,13 @@ export function ProfilePage() {
   const { t } = useLanguage();
   const { role, userId } = useUserRole();
   const canEditProfile = role === 'registered' || role === 'admin';
-  const roleLabel = role === 'admin' ? t('roleAdmin') : t('roleRegistered');
+  const isAdmin = role === 'admin';
+  const roleLabel = role === 'admin' ? t('roleAdmin') : role === 'blocked' ? t('roleBlocked') : t('roleRegistered');
   const requiredMark = <span className="text-rose-600">*</span>;
+  const snapshotUsers = useMemo(
+    () => ((supabaseUsersSnapshot as { users?: SnapshotUser[] }).users ?? []),
+    [],
+  );
 
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
@@ -71,8 +89,23 @@ export function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [photoError, setPhotoError] = useState<TranslationKey | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ photo?: boolean; fullName?: boolean; email?: boolean }>({});
+  const [userControls, setUserControls] = useState<UserAdminControlMap>(() => readUserAdminControls());
   const dragStartRef = useRef<{ x: number; y: number; startX: number; startY: number } | null>(null);
   const previousEditorZoomRef = useRef(1);
+
+  const managedUsers = useMemo(() => {
+    return snapshotUsers
+      .filter((user) => !userControls[user.id]?.deleted)
+      .map((user) => {
+        const control = userControls[user.id];
+        return {
+          ...user,
+          selectedRole: normalizeManagedRole(control?.role ?? user.role),
+          isBlocked: Boolean(control?.blocked),
+        };
+      })
+      .sort((left, right) => (left.email ?? '').localeCompare(right.email ?? ''));
+  }, [snapshotUsers, userControls]);
 
   function inputBorderClass(hasError: boolean): string {
     return hasError ? 'border-rose-500' : 'border-slate-300';
@@ -359,6 +392,58 @@ export function ProfilePage() {
       isMounted = false;
     };
   }, [canEditProfile, userId]);
+
+  useEffect(() => {
+    function refreshUserControls() {
+      setUserControls(readUserAdminControls());
+    }
+
+    window.addEventListener('storage', refreshUserControls);
+    window.addEventListener('user-controls-updated', refreshUserControls);
+
+    return () => {
+      window.removeEventListener('storage', refreshUserControls);
+      window.removeEventListener('user-controls-updated', refreshUserControls);
+    };
+  }, []);
+
+  function updateUserControl(
+    userEntryId: string,
+    updater: (entry: { role?: ManagedUserRole; blocked?: boolean; deleted?: boolean }) => { role?: ManagedUserRole; blocked?: boolean; deleted?: boolean },
+  ) {
+    const current = readUserAdminControls();
+    const nextEntry = updater(current[userEntryId] ?? {});
+    const next = {
+      ...current,
+      [userEntryId]: nextEntry,
+    };
+
+    setUserControls(next);
+    writeUserAdminControls(next);
+  }
+
+  function handleManagedRoleChange(userEntryId: string, nextRole: ManagedUserRole) {
+    updateUserControl(userEntryId, (entry) => ({
+      ...entry,
+      role: nextRole,
+    }));
+  }
+
+  function handleToggleBlocked(userEntryId: string) {
+    updateUserControl(userEntryId, (entry) => ({
+      ...entry,
+      blocked: !entry.blocked,
+      deleted: entry.deleted ? false : entry.deleted,
+    }));
+  }
+
+  function handleDeleteManagedUser(userEntryId: string) {
+    updateUserControl(userEntryId, (entry) => ({
+      ...entry,
+      deleted: true,
+      blocked: true,
+    }));
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -659,6 +744,69 @@ export function ProfilePage() {
 
         {successMessage && <p className="text-sm text-emerald-700">{successMessage}</p>}
       </form>
+
+      {isAdmin && (
+        <section className="mt-8 rounded-xl border border-slate-200 bg-white p-4">
+          <h3 className="text-base font-semibold text-slate-900">{t('adminUserManagementTitle')}</h3>
+          <p className="mt-1 text-xs text-slate-500">{t('adminUserManagementSubtitle')}</p>
+
+          <div className="mt-4 space-y-2">
+            {managedUsers.map((entry) => {
+              const isCurrentUser = Boolean(userId) && entry.id === userId;
+
+              return (
+                <div key={entry.id} className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-[1.6fr_auto_auto_auto] md:items-center">
+                  <div>
+                    <p className="text-sm font-medium text-slate-800">{entry.email || entry.id}</p>
+                    <p className="text-xs text-slate-500">{t('profileFieldUserId')}: {entry.id}</p>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-slate-500" htmlFor={`manage-role-${entry.id}`}>
+                      {t('profileRoleLabel')}
+                    </label>
+                    <select
+                      id={`manage-role-${entry.id}`}
+                      className="mt-1 block rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                      value={entry.selectedRole}
+                      onChange={(event) => handleManagedRoleChange(entry.id, event.target.value as ManagedUserRole)}
+                    >
+                      <option value="registered">{t('roleRegistered')}</option>
+                      <option value="admin">{t('roleAdmin')}</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-slate-500">{t('userStatusLabel')}</p>
+                    <p className={`mt-1 text-xs font-medium ${entry.isBlocked ? 'text-rose-700' : 'text-emerald-700'}`}>
+                      {entry.isBlocked ? t('userStatusBlocked') : t('userStatusActive')}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-60"
+                      onClick={() => handleToggleBlocked(entry.id)}
+                      disabled={isCurrentUser}
+                    >
+                      {entry.isBlocked ? t('unblockUser') : t('blockUser')}
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-xs text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                      onClick={() => handleDeleteManagedUser(entry.id)}
+                      disabled={isCurrentUser}
+                    >
+                      {t('deleteUser')}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {isPhotoEditorOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/70 p-4">
