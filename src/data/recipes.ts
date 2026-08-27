@@ -206,7 +206,7 @@ export const recipes: Recipe[] = [
       'Охлади, прибери в хладилник поне 4 часа и сервирай обърнат.',
     ],
     notes: 'За по-гладка текстура не допускай силно кипене на водната баня.',
-    photoUrls: ['https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=1200&q=80'],
+    photoUrls: ['https://bcdn.bonapeti.bg/uploads/recipes/rec19913/recipe_image0_540x405_169331442445.jpg'],
     status: 'approved',
     ownerId: 'd6cb62d6-ec0b-4214-afca-962aa049b0a1',
     ownerRole: 'registered',
@@ -220,6 +220,8 @@ export const recipes: Recipe[] = [
     complexity: 'easy',
     dishType: 'salad',
     cuisine: 'bulgarian',
+    mainProduct: 'bob',
+    mainProducts: ['bob', 'zelenchuci'],
     ingredients: [
       '400 г сварен бял боб',
       '1 малка глава червен лук',
@@ -237,7 +239,7 @@ export const recipes: Recipe[] = [
       'Поръси с нарязан магданоз и разбъркай внимателно.',
     ],
     notes: 'За по-наситен вкус остави салатата 15 минути да поеме дресинга.',
-    photoUrls: ['https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80'],
+    photoUrls: ['https://bcdn.bonapeti.bg/uploads/recipes/rec7237/salata_stri_vida_bob1.jpg'],
     status: 'approved',
     ownerId: 'd6cb62d6-ec0b-4214-afca-962aa049b0a1',
     ownerRole: 'registered',
@@ -698,7 +700,7 @@ const PRESET_RECIPE_META: RecipeMetaMap = {
       'Остави баницата да отпочине 10 минути и сервирай топла.',
     ],
     notes: 'За по-пухкава баница може да добавиш 100 мл газирана вода към плънката.',
-    photoUrls: ['https://upload.wikimedia.org/wikipedia/commons/5/5d/%D0%92%D0%BA%D1%83%D1%81%D0%BD%D0%B0_%D0%B4%D0%BE%D0%BC%D0%B0%D1%88%D0%BD%D0%B0_%D0%B1%D0%B0%D0%BD%D0%B8%D1%86%D0%B0.JPG'],
+    photoUrls: ['https://bcdn.bonapeti.bg/uploads/recipes/rec8032/grucki_pai_s_tikvichki1.jpg'],
   },
   'banitsa-sirene': {
     status: 'approved',
@@ -726,6 +728,17 @@ const PRESET_RECIPE_META: RecipeMetaMap = {
     ],
     notes: 'За по-пухкава баница може да добавиш 100 мл газирана вода към плънката.',
     photoUrls: ['https://upload.wikimedia.org/wikipedia/commons/5/5d/%D0%92%D0%BA%D1%83%D1%81%D0%BD%D0%B0_%D0%B4%D0%BE%D0%BC%D0%B0%D1%88%D0%BD%D0%B0_%D0%B1%D0%B0%D0%BD%D0%B8%D1%86%D0%B0.JPG'],
+  },
+  'bobena-salata-chox2': {
+    status: 'approved',
+    ownerId: 'd6cb62d6-ec0b-4214-afca-962aa049b0a1',
+    ownerRole: 'registered',
+    complexity: 'easy',
+    dishType: 'salad',
+    cuisine: 'bulgarian',
+    mainProduct: 'bob',
+    mainProducts: ['bob', 'zelenchuci'],
+    photoUrls: ['https://bcdn.bonapeti.bg/uploads/recipes/rec7237/salata_stri_vida_bob1.jpg'],
   },
   kunefe: {
     status: 'approved',
@@ -1032,26 +1045,39 @@ function getDefaultRecipeMeta(recipe?: Partial<Pick<Recipe, 'status' | 'ownerId'
 function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
   const defaultMeta = getDefaultRecipeMeta(recipe);
   const presetTags = PRESET_RECIPE_TAGS[recipe.id];
-  const meta = map[recipe.id] ?? PRESET_RECIPE_META[recipe.id] ?? defaultMeta;
-  const normalizedPhotoUrls = normalizeStringList(meta.photoUrls);
+  const presetMeta = PRESET_RECIPE_META[recipe.id];
+  const storedMeta = map[recipe.id];
+  const meta: RecipeMeta = {
+    ...defaultMeta,
+    ...(presetMeta ?? {}),
+    ...(storedMeta ?? {}),
+  };
+  const normalizedPhotoUrls = normalizeStringList(meta.photoUrls) ?? normalizeStringList(recipe.photoUrls);
+  const normalizedMainProducts = normalizeStringList(meta.mainProducts) ?? normalizeStringList(recipe.mainProducts);
+  const normalizedIngredients = normalizeStringList(meta.ingredients) ?? normalizeStringList(recipe.ingredients);
+  const normalizedSteps = normalizeStringList(meta.steps) ?? normalizeStringList(recipe.steps);
+  const normalizedNotes =
+    meta.notes !== undefined
+      ? (meta.notes.trim() ? meta.notes.trim() : undefined)
+      : (recipe.notes?.trim() ? recipe.notes.trim() : undefined);
   const normalizedPhotoOriginalUrl = meta.photoOriginalUrl?.trim()
     ? meta.photoOriginalUrl.trim()
-    : normalizedPhotoUrls?.[0];
+    : (recipe.photoOriginalUrl?.trim() ? recipe.photoOriginalUrl.trim() : normalizedPhotoUrls?.[0]);
 
   const withMeta: Recipe = {
     ...recipe,
-    status: meta.status,
-    reviewComment: meta.reviewComment,
-    ownerId: meta.ownerId,
-    ownerRole: meta.ownerRole,
+    status: meta.status ?? recipe.status,
+    reviewComment: meta.reviewComment ?? recipe.reviewComment,
+    ownerId: meta.ownerId ?? recipe.ownerId ?? defaultMeta.ownerId,
+    ownerRole: meta.ownerRole ?? recipe.ownerRole ?? defaultMeta.ownerRole,
     complexity: meta.complexity ?? PRESET_RECIPE_META[recipe.id]?.complexity ?? 'medium',
     dishType: meta.dishType ?? presetTags?.dishType ?? 'main',
     cuisine: meta.cuisine ?? presetTags?.cuisine ?? 'international',
-    mainProduct: meta.mainProduct ?? meta.mainProducts?.[0],
-    mainProducts: normalizeStringList(meta.mainProducts),
-    ingredients: normalizeStringList(meta.ingredients),
-    steps: normalizeStringList(meta.steps),
-    notes: meta.notes?.trim() ? meta.notes.trim() : undefined,
+    mainProduct: meta.mainProduct ?? recipe.mainProduct ?? normalizedMainProducts?.[0],
+    mainProducts: normalizedMainProducts,
+    ingredients: normalizedIngredients,
+    steps: normalizedSteps,
+    notes: normalizedNotes,
     photoUrls: normalizedPhotoUrls,
     photoOriginalUrl: normalizedPhotoOriginalUrl,
   };

@@ -42,6 +42,34 @@ interface UserCardSummary {
   isDeleted: boolean;
 }
 
+function getUserNameFallback(
+  fullName: string,
+  email: string,
+  id: string,
+  roleType?: 'registered' | 'admin' | 'blocked',
+): string {
+  const trimmedName = fullName.trim();
+  if (trimmedName) {
+    return trimmedName;
+  }
+
+  if (roleType === 'admin') {
+    return 'АдминЧо';
+  }
+
+  const trimmedEmail = email.trim();
+  if (trimmedEmail) {
+    const atIndex = trimmedEmail.indexOf('@');
+    if (atIndex > 0) {
+      return trimmedEmail.slice(0, atIndex);
+    }
+
+    return trimmedEmail;
+  }
+
+  return id;
+}
+
 function normalizeManagedRole(value: unknown): ManagedUserRole {
   return value === 'admin' ? 'admin' : 'registered';
 }
@@ -106,6 +134,7 @@ export function ProfilePage() {
   const [fieldErrors, setFieldErrors] = useState<{ photo?: boolean; fullName?: boolean; email?: boolean }>({});
   const [userControls, setUserControls] = useState<UserAdminControlMap>(() => readUserAdminControls());
   const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [managedRoleFilter, setManagedRoleFilter] = useState<'all' | 'registered' | 'admin' | 'blocked'>('all');
   const [selectedManagedUserId, setSelectedManagedUserId] = useState<string | null>(null);
   const dragStartRef = useRef<{ x: number; y: number; startX: number; startY: number } | null>(null);
   const previousEditorZoomRef = useRef(1);
@@ -130,16 +159,28 @@ export function ProfilePage() {
 
   const filteredManagedUsers = useMemo(() => {
     const query = userSearchQuery.trim().toLowerCase();
+    const byType = managedUsers.filter((user) => {
+      if (managedRoleFilter === 'all') {
+        return true;
+      }
+
+      if (managedRoleFilter === 'blocked') {
+        return user.isBlocked;
+      }
+
+      return !user.isBlocked && user.selectedRole === managedRoleFilter;
+    });
+
     if (!query) {
-      return managedUsers;
+      return byType;
     }
 
-    return managedUsers.filter((user) => {
+    return byType.filter((user) => {
       const emailMatch = (user.email ?? '').toLowerCase().includes(query);
       const nameMatch = user.fullName.toLowerCase().includes(query);
       return emailMatch || nameMatch;
     });
-  }, [managedUsers, userSearchQuery]);
+  }, [managedRoleFilter, managedUsers, userSearchQuery]);
 
   const selectedManagedUser = useMemo(
     () => managedUsers.find((user) => user.id === selectedManagedUserId) ?? null,
@@ -510,19 +551,24 @@ export function ProfilePage() {
     writeUserAdminControls(next);
   }
 
-  function handleManagedRoleChange(userEntryId: string, nextRole: ManagedUserRole) {
-    updateUserControl(userEntryId, (entry) => ({
-      ...entry,
-      role: nextRole,
-    }));
-  }
+  function handleManagedRoleChange(userEntryId: string, nextRole: ManagedUserRole | 'blocked') {
+    updateUserControl(userEntryId, (entry) => {
+      if (nextRole === 'blocked') {
+        return {
+          ...entry,
+          role: 'registered',
+          blocked: true,
+          deleted: false,
+        };
+      }
 
-  function handleToggleBlocked(userEntryId: string) {
-    updateUserControl(userEntryId, (entry) => ({
-      ...entry,
-      blocked: !entry.blocked,
-      deleted: entry.deleted ? false : entry.deleted,
-    }));
+      return {
+        ...entry,
+        role: nextRole,
+        blocked: false,
+        deleted: false,
+      };
+    });
   }
 
   function handleDeleteManagedUser(userEntryId: string) {
@@ -871,7 +917,53 @@ export function ProfilePage() {
           <div className="w-full max-w-4xl rounded-xl bg-white p-4 shadow-xl" onClick={(event) => event.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <h3 className="text-base font-semibold text-slate-900">{t('adminUserManagementTitle')}</h3>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-base font-semibold text-slate-900">{t('adminUserManagementTitle')}</h3>
+                  <button
+                    type="button"
+                    className={`rounded-full border px-2 py-1 text-xs transition-colors ${
+                      managedRoleFilter === 'all'
+                        ? 'border-slate-400 bg-slate-900 text-white'
+                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                    }`}
+                    onClick={() => setManagedRoleFilter('all')}
+                  >
+                    {t('usersFilterAll')}
+                  </button>
+                  <button
+                    type="button"
+                    className={`rounded-full border px-2 py-1 text-xs transition-colors ${
+                      managedRoleFilter === 'admin'
+                        ? 'border-slate-400 bg-slate-900 text-white'
+                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                    }`}
+                    onClick={() => setManagedRoleFilter('admin')}
+                  >
+                    {t('roleAdmin')}
+                  </button>
+                  <button
+                    type="button"
+                    className={`rounded-full border px-2 py-1 text-xs transition-colors ${
+                      managedRoleFilter === 'registered'
+                        ? 'border-slate-400 bg-slate-900 text-white'
+                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                    }`}
+                    onClick={() => setManagedRoleFilter('registered')}
+                  >
+                    {t('roleRegistered')}
+                  </button>
+                  <button
+                    type="button"
+                    className={`rounded-full border px-2 py-1 text-xs transition-colors ${
+                      managedRoleFilter === 'blocked'
+                        ? 'border-slate-400 bg-slate-900 text-white'
+                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                    }`}
+                    onClick={() => setManagedRoleFilter('blocked')}
+                  >
+                    {t('roleBlocked')}
+                  </button>
+                </div>
                 <p className="mt-1 text-xs text-slate-500">{t('adminUserManagementSubtitle')}</p>
               </div>
               <button
@@ -907,8 +999,8 @@ export function ProfilePage() {
                 return (
                   <div key={entry.id} className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-[1.6fr_auto_auto_auto] md:items-center">
                     <div>
-                      <p className="text-sm font-medium text-slate-800">{entry.fullName || entry.email || entry.id}</p>
-                      {entry.fullName && <p className="text-xs text-slate-600">{entry.email || '-'}</p>}
+                      <p className="text-sm font-medium text-slate-800">{t('profileFieldFullName')}: {getUserNameFallback(entry.fullName, entry.email ?? '', entry.id, entry.isBlocked ? 'blocked' : entry.selectedRole)}</p>
+                      <p className="text-xs text-slate-600">{t('profileFieldEmail')}: {entry.email || '-'}</p>
                       <p className="text-xs text-slate-500">{t('profileFieldUserId')}: {entry.id}</p>
                     </div>
 
@@ -919,11 +1011,12 @@ export function ProfilePage() {
                       <select
                         id={`manage-role-${entry.id}`}
                         className="mt-1 block rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
-                        value={entry.selectedRole}
-                        onChange={(event) => handleManagedRoleChange(entry.id, event.target.value as ManagedUserRole)}
+                        value={entry.isBlocked ? 'blocked' : entry.selectedRole}
+                        onChange={(event) => handleManagedRoleChange(entry.id, event.target.value as ManagedUserRole | 'blocked')}
                       >
                         <option value="registered">{t('roleRegistered')}</option>
                         <option value="admin">{t('roleAdmin')}</option>
+                        <option value="blocked">{t('roleBlocked')}</option>
                       </select>
                     </div>
 
@@ -941,14 +1034,6 @@ export function ProfilePage() {
                         onClick={() => openManagedUserCard(entry.id)}
                       >
                         {t('openUserCard')}
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-60"
-                        onClick={() => handleToggleBlocked(entry.id)}
-                        disabled={isCurrentUser}
-                      >
-                        {entry.isBlocked ? t('unblockUser') : t('blockUser')}
                       </button>
                       <button
                         type="button"
@@ -986,8 +1071,8 @@ export function ProfilePage() {
 
             <div className="space-y-3 text-sm text-slate-700">
               <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-                <p className="font-medium text-slate-900">{selectedManagedUser.fullName || selectedManagedUser.email || selectedManagedUser.id}</p>
-                {selectedManagedUser.fullName && <p className="text-xs text-slate-600">{selectedManagedUser.email || '-'}</p>}
+                <p className="font-medium text-slate-900">{t('profileFieldFullName')}: {getUserNameFallback(selectedManagedUser.fullName, selectedManagedUser.email ?? '', selectedManagedUser.id, selectedManagedUser.isBlocked ? 'blocked' : selectedManagedUser.selectedRole)}</p>
+                <p className="text-xs text-slate-600">{t('profileFieldEmail')}: {selectedManagedUser.email || '-'}</p>
                 <p className="mt-1 text-xs text-slate-500">{t('profileFieldUserId')}: {selectedManagedUser.id}</p>
               </div>
 
@@ -996,11 +1081,12 @@ export function ProfilePage() {
                 <select
                   id="selected-user-role"
                   className="mt-1 block w-full rounded border border-slate-300 bg-white px-2 py-2 text-sm text-slate-700"
-                  value={selectedManagedUser.selectedRole}
-                  onChange={(event) => handleManagedRoleChange(selectedManagedUser.id, event.target.value as ManagedUserRole)}
+                  value={selectedManagedUser.isBlocked ? 'blocked' : selectedManagedUser.selectedRole}
+                  onChange={(event) => handleManagedRoleChange(selectedManagedUser.id, event.target.value as ManagedUserRole | 'blocked')}
                 >
                   <option value="registered">{t('roleRegistered')}</option>
                   <option value="admin">{t('roleAdmin')}</option>
+                  <option value="blocked">{t('roleBlocked')}</option>
                 </select>
               </label>
 
@@ -1009,14 +1095,6 @@ export function ProfilePage() {
               </p>
 
               <div className="flex flex-wrap gap-2 pt-1">
-                <button
-                  type="button"
-                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-60"
-                  onClick={() => handleToggleBlocked(selectedManagedUser.id)}
-                  disabled={selectedManagedUser.id === userId}
-                >
-                  {selectedManagedUser.isBlocked ? t('unblockUser') : t('blockUser')}
-                </button>
                 <button
                   type="button"
                   className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700 hover:bg-rose-100 disabled:opacity-60"
