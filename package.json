@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "apple:secret": "node scripts/generate-apple-secret.mjs"
+    "apple:secret": "node scripts/generate-apple-secret.mjs",
+    "sync:users": "env -u SUPABASE_URL -u SUPABASE_SERVICE_ROLE_KEY -u VITE_SUPABASE_URL node --env-file=.env scripts/sync-supabase-users.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
