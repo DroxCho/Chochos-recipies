@@ -1,0 +1,21 @@
+{
+  "synced_at": "2026-08-27T14:00:53.533Z",
+  "source_url": "https://bpgfxnwlrrgntzhjxqdr.supabase.co",
+  "total": 2,
+  "users": [
+    {
+      "id": "d6cb62d6-ec0b-4214-afca-962aa049b0a1",
+      "email": "chox2@windowslive.com",
+      "role": "registered",
+      "created_at": "2026-08-26T08:49:38.333984Z",
+      "last_sign_in_at": "2026-08-27T04:37:32.090957Z"
+    },
+    {
+      "id": "f870261e-5cd9-4eef-8be2-7d71ae886634",
+      "email": "drumeshki@gmail.com",
+      "role": "admin",
+      "created_at": "2026-08-27T04:38:18.123688Z",
+      "last_sign_in_at": "2026-08-27T13:41:20.00624Z"
+    }
+  ]
+}
