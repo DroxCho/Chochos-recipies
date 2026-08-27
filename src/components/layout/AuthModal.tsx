@@ -311,7 +311,7 @@ export function AuthModal({ isOpen, onClose, onLoggedIn, initialTab = 'login' }:
                     {t('authLoginGoogle')}
                   </button>
                   <button
-                    className="relative inline-flex w-full items-center justify-center rounded-md bg-black px-3 py-3 text-base font-semibold text-white transition-colors hover:bg-slate-900 disabled:opacity-60"
+                    className="relative inline-flex w-full items-center justify-center rounded-md bg-black px-3 py-3 text-base font-semibold text-white transition-colors hover:bg-black/90 disabled:opacity-60"
                     disabled={isSubmitting}
                     onClick={() => {
                       void handleOAuthLogin('apple');
