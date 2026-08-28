@@ -1029,7 +1029,7 @@ export function RecipeForm({
           <label className="flex flex-col gap-1 text-sm text-slate-700">
             <span>{t('dishType')} {requiredMark}</span>
             <select
-              className={`rounded-md border px-3 py-2 ${inputBorderClass(Boolean(fieldErrors.dishType))}`}
+              className={`w-full rounded-md border bg-white px-3 py-2 text-left text-sm text-slate-700 ${inputBorderClass(Boolean(fieldErrors.dishType))}`}
               onChange={(event) => {
                 setDishType(event.target.value as DishTypeValue);
                 clearFieldError('dishType');
@@ -1050,7 +1050,7 @@ export function RecipeForm({
           <label className="flex flex-col gap-1 text-sm text-slate-700">
             <span>{t('cuisineType')} {requiredMark}</span>
             <select
-              className={`rounded-md border px-3 py-2 ${inputBorderClass(Boolean(fieldErrors.cuisine))}`}
+              className={`w-full rounded-md border bg-white px-3 py-2 text-left text-sm text-slate-700 ${inputBorderClass(Boolean(fieldErrors.cuisine))}`}
               onChange={(event) => {
                 setCuisine(event.target.value as CuisineValue);
                 clearFieldError('cuisine');
