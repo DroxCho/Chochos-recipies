@@ -1063,8 +1063,8 @@ export function RecipeDetailsPage() {
                       canUseSocialRating
                         ? isRecipeFavorite
                           ? 'border-rose-400 bg-rose-200 text-rose-700'
-                          : 'border-red-900 bg-white text-red-900 hover:border-red-950 hover:text-red-950'
-                        : 'cursor-not-allowed border-red-900 bg-white text-red-900 opacity-60'
+                          : 'border-[3px] border-red-900 bg-white text-red-900 hover:border-red-950 hover:text-red-950'
+                        : 'cursor-not-allowed border-[3px] border-red-900 bg-white text-red-900 opacity-60'
                     }`}
                     onClick={canUseSocialRating ? handleToggleRecipeFavorite : handleRegisteredRequiredAction}
                     data-tooltip={canUseSocialRating ? t('favoriteRecipe') : t('registeredRequiredTooltip')}
@@ -1118,8 +1118,8 @@ export function RecipeDetailsPage() {
                   canUseSocialRating
                     ? isRecipeFavorite
                       ? 'border-rose-400 bg-rose-200 text-rose-700'
-                      : 'border-red-900 bg-white text-red-900 hover:border-red-950 hover:text-red-950'
-                    : 'cursor-not-allowed border-red-900 bg-white text-red-900 opacity-60'
+                      : 'border-[3px] border-red-900 bg-white text-red-900 hover:border-red-950 hover:text-red-950'
+                    : 'cursor-not-allowed border-[3px] border-red-900 bg-white text-red-900 opacity-60'
                 }`}
                 onClick={canUseSocialRating ? handleToggleRecipeFavorite : handleRegisteredRequiredAction}
                 data-tooltip={canUseSocialRating ? t('favoriteRecipe') : t('registeredRequiredTooltip')}
