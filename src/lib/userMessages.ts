@@ -5,6 +5,7 @@ export interface UserMessage {
   text: string;
   createdAt: string;
   read: boolean;
+  imageDataUrl?: string;
 }
 
 const USER_MESSAGES_KEY = 'recipes_user_messages_v1';
@@ -32,9 +33,15 @@ function writeMessages(messages: UserMessage[]): void {
   }
 
   localStorage.setItem(USER_MESSAGES_KEY, JSON.stringify(messages));
+  window.dispatchEvent(new Event('user-messages-updated'));
 }
 
-export function addUserMessage(toUserId: string, recipeId: string, text: string): void {
+export function addUserMessage(
+  toUserId: string,
+  recipeId: string,
+  text: string,
+  imageDataUrl?: string,
+): void {
   const next: UserMessage = {
     id: `msg-${Date.now()}`,
     toUserId,
@@ -42,6 +49,7 @@ export function addUserMessage(toUserId: string, recipeId: string, text: string)
     text,
     createdAt: new Date().toISOString(),
     read: false,
+    imageDataUrl,
   };
 
   writeMessages([next, ...readMessages()]);

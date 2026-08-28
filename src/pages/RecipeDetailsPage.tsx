@@ -13,7 +13,7 @@ import { getMainProductMeta, getMainProductsMeta } from '../lib/mainProduct';
 import { openPublicUserCard } from '../lib/publicUserCard';
 import { getRecipeAverageRating, getUserRecipeRating, setUserRecipeRating } from '../lib/recipeRatings';
 import { hasUserTriedRecipe, setUserTriedRecipe } from '../lib/recipeTried';
-import { getUserDisplayName } from '../lib/userDisplay';
+import { getUserDisplayName, getUserProfileLinkId } from '../lib/userDisplay';
 import { addUserMessage } from '../lib/userMessages';
 import type { Recipe } from '../types/recipe';
 
@@ -386,6 +386,81 @@ export function RecipeDetailsPage() {
     setApprovalError(null);
   }
 
+  function buildReportCommentScreenshot(comment: RecipeComment): string {
+    if (typeof document === 'undefined') {
+      return '';
+    }
+
+    const canvas = document.createElement('canvas');
+    const width = 920;
+    const height = 300;
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d');
+
+    if (!context) {
+      return '';
+    }
+
+    const ctx = context;
+
+    const authorLabel = getCommentAuthorLabel(comment);
+    const timestamp = new Date(comment.createdAt).toLocaleString();
+    const text = comment.text || '';
+    const horizontalPadding = 24;
+    const verticalPadding = 26;
+    const maxTextWidth = width - horizontalPadding * 2;
+    const lineHeight = 26;
+
+    function wrapText(input: string): string[] {
+      const words = input.split(/\s+/).filter(Boolean);
+      const lines: string[] = [];
+      let currentLine = '';
+
+      for (const word of words) {
+        const candidate = currentLine ? `${currentLine} ${word}` : word;
+        if (ctx.measureText(candidate).width <= maxTextWidth) {
+          currentLine = candidate;
+        } else {
+          if (currentLine) {
+            lines.push(currentLine);
+          }
+          currentLine = word;
+        }
+      }
+
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+
+      return lines.slice(0, 6);
+    }
+
+    ctx.fillStyle = '#fff7ed';
+    ctx.fillRect(0, 0, width, height);
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(1.5, 1.5, width - 3, height - 3);
+
+    ctx.fillStyle = '#92400e';
+    ctx.font = '700 24px Georgia, serif';
+    ctx.fillText('Докладван коментар', horizontalPadding, verticalPadding + 6);
+
+    ctx.fillStyle = '#7c2d12';
+    ctx.font = '600 18px "Trebuchet MS", "Segoe UI", sans-serif';
+    ctx.fillText(`${authorLabel} · ${timestamp}`, horizontalPadding, verticalPadding + 42);
+
+    ctx.fillStyle = '#1f2937';
+    ctx.font = '500 22px "Trebuchet MS", "Segoe UI", sans-serif';
+
+    const lines = wrapText(text);
+    lines.forEach((line, index) => {
+      ctx.fillText(line, horizontalPadding, verticalPadding + 86 + index * lineHeight);
+    });
+
+    return canvas.toDataURL('image/png');
+  }
+
   function handleSendCommentReport(comment: RecipeComment) {
     if (!currentRecipe || !userId || !canReportComments) {
       return;
@@ -404,7 +479,10 @@ export function RecipeDetailsPage() {
       `Подател: ${userId}`,
     ].join('\n');
 
-    addUserMessage('admin-user-1', currentRecipe.id, reportText);
+    const canonicalAdminId = getUserProfileLinkId('admin-user-1', 'admin');
+    const reportImageDataUrl = buildReportCommentScreenshot(comment);
+
+    addUserMessage(canonicalAdminId, currentRecipe.id, reportText, reportImageDataUrl || undefined);
     setReportingCommentId(null);
     setReportDescription('');
     setReviewSuccess(t('reportSent'));

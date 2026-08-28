@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { canParticipate } from '../../auth/roles';
 import { useUserRole } from '../../auth/useUserRole';
 import { getUnreadUserMessages, markAllUserMessagesRead } from '../../lib/userMessages';
 
@@ -10,12 +11,26 @@ export function UserMessagesBanner() {
   const messages = useMemo(() => {
     void version;
 
-    if (!userId || role !== 'registered') {
+    if (!userId || !canParticipate(role)) {
       return [];
     }
 
     return getUnreadUserMessages(userId);
   }, [role, userId, version]);
+
+  useEffect(() => {
+    function refreshMessages() {
+      setVersion((current) => current + 1);
+    }
+
+    window.addEventListener('user-messages-updated', refreshMessages);
+    window.addEventListener('storage', refreshMessages);
+
+    return () => {
+      window.removeEventListener('user-messages-updated', refreshMessages);
+      window.removeEventListener('storage', refreshMessages);
+    };
+  }, []);
 
   if (messages.length === 0) {
     return null;
@@ -46,6 +61,13 @@ export function UserMessagesBanner() {
         {messages.map((message) => (
           <li key={message.id} className="rounded bg-white px-3 py-2">
             <p>{message.text}</p>
+            {message.imageDataUrl && (
+              <img
+                alt="Докладван коментар"
+                className="mt-2 w-full max-w-md rounded border border-amber-200"
+                src={message.imageDataUrl}
+              />
+            )}
             <Link className="mt-1 inline-flex text-xs underline" to={`/recipes/${message.recipeId}/edit`}>
               Отвори за редакция
             </Link>
