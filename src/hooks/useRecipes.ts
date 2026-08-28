@@ -6,19 +6,10 @@ import {
   fetchRecipeById,
   fetchRecipes,
   insertRecipe,
-  recipes as sampleRecipes,
   updateRecipe,
 } from '../data/recipes';
 import type { CreateRecipeInput, Recipe } from '../types/recipe';
 import { useLanguage } from '../i18n/useLanguage';
-
-function withFallbackTags(recipe: Recipe): Recipe {
-  return {
-    ...recipe,
-    dishType: recipe.dishType ?? 'main',
-    cuisine: recipe.cuisine ?? 'international',
-  };
-}
 
 export function useRecipes() {
   const { t } = useLanguage();
@@ -49,7 +40,7 @@ export function useRecipes() {
         }
       } catch {
         if (isMounted) {
-          setRecipes(applyVisibility(sampleRecipes.map(withFallbackTags)));
+          setRecipes([]);
           setError(t('errorLoadRecipes'));
         }
       } finally {
@@ -190,14 +181,8 @@ export function useRecipeDetails(id: string | undefined) {
         }
       } catch {
         if (isMounted) {
-          const fallback = sampleRecipes.find((item) => item.id === id);
-          if (fallback && canViewRecipe(role, fallback, userId)) {
-            setRecipe(withFallbackTags(fallback));
-            setError(t('errorLoadRecipeDetails'));
-          } else {
-            setRecipe(undefined);
-            setError(t('recipeNotFound'));
-          }
+          setRecipe(undefined);
+          setError(t('errorLoadRecipeDetails'));
         }
       } finally {
         if (isMounted) {

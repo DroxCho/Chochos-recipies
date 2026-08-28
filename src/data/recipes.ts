@@ -1289,54 +1289,17 @@ function mapRecipeRow(row: RecipeRow): Recipe {
   };
 }
 
-function mergeRecipesById(primary: Recipe[], secondary: Recipe[]): Recipe[] {
-  const byId = new Map(primary.map((recipe) => [recipe.id, recipe]));
-
-  for (const fallback of secondary) {
-    const existing = byId.get(fallback.id);
-
-    if (!existing) {
-      byId.set(fallback.id, fallback);
-      continue;
-    }
-
-    byId.set(fallback.id, {
-      ...fallback,
-      ...existing,
-      complexity: existing.complexity ?? fallback.complexity,
-      dishType: existing.dishType ?? fallback.dishType,
-      dishTypes: normalizeRecipeDishTypeList(existing.dishTypes) ?? normalizeRecipeDishTypeList(fallback.dishTypes),
-      cuisine: existing.cuisine ?? fallback.cuisine,
-      cuisines: normalizeRecipeCuisineList(existing.cuisines) ?? normalizeRecipeCuisineList(fallback.cuisines),
-      mainProduct: existing.mainProduct ?? fallback.mainProduct,
-      mainProducts: normalizeStringList(existing.mainProducts) ?? normalizeStringList(fallback.mainProducts),
-      ingredients: normalizeStringList(existing.ingredients) ?? normalizeStringList(fallback.ingredients),
-      steps: normalizeStringList(existing.steps) ?? normalizeStringList(fallback.steps),
-      notes: existing.notes?.trim() ? existing.notes.trim() : fallback.notes,
-      photoUrls: normalizeStringList(existing.photoUrls) ?? normalizeStringList(fallback.photoUrls),
-      photoOriginalUrl: existing.photoOriginalUrl?.trim() ? existing.photoOriginalUrl.trim() : fallback.photoOriginalUrl,
-      status: existing.status ?? fallback.status,
-      reviewComment: existing.reviewComment ?? fallback.reviewComment,
-      ownerId: existing.ownerId ?? fallback.ownerId,
-      ownerRole: existing.ownerRole ?? fallback.ownerRole,
-    });
-  }
-
-  return Array.from(byId.values());
-}
-
 export async function fetchRecipes(): Promise<Recipe[]> {
   const metaMap = readRecipeMetaMap();
-  const localRecipes = readLocalRecipes();
   const deletedIds = readDeletedRecipeIds();
 
   if (!hasSupabaseAnonKey) {
-    return localRecipes.map((recipe) => applyMeta(recipe, metaMap));
+    return [];
   }
 
   const supabase = getSupabaseClient();
   if (!supabase) {
-    return localRecipes.map((recipe) => applyMeta(recipe, metaMap));
+    return [];
   }
 
   const { data, error } = await supabase
@@ -1350,9 +1313,8 @@ export async function fetchRecipes(): Promise<Recipe[]> {
 
   const supabaseRecipes = ((data as RecipeRow[] | null | undefined)?.map((row) => mapRecipeRow(row)) ?? [])
     .filter((recipe) => !deletedIds.has(recipe.id));
-  const mergedRecipes = mergeRecipesById(supabaseRecipes, localRecipes);
 
-  return mergedRecipes.map((recipe) => applyMeta(recipe, metaMap));
+  return supabaseRecipes.map((recipe) => applyMeta(recipe, metaMap));
 }
 
 export async function fetchRecipeById(id: string): Promise<Recipe | undefined> {
@@ -1364,14 +1326,12 @@ export async function fetchRecipeById(id: string): Promise<Recipe | undefined> {
   }
 
   if (!hasSupabaseAnonKey) {
-    const fallbackRecipe = getRecipeByIdFromLocal(id);
-    return fallbackRecipe ? applyMeta(fallbackRecipe, metaMap) : undefined;
+    return undefined;
   }
 
   const supabase = getSupabaseClient();
   if (!supabase) {
-    const fallbackRecipe = getRecipeByIdFromLocal(id);
-    return fallbackRecipe ? applyMeta(fallbackRecipe, metaMap) : undefined;
+    return undefined;
   }
 
   const { data, error } = await supabase
@@ -1385,8 +1345,7 @@ export async function fetchRecipeById(id: string): Promise<Recipe | undefined> {
   }
 
   if (!data) {
-    const fallbackRecipe = getRecipeByIdFromLocal(id);
-    return fallbackRecipe ? applyMeta(fallbackRecipe, metaMap) : undefined;
+    return undefined;
   }
 
   return applyMeta(mapRecipeRow(data as RecipeRow), metaMap);
