@@ -68,8 +68,11 @@ export function UserMessagesBanner() {
                 src={message.imageDataUrl}
               />
             )}
-            <Link className="mt-1 inline-flex text-xs underline" to={`/recipes/${message.recipeId}/edit`}>
-              Отвори за редакция
+            <Link
+              className="mt-1 inline-flex text-xs underline"
+              to={role === 'admin' ? `/recipes/${message.recipeId}` : `/recipes/${message.recipeId}/edit`}
+            >
+              {role === 'admin' ? 'Отвори рецепта' : 'Отвори за редакция'}
             </Link>
           </li>
         ))}
