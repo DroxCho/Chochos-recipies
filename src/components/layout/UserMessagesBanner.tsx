@@ -4,7 +4,7 @@ import { canParticipate } from '../../auth/roles';
 import { useUserRole } from '../../auth/useUserRole';
 import { openPublicUserCard } from '../../lib/publicUserCard';
 import { getUserDisplayName } from '../../lib/userDisplay';
-import { getUnreadUserMessages, markAllUserMessagesRead } from '../../lib/userMessages';
+import { getUnreadUserMessages, markAllUserMessagesRead, markUserMessageRead } from '../../lib/userMessages';
 
 export function UserMessagesBanner() {
   const { userId, role } = useUserRole();
@@ -47,6 +47,15 @@ export function UserMessagesBanner() {
     setVersion((current) => current + 1);
   }
 
+  function onMarkOneRead(messageId: string) {
+    if (!userId) {
+      return;
+    }
+
+    markUserMessageRead(userId, messageId);
+    setVersion((current) => current + 1);
+  }
+
   function extractLegacyReporterId(text: string): string | null {
     const match = text.match(/Подател:\s*([a-f0-9-]{36})/i);
     return match?.[1] ?? null;
@@ -67,13 +76,15 @@ export function UserMessagesBanner() {
     <section className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-amber-900">Имате {messages.length} нови съобщения за рецепти.</p>
-        <button
-          className="rounded border border-amber-300 bg-white px-2 py-1 text-xs text-amber-900"
-          onClick={onMarkAllRead}
-          type="button"
-        >
-          Маркирай като прочетени
-        </button>
+        {messages.length > 1 && (
+          <button
+            className="rounded border border-amber-300 bg-white px-2 py-1 text-xs text-amber-900"
+            onClick={onMarkAllRead}
+            type="button"
+          >
+            Маркирай всички като прочетени
+          </button>
+        )}
       </div>
       <ul className="mt-3 space-y-2 text-sm text-amber-900">
         {messages.map((message) => (
@@ -128,6 +139,13 @@ export function UserMessagesBanner() {
             >
               {role === 'admin' ? 'Отвори рецепта' : 'Отвори за редакция'}
             </Link>
+            <button
+              className="ml-3 mt-1 inline-flex rounded border border-amber-300 bg-white px-2 py-1 text-xs text-amber-900"
+              onClick={() => onMarkOneRead(message.id)}
+              type="button"
+            >
+              Маркирай като прочетен
+            </button>
           </li>
         ))}
       </ul>

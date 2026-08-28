@@ -86,3 +86,15 @@ export function markAllUserMessagesRead(toUserId: string): void {
 
   writeMessages(updated);
 }
+
+export function markUserMessageRead(toUserId: string, messageId: string): void {
+  const updated = readMessages().map((message) => {
+    if (message.id !== messageId || message.toUserId !== toUserId) {
+      return message;
+    }
+
+    return { ...message, read: true };
+  });
+
+  writeMessages(updated);
+}
