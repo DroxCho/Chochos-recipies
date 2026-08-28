@@ -127,6 +127,8 @@ export function RecipeForm({
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrorMap>({});
   const [isPhotoEditorOpen, setIsPhotoEditorOpen] = useState(false);
+  const [isDishTypeMenuOpen, setIsDishTypeMenuOpen] = useState(false);
+  const [isCuisineMenuOpen, setIsCuisineMenuOpen] = useState(false);
   const [isMainProductMenuOpen, setIsMainProductMenuOpen] = useState(false);
   const [editorSourceUrl, setEditorSourceUrl] = useState('');
   const [editorZoom, setEditorZoom] = useState(1);
@@ -138,6 +140,8 @@ export function RecipeForm({
   const dragStartRef = useRef<{ x: number; y: number; startX: number; startY: number } | null>(null);
   const previousEditorZoomRef = useRef(1);
   const editorPreviewRef = useRef<HTMLDivElement | null>(null);
+  const dishTypeMenuRef = useRef<HTMLDivElement | null>(null);
+  const cuisineMenuRef = useRef<HTMLDivElement | null>(null);
   const mainProductMenuRef = useRef<HTMLDivElement | null>(null);
   const totalSteps = 5;
   const wizardStepLabels: TranslationKey[] = ['wizardStep1', 'wizardStep2', 'wizardStep3', 'wizardStep4', 'wizardStep5'];
@@ -654,20 +658,48 @@ export function RecipeForm({
       ? (getMainProductMeta(mainProducts[0], language)?.label ?? '')
       : `${mainProducts.length} ${t('selectedItems')}`;
 
+  const selectedDishTypeLabel = dishType
+    ? (t(dishTypeOptions.find((option) => option.value === dishType)?.label ?? 'selectDishType'))
+    : t('selectDishType');
+
+  const selectedCuisineLabel = cuisine
+    ? (t(cuisineOptions.find((option) => option.value === cuisine)?.label ?? 'selectCuisineType'))
+    : t('selectCuisineType');
+
   useEffect(() => {
-    if (!isMainProductMenuOpen) {
+    if (!isDishTypeMenuOpen && !isCuisineMenuOpen && !isMainProductMenuOpen) {
       return;
     }
 
     function handleClickOutside(event: MouseEvent) {
+      if (!dishTypeMenuRef.current?.contains(event.target as Node)) {
+        setIsDishTypeMenuOpen(false);
+      }
+
+      if (!cuisineMenuRef.current?.contains(event.target as Node)) {
+        setIsCuisineMenuOpen(false);
+      }
+
       if (!mainProductMenuRef.current?.contains(event.target as Node)) {
         setIsMainProductMenuOpen(false);
       }
     }
 
+    function handleEsc(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsDishTypeMenuOpen(false);
+        setIsCuisineMenuOpen(false);
+        setIsMainProductMenuOpen(false);
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isMainProductMenuOpen]);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [isCuisineMenuOpen, isDishTypeMenuOpen, isMainProductMenuOpen]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1028,43 +1060,95 @@ export function RecipeForm({
         <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm text-slate-700">
             <span>{t('dishType')} {requiredMark}</span>
-            <select
-              className={`w-full rounded-md border bg-white px-3 py-2 text-left text-sm text-slate-700 ${inputBorderClass(Boolean(fieldErrors.dishType))}`}
-              onChange={(event) => {
-                setDishType(event.target.value as DishTypeValue);
-                clearFieldError('dishType');
-              }}
-              required
-              value={dishType}
-            >
-              <option value="">{t('selectDishType')}</option>
-              {dishTypeOptions.map((option) => (
-                <option key={`dish-type-${option.value}`} value={option.value}>
-                  {t(option.label)}
-                </option>
-              ))}
-            </select>
+            <div className="relative" ref={dishTypeMenuRef}>
+              <button
+                aria-expanded={isDishTypeMenuOpen}
+                aria-haspopup="menu"
+                className={`w-full rounded-md border bg-white px-3 py-2 text-left text-sm text-slate-700 ${inputBorderClass(Boolean(fieldErrors.dishType))}`}
+                onClick={() => {
+                  setIsDishTypeMenuOpen((open) => !open);
+                  setIsCuisineMenuOpen(false);
+                  setIsMainProductMenuOpen(false);
+                }}
+                type="button"
+              >
+                {selectedDishTypeLabel}
+              </button>
+
+              {isDishTypeMenuOpen && (
+                <div className="absolute left-0 top-full z-30 mt-1 w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-lg sm:w-80" role="menu">
+                  <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                    {dishTypeOptions.map((option) => {
+                      const isSelected = dishType === option.value;
+
+                      return (
+                        <button
+                          key={`dish-type-form-${option.value}`}
+                          className={`flex w-full items-center rounded px-2 py-1.5 text-left text-sm ${isSelected ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
+                          onClick={() => {
+                            setDishType(option.value as DishTypeValue);
+                            clearFieldError('dishType');
+                            setIsDishTypeMenuOpen(false);
+                          }}
+                          role="menuitemradio"
+                          aria-checked={isSelected}
+                          type="button"
+                        >
+                          {t(option.label)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
             {fieldErrors.dishType && <span className="text-xs text-rose-700">{t(fieldErrors.dishType)}</span>}
           </label>
 
           <label className="flex flex-col gap-1 text-sm text-slate-700">
             <span>{t('cuisineType')} {requiredMark}</span>
-            <select
-              className={`w-full rounded-md border bg-white px-3 py-2 text-left text-sm text-slate-700 ${inputBorderClass(Boolean(fieldErrors.cuisine))}`}
-              onChange={(event) => {
-                setCuisine(event.target.value as CuisineValue);
-                clearFieldError('cuisine');
-              }}
-              required
-              value={cuisine}
-            >
-              <option value="">{t('selectCuisineType')}</option>
-              {cuisineOptions.map((option) => (
-                <option key={`cuisine-type-${option.value}`} value={option.value}>
-                  {t(option.label)}
-                </option>
-              ))}
-            </select>
+            <div className="relative" ref={cuisineMenuRef}>
+              <button
+                aria-expanded={isCuisineMenuOpen}
+                aria-haspopup="menu"
+                className={`w-full rounded-md border bg-white px-3 py-2 text-left text-sm text-slate-700 ${inputBorderClass(Boolean(fieldErrors.cuisine))}`}
+                onClick={() => {
+                  setIsCuisineMenuOpen((open) => !open);
+                  setIsDishTypeMenuOpen(false);
+                  setIsMainProductMenuOpen(false);
+                }}
+                type="button"
+              >
+                {selectedCuisineLabel}
+              </button>
+
+              {isCuisineMenuOpen && (
+                <div className="absolute left-0 top-full z-30 mt-1 w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-lg sm:w-80" role="menu">
+                  <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                    {cuisineOptions.map((option) => {
+                      const isSelected = cuisine === option.value;
+
+                      return (
+                        <button
+                          key={`cuisine-form-${option.value}`}
+                          className={`flex w-full items-center rounded px-2 py-1.5 text-left text-sm ${isSelected ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
+                          onClick={() => {
+                            setCuisine(option.value as CuisineValue);
+                            clearFieldError('cuisine');
+                            setIsCuisineMenuOpen(false);
+                          }}
+                          role="menuitemradio"
+                          aria-checked={isSelected}
+                          type="button"
+                        >
+                          {t(option.label)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
             {fieldErrors.cuisine && <span className="text-xs text-rose-700">{t(fieldErrors.cuisine)}</span>}
           </label>
 
@@ -1073,7 +1157,11 @@ export function RecipeForm({
             <div className="relative" ref={mainProductMenuRef}>
               <button
                 className={`w-full rounded-md border bg-white px-3 py-2 text-left text-sm text-slate-700 ${inputBorderClass(Boolean(fieldErrors.mainProduct))}`}
-                onClick={() => setIsMainProductMenuOpen((open) => !open)}
+                onClick={() => {
+                  setIsMainProductMenuOpen((open) => !open);
+                  setIsDishTypeMenuOpen(false);
+                  setIsCuisineMenuOpen(false);
+                }}
                 type="button"
               >
                 {selectedMainProductLabel || t('selectMainProduct')}
