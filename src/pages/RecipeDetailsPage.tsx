@@ -357,7 +357,7 @@ export function RecipeDetailsPage() {
 
     try {
       const copiedRecipe = await insertRecipe({
-        title: `${currentRecipe.title} (copy)`,
+        title: `${currentRecipe.title} (копие)`,
         description: currentRecipe.description,
         prepMinutes: currentRecipe.prepMinutes,
         servings: currentRecipe.servings,
