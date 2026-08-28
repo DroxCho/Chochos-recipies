@@ -51,7 +51,6 @@ function readUserProfilePhoto(userId: string | null | undefined): string {
 export function Header() {
   const { t } = useLanguage();
   const { role, setRole, userId } = useUserRole();
-  const isSignedIn = role !== 'visitor';
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
   const [isAuthMenuOpen, setIsAuthMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -60,6 +59,7 @@ export function Header() {
   const [profilePhotoDataUrl, setProfilePhotoDataUrl] = useState('');
   const authMenuRef = useRef<HTMLDivElement | null>(null);
   const activeUserId = userId ?? sessionUserId;
+  const isSignedIn = Boolean(sessionUserId);
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -278,7 +278,7 @@ export function Header() {
               </div>
             )}
           </div>
-          {role === 'visitor' ? (
+          {!isSignedIn ? (
             <button
               type="button"
               className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
