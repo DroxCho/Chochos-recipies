@@ -1049,12 +1049,9 @@ export function ProfilePage() {
                     </div>
 
                     <div>
-                      <label className="text-xs text-slate-500" htmlFor={`manage-role-${entry.id}`}>
-                        {t('profileRoleLabel')}
-                      </label>
                       <select
                         id={`manage-role-${entry.id}`}
-                        className="mt-1 block rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                        className="block rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
                         value={entry.isBlocked ? 'blocked' : entry.selectedRole}
                         onChange={(event) => handleManagedRoleChange(entry.id, event.target.value as ManagedUserRole | 'blocked')}
                       >
@@ -1120,11 +1117,10 @@ export function ProfilePage() {
                 <p className="mt-1 text-xs text-slate-500">{t('profileFieldUserId')}: {selectedManagedUser.id}</p>
               </div>
 
-              <label className="block text-xs text-slate-500" htmlFor="selected-user-role">
-                {t('profileRoleLabel')}
+              <div>
                 <select
                   id="selected-user-role"
-                  className="mt-1 block w-full rounded border border-slate-300 bg-white px-2 py-2 text-sm text-slate-700"
+                  className="block w-full rounded border border-slate-300 bg-white px-2 py-2 text-sm text-slate-700"
                   value={selectedManagedUser.isBlocked ? 'blocked' : selectedManagedUser.selectedRole}
                   onChange={(event) => handleManagedRoleChange(selectedManagedUser.id, event.target.value as ManagedUserRole | 'blocked')}
                 >
@@ -1132,7 +1128,7 @@ export function ProfilePage() {
                   <option value="admin">{t('roleAdmin')}</option>
                   <option value="blocked">{t('roleBlocked')}</option>
                 </select>
-              </label>
+              </div>
 
               <p className="text-xs text-slate-500">
                 {t('userStatusLabel')}: <span className={selectedManagedUser.isBlocked ? 'text-rose-700' : 'text-emerald-700'}>{selectedManagedUser.isBlocked ? t('userStatusBlocked') : t('userStatusActive')}</span>
