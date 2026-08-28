@@ -16,7 +16,7 @@ const ProfilePage = lazy(async () => {
 const PROFILE_STORAGE_KEY = 'recipes_user_profiles_v1';
 
 function readUserProfilePhoto(userId: string | null | undefined): string {
-  if (!userId || typeof window === 'undefined') {
+  if (typeof window === 'undefined') {
     return '';
   }
 
@@ -27,7 +27,22 @@ function readUserProfilePhoto(userId: string | null | undefined): string {
 
   try {
     const parsed = JSON.parse(raw) as Record<string, { profilePhotoDataUrl?: string }>;
-    return parsed[userId]?.profilePhotoDataUrl ?? '';
+    if (userId) {
+      const directPhoto = parsed[userId]?.profilePhotoDataUrl?.trim() ?? '';
+      if (directPhoto) {
+        return directPhoto;
+      }
+    }
+
+    const photos = Object.values(parsed)
+      .map((entry) => entry.profilePhotoDataUrl?.trim() ?? '')
+      .filter((value) => Boolean(value));
+
+    if (photos.length === 1) {
+      return photos[0] ?? '';
+    }
+
+    return '';
   } catch {
     return '';
   }
