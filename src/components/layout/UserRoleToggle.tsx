@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import type { ChangeEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useUserRole } from '../../auth/useUserRole';
 import type { UserRole } from '../../auth/roles';
 import { readUserAdminControls, resolveManagedRole } from '../../auth/userAdminControls';
@@ -20,6 +19,8 @@ export function UserRoleToggle() {
   const { role, setRole } = useUserRole();
   const { t } = useLanguage();
   const [canSwitchRole, setCanSwitchRole] = useState(role === 'admin');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const roleMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -105,9 +106,38 @@ export function UserRoleToggle() {
     };
   }, [role]);
 
-  function handleChange(event: ChangeEvent<HTMLSelectElement>) {
-    setRole(event.target.value as UserRole);
-  }
+  useEffect(() => {
+    if (!isMenuOpen) {
+      return;
+    }
+
+    function handleClickOutside(event: MouseEvent) {
+      if (!roleMenuRef.current?.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    }
+
+    function handleEsc(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [isMenuOpen]);
+
+  const roleOptions: Array<{ value: UserRole; label: string }> = [
+    { value: 'visitor', label: t('roleVisitor') },
+    { value: 'registered', label: t('roleRegistered') },
+    { value: 'admin', label: t('roleAdmin') },
+    { value: 'blocked', label: t('roleBlocked') },
+  ];
 
   if (!canSwitchRole) {
     const roleLabel = role === 'registered'
@@ -122,18 +152,45 @@ export function UserRoleToggle() {
   }
 
   return (
-    <label className="flex max-w-full flex-wrap items-center gap-2 text-xs text-slate-600">
-      {t('userTypeLabel')}:
-      <select
-        className="max-w-[42vw] min-w-0 rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 sm:max-w-none"
-        onChange={handleChange}
-        value={role}
+    <div className="relative flex max-w-full flex-wrap items-center gap-2 text-xs text-slate-600" ref={roleMenuRef}>
+      <span>{t('userTypeLabel')}:</span>
+      <button
+        aria-expanded={isMenuOpen}
+        aria-haspopup="menu"
+        className="inline-flex min-w-[128px] items-center justify-between rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+        onClick={() => setIsMenuOpen((open) => !open)}
+        type="button"
       >
-        <option value="visitor">{t('roleVisitor')}</option>
-        <option value="registered">{t('roleRegistered')}</option>
-        <option value="admin">{t('roleAdmin')}</option>
-        <option value="blocked">{t('roleBlocked')}</option>
-      </select>
-    </label>
+        <span className="truncate">{roleOptions.find((option) => option.value === role)?.label ?? t('roleVisitor')}</span>
+        <span aria-hidden="true" className="ml-2 text-[10px]">▾</span>
+      </button>
+
+      {isMenuOpen && (
+        <div
+          className="absolute right-0 top-full z-30 mt-1 w-[min(14rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-md"
+          role="menu"
+        >
+          {roleOptions.map((option) => {
+            const isSelected = role === option.value;
+
+            return (
+              <button
+                key={option.value}
+                className={`flex w-full items-center rounded px-2 py-1.5 text-left text-sm ${isSelected ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
+                onClick={() => {
+                  setRole(option.value);
+                  setIsMenuOpen(false);
+                }}
+                role="menuitemradio"
+                aria-checked={isSelected}
+                type="button"
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
