@@ -1111,9 +1111,25 @@ export function ProfilePage() {
 
             <div className="space-y-3 text-sm text-slate-700">
               <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-                <p className="font-medium text-slate-900">{t('profileFieldFullName')}: {getUserNameFallback(selectedManagedUser.fullName, selectedManagedUser.email ?? '', selectedManagedUser.id, selectedManagedUser.isBlocked ? 'blocked' : selectedManagedUser.selectedRole)}</p>
-                <p className="text-xs text-slate-600">{t('profileFieldEmail')}: {selectedManagedUser.email || '-'}</p>
-                <p className="mt-1 text-xs text-slate-500">{t('profileFieldUserId')}: {selectedManagedUser.id}</p>
+                <div className="flex items-start gap-3">
+                  {selectedManagedUser.profilePhotoDataUrl ? (
+                    <img
+                      alt={getUserNameFallback(selectedManagedUser.fullName, selectedManagedUser.email ?? '', selectedManagedUser.id, selectedManagedUser.isBlocked ? 'blocked' : selectedManagedUser.selectedRole)}
+                      className="h-14 w-14 shrink-0 rounded-full border border-slate-200 object-cover"
+                      src={selectedManagedUser.profilePhotoDataUrl}
+                    />
+                  ) : (
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-dashed border-slate-300 bg-white text-[10px] text-slate-500">
+                      {t('noPhotoPlaceholder')}
+                    </div>
+                  )}
+
+                  <div className="min-w-0">
+                    <p className="font-medium text-slate-900">{t('profileFieldFullName')}: {getUserNameFallback(selectedManagedUser.fullName, selectedManagedUser.email ?? '', selectedManagedUser.id, selectedManagedUser.isBlocked ? 'blocked' : selectedManagedUser.selectedRole)}</p>
+                    <p className="text-xs text-slate-600">{t('profileFieldEmail')}: {selectedManagedUser.email || '-'}</p>
+                    <p className="mt-1 text-xs text-slate-500">{t('profileFieldUserId')}: {selectedManagedUser.id}</p>
+                  </div>
+                </div>
               </div>
 
               <div>
