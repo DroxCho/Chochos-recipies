@@ -131,7 +131,7 @@ export function Header() {
           )}
         </nav>
 
-        <div className="order-2 ml-auto flex items-center gap-2 sm:order-3 sm:ml-0 sm:gap-4">
+        <div className="order-2 ml-auto flex max-w-full flex-wrap items-center justify-end gap-2 sm:order-3 sm:ml-0 sm:flex-nowrap sm:gap-4">
           {isSignedIn && (
             <NavLink
               aria-label={t('navFavorites')}

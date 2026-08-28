@@ -122,10 +122,10 @@ export function UserRoleToggle() {
   }
 
   return (
-    <label className="flex items-center gap-2 text-xs text-slate-600">
+    <label className="flex max-w-full flex-wrap items-center gap-2 text-xs text-slate-600">
       {t('userTypeLabel')}:
       <select
-        className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+        className="max-w-[42vw] min-w-0 rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 sm:max-w-none"
         onChange={handleChange}
         value={role}
       >
