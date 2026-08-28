@@ -11,7 +11,29 @@ import { openPublicUserCard } from '../../lib/publicUserCard';
 import { getRecipeAverageRating, getUserRecipeRating } from '../../lib/recipeRatings';
 import { hasUserTriedRecipe } from '../../lib/recipeTried';
 import { getUserDisplayName } from '../../lib/userDisplay';
-import type { Recipe } from '../../types/recipe';
+import type { Recipe, RecipeCuisine, RecipeDishType } from '../../types/recipe';
+
+const DISH_TYPE_ICONS: Record<RecipeDishType, string> = {
+  main: '🍽️',
+  dessert: '🍰',
+  soup: '🍲',
+  salad: '🥗',
+  appetizer: '🥟',
+  breakfast: '🍳',
+};
+
+const CUISINE_ICONS: Record<RecipeCuisine, string> = {
+  bulgarian: '🇧🇬',
+  french: '🇫🇷',
+  asian: '🥢',
+  italian: '🇮🇹',
+  mexican: '🇲🇽',
+  spanish: '🇪🇸',
+  turkish: '🇹🇷',
+  vegan: '🌿',
+  vegetarian: '🥬',
+  international: '🌍',
+};
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -358,7 +380,10 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
             role="button"
             tabIndex={0}
           >
-            {t(dishTypeLabelKey)}
+            <span className="inline-flex items-center gap-1">
+              <span aria-hidden="true" className="text-sm leading-none">{DISH_TYPE_ICONS[recipe.dishType ?? 'main']}</span>
+              <span>{t(dishTypeLabelKey)}</span>
+            </span>
           </span>
         </p>
         <p
@@ -383,7 +408,10 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
             role="button"
             tabIndex={0}
           >
-            {t(cuisineLabelKey)}
+            <span className="inline-flex items-center gap-1">
+              <span aria-hidden="true" className="text-sm leading-none">{CUISINE_ICONS[recipe.cuisine ?? 'international']}</span>
+              <span>{t(cuisineLabelKey)}</span>
+            </span>
           </span>
         </p>
       </div>
