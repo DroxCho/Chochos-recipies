@@ -1048,6 +1048,12 @@ export function ProfilePage() {
                       </div>
                     </div>
 
+                    <div className="text-xs font-medium">
+                      <p className={entry.isBlocked ? 'text-rose-700' : 'text-emerald-700'}>
+                        {entry.isBlocked ? t('userStatusBlocked') : t('userStatusActive')}
+                      </p>
+                    </div>
+
                     <div>
                       <select
                         id={`manage-role-${entry.id}`}
@@ -1059,13 +1065,6 @@ export function ProfilePage() {
                         <option value="admin">{t('roleAdmin')}</option>
                         <option value="blocked">{t('roleBlocked')}</option>
                       </select>
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-slate-500">{t('userStatusLabel')}</p>
-                      <p className={`mt-1 text-xs font-medium ${entry.isBlocked ? 'text-rose-700' : 'text-emerald-700'}`}>
-                        {entry.isBlocked ? t('userStatusBlocked') : t('userStatusActive')}
-                      </p>
                     </div>
 
                     <div className="flex gap-2">
