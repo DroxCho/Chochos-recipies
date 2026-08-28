@@ -17,6 +17,7 @@ import {
   openPublicUserCard,
 } from '../../lib/publicUserCard';
 import { getUserProfileLinkId } from '../../lib/userDisplay';
+import { addUserMessage } from '../../lib/userMessages';
 import type { Recipe } from '../../types/recipe';
 
 const PROFILE_STORAGE_KEY = 'recipes_user_profiles_v1';
@@ -129,7 +130,7 @@ function writeProfiles(value: LocalProfilesMap): void {
 
 export function PublicUserCardModal() {
   const { t, language } = useLanguage();
-  const { role } = useUserRole();
+  const { role, userId } = useUserRole();
   const location = useLocation();
   const [selectedUserId, setSelectedUserId] = useState('');
   const [profilesVersion, setProfilesVersion] = useState(0);
@@ -158,6 +159,9 @@ export function PublicUserCardModal() {
   const [deletingRecipeId, setDeletingRecipeId] = useState<string | null>(null);
   const [isDeletingAllRecipes, setIsDeletingAllRecipes] = useState(false);
   const [userRecipes, setUserRecipes] = useState<Recipe[]>([]);
+  const [isMessageComposerOpen, setIsMessageComposerOpen] = useState(false);
+  const [messageDraft, setMessageDraft] = useState('');
+  const [messageFeedback, setMessageFeedback] = useState<{ text: string; tone: 'success' | 'error' } | null>(null);
   const dragStartRef = useRef<{ x: number; y: number; startX: number; startY: number } | null>(null);
   const previousEditorZoomRef = useRef(1);
   const editorPreviewRef = useRef<HTMLDivElement | null>(null);
@@ -438,6 +442,9 @@ export function PublicUserCardModal() {
 
   useEffect(() => {
     setIsEditingUserProfile(false);
+    setIsMessageComposerOpen(false);
+    setMessageDraft('');
+    setMessageFeedback(null);
     setProfileSavedMessage('');
   }, [selectedUserId]);
 
@@ -680,6 +687,26 @@ export function PublicUserCardModal() {
     setProfileSavedMessage(t('profileSaveSuccess'));
   }
 
+  function handleSendMessage() {
+    if (!selectedUser || !userId) {
+      return;
+    }
+
+    const trimmedMessage = messageDraft.trim();
+    if (!trimmedMessage) {
+      setMessageFeedback({ text: t('authorMessageRequired'), tone: 'error' });
+      return;
+    }
+
+    addUserMessage(selectedUser.id, `user-card-${selectedUser.id}`, trimmedMessage, {
+      fromUserId: userId,
+    });
+
+    setMessageDraft('');
+    setIsMessageComposerOpen(false);
+    setMessageFeedback({ text: t('authorMessageSent'), tone: 'success' });
+  }
+
   function handleProfilePhotoSelect(file: File | null) {
     if (!file || !file.type.startsWith('image/')) {
       return;
@@ -778,6 +805,7 @@ export function PublicUserCardModal() {
 
   const selectedRole = selectedUser.isBlocked ? 'blocked' : selectedUser.role;
   const selectedUserAlias = getFallbackName(selectedUser.fullName, selectedUser.email, selectedUser.id);
+  const canSendMessage = (role === 'registered' || role === 'admin') && !selectedUser.isDeleted;
   const selectedRoleLabel = selectedRole === 'admin'
     ? t('roleAdmin')
     : selectedRole === 'blocked'
@@ -853,6 +881,58 @@ export function PublicUserCardModal() {
                 >
                   {t('userAllRecipesButton')}
                 </a>
+
+                {canSendMessage ? (
+                  <div className="mt-2">
+                    {!isMessageComposerOpen ? (
+                      <button
+                        type="button"
+                        className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+                        onClick={() => {
+                          setIsMessageComposerOpen(true);
+                          setMessageFeedback(null);
+                        }}
+                      >
+                        {t('sendAuthorMessage')}
+                      </button>
+                    ) : (
+                      <div className="space-y-2 rounded-md border border-slate-200 bg-white p-2">
+                        <textarea
+                          className="min-h-20 w-full rounded-md border border-slate-300 px-2 py-1.5 text-xs text-slate-700"
+                          onChange={(event) => setMessageDraft(event.target.value)}
+                          placeholder={t('messageAuthorPlaceholder')}
+                          value={messageDraft}
+                        />
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            className="rounded-md bg-slate-900 px-2.5 py-1 text-xs font-medium text-white hover:bg-slate-800"
+                            onClick={handleSendMessage}
+                          >
+                            {t('sendAuthorMessage')}
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                            onClick={() => {
+                              setIsMessageComposerOpen(false);
+                              setMessageDraft('');
+                              setMessageFeedback(null);
+                            }}
+                          >
+                            {t('cancel')}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
+                {messageFeedback ? (
+                  <p className={`mt-2 text-xs ${messageFeedback.tone === 'success' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    {messageFeedback.text}
+                  </p>
+                ) : null}
 
                 {role === 'admin' ? (
                   <div className="mt-2">
