@@ -670,10 +670,20 @@ export function RecipeDetailsPage() {
     return getReplyPreviewLabel(parentId);
   }
 
+  function getReplyParentComment(comment: RecipeComment): RecipeComment | null {
+    const parentId = comment.parentCommentId;
+    if (!parentId) {
+      return null;
+    }
+
+    return commentById.get(parentId) ?? null;
+  }
+
   function renderCommentItem(comment: RecipeComment, depth: number = 0) {
     const replies = repliesByParent.get(comment.id) ?? [];
     const isReply = depth > 0;
     const replyParentLabel = getReplyParentLabel(comment);
+    const replyParentComment = getReplyParentComment(comment);
 
     return (
       <div
@@ -681,9 +691,16 @@ export function RecipeDetailsPage() {
         className={`rounded-md border border-slate-200 bg-white px-3 py-2 ${isReply ? 'ml-4 mt-2 border-l-4 border-l-sky-200' : ''}`}
       >
         <div className="flex items-start justify-between gap-2">
-          <p className="text-xs text-slate-500">
-            {getCommentAuthorLabel(comment)} · {new Date(comment.createdAt).toLocaleString()}
-          </p>
+          <div className="flex flex-wrap items-center gap-1 text-xs text-slate-500">
+            <button
+              className="font-medium text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-800"
+              onClick={() => openPublicUserCard(comment.userId)}
+              type="button"
+            >
+              {getCommentAuthorLabel(comment)}
+            </button>
+            <span>· {new Date(comment.createdAt).toLocaleString()}</span>
+          </div>
           {canReportComments && (
             <div className="group relative inline-flex">
               <button
@@ -706,7 +723,18 @@ export function RecipeDetailsPage() {
         </div>
         {isReply && replyParentLabel && (
           <p className="mt-1 text-[11px] font-medium text-sky-700">
-            {t('replyToLabel')} {replyParentLabel}
+            {t('replyToLabel')}{' '}
+            {replyParentComment ? (
+              <button
+                className="underline decoration-sky-300 underline-offset-2 hover:text-sky-800"
+                onClick={() => openPublicUserCard(replyParentComment.userId)}
+                type="button"
+              >
+                {replyParentLabel}
+              </button>
+            ) : (
+              <span>{replyParentLabel}</span>
+            )}
           </p>
         )}
         {editingCommentId === comment.id ? (
