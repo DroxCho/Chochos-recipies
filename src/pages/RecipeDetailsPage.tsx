@@ -1143,7 +1143,7 @@ export function RecipeDetailsPage() {
                 className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                   isRecipeTried
                     ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                    : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                    : 'border border-emerald-600 bg-transparent text-emerald-700 hover:bg-emerald-50'
                 }`}
                 onClick={handleToggleRecipeTried}
                 type="button"
