@@ -814,10 +814,39 @@ export function RecipeForm({
 
   const selectedMainProductLabel =
     mainProducts.length === 0
-      ? ''
+      ? null
       : mainProducts.length === 1
-      ? (getMainProductMeta(mainProducts[0], language)?.label ?? '')
-      : `${mainProducts.length} ${t('selectedItems')}`;
+      ? (() => {
+          const meta = getMainProductMeta(mainProducts[0], language);
+          if (!meta) {
+            return null;
+          }
+
+          return (
+            <span className="inline-flex items-center gap-2">
+              <span aria-hidden="true" className="text-base leading-none">{meta.icon}</span>
+              <span>{meta.label}</span>
+            </span>
+          );
+        })()
+      : (() => {
+          const selectedMeta = mainProducts
+            .map((mainProduct) => getMainProductMeta(mainProduct, language))
+            .filter((meta): meta is NonNullable<ReturnType<typeof getMainProductMeta>> => meta !== null);
+
+          return (
+            <span className="inline-flex items-center gap-2">
+              <span className="inline-flex items-center gap-1">
+                {selectedMeta.map((meta) => (
+                  <span key={`selected-main-product-icon-${meta.label}`} aria-hidden="true" className="text-base leading-none">
+                    {meta.icon}
+                  </span>
+                ))}
+              </span>
+              <span>{mainProducts.length} {t('selectedProductTypes')}</span>
+            </span>
+          );
+        })();
 
   const selectedDishTypeLabel = dishType
     ? `${DISH_TYPE_ICONS[dishType]} ${t(dishTypeOptions.find((option) => option.value === dishType)?.label ?? 'selectDishType')}`
@@ -1336,7 +1365,7 @@ export function RecipeForm({
                 }}
                 type="button"
               >
-                {selectedMainProductLabel || t('selectMainProduct')}
+                {selectedMainProductLabel ?? t('selectMainProduct')}
               </button>
 
               {isMainProductMenuOpen && (
