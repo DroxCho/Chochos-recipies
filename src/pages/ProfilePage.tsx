@@ -138,6 +138,7 @@ export function ProfilePage() {
   const [selectedManagedUserId, setSelectedManagedUserId] = useState<string | null>(null);
   const dragStartRef = useRef<{ x: number; y: number; startX: number; startY: number } | null>(null);
   const previousEditorZoomRef = useRef(1);
+  const editorPreviewRef = useRef<HTMLDivElement | null>(null);
 
   const managedUsers = useMemo(() => {
     const profiles = readProfiles();
@@ -271,7 +272,8 @@ export function ProfilePage() {
       return { width: 0, height: 0, scale: 1, offsetX: 0, offsetY: 0 };
     }
 
-    const baseScale = Math.min(PHOTO_EDITOR_PREVIEW_SIZE / width, PHOTO_EDITOR_PREVIEW_SIZE / height);
+    const previewSize = editorPreviewRef.current?.clientWidth || PHOTO_EDITOR_PREVIEW_SIZE;
+    const baseScale = Math.min(previewSize / width, previewSize / height);
     const scale = baseScale * clamp(zoomValue, 0.4, 3);
     const renderedWidth = width * scale;
     const renderedHeight = height * scale;
@@ -280,8 +282,8 @@ export function ProfilePage() {
       width: renderedWidth,
       height: renderedHeight,
       scale,
-      offsetX: (PHOTO_EDITOR_PREVIEW_SIZE - renderedWidth) / 2,
-      offsetY: (PHOTO_EDITOR_PREVIEW_SIZE - renderedHeight) / 2,
+      offsetX: (previewSize - renderedWidth) / 2,
+      offsetY: (previewSize - renderedHeight) / 2,
     };
   }
 
@@ -1175,6 +1177,7 @@ export function ProfilePage() {
 
             <div className="grid gap-4 md:grid-cols-[320px,1fr]">
               <div
+                ref={editorPreviewRef}
                 className="relative mx-auto h-[min(68vw,18rem)] w-[min(68vw,18rem)] overflow-hidden rounded-lg border border-slate-300 bg-slate-100 sm:h-72 sm:w-72"
                 onWheel={handleEditorWheel}
               >
