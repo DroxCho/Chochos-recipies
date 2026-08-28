@@ -902,13 +902,59 @@ export function RecipeForm({
 
   const selectedDishTypeLabel =
     dishTypes.length === 0
-      ? t('selectDishType')
-      : `${dishTypes.length} ${t('selectedItems')}`;
+      ? null
+      : dishTypes.length === 1
+      ? (() => {
+          const selectedDishType = dishTypes[0];
+          const labelKey = dishTypeOptions.find((option) => option.value === selectedDishType)?.label ?? 'selectDishType';
+
+          return (
+            <span className="inline-flex items-center gap-2">
+              <span aria-hidden="true" className="text-base leading-none">{DISH_TYPE_ICONS[selectedDishType]}</span>
+              <span>{t(labelKey)}</span>
+            </span>
+          );
+        })()
+      : (
+          <span className="inline-flex items-center gap-2">
+            <span className="inline-flex items-center gap-1">
+              {dishTypes.map((selectedDishType) => (
+                <span key={`selected-dish-type-icon-${selectedDishType}`} aria-hidden="true" className="text-base leading-none">
+                  {DISH_TYPE_ICONS[selectedDishType]}
+                </span>
+              ))}
+            </span>
+            <span>{dishTypes.length} {t('selectedItems')}</span>
+          </span>
+        );
 
   const selectedCuisineLabel =
     cuisines.length === 0
-      ? t('selectCuisineType')
-      : `${cuisines.length} ${t('selectedItems')}`;
+      ? null
+      : cuisines.length === 1
+      ? (() => {
+          const selectedCuisine = cuisines[0];
+          const labelKey = cuisineOptions.find((option) => option.value === selectedCuisine)?.label ?? 'selectCuisineType';
+
+          return (
+            <span className="inline-flex items-center gap-2">
+              <span aria-hidden="true" className="text-base leading-none">{CUISINE_ICONS[selectedCuisine]}</span>
+              <span>{t(labelKey)}</span>
+            </span>
+          );
+        })()
+      : (
+          <span className="inline-flex items-center gap-2">
+            <span className="inline-flex items-center gap-1">
+              {cuisines.map((selectedCuisine) => (
+                <span key={`selected-cuisine-icon-${selectedCuisine}`} aria-hidden="true" className="text-base leading-none">
+                  {CUISINE_ICONS[selectedCuisine]}
+                </span>
+              ))}
+            </span>
+            <span>{cuisines.length} {t('selectedItems')}</span>
+          </span>
+        );
 
   useEffect(() => {
     if (!isDishTypeMenuOpen && !isCuisineMenuOpen && !isMainProductMenuOpen) {
@@ -1329,7 +1375,7 @@ export function RecipeForm({
                 }}
                 type="button"
               >
-                {selectedDishTypeLabel}
+                {selectedDishTypeLabel ?? t('selectDishType')}
               </button>
 
               {isDishTypeMenuOpen && (
@@ -1392,7 +1438,7 @@ export function RecipeForm({
                 }}
                 type="button"
               >
-                {selectedCuisineLabel}
+                {selectedCuisineLabel ?? t('selectCuisineType')}
               </button>
 
               {isCuisineMenuOpen && (
