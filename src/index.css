@@ -21,9 +21,13 @@
     min-height: 100%;
   }
 
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
   body {
     margin: 0;
-    overflow-x: hidden;
     color: var(--rustic-text);
     font-family: 'Trebuchet MS', 'Gill Sans', 'Segoe UI', sans-serif;
     background-color: var(--rustic-bg);
