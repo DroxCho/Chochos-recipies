@@ -177,6 +177,9 @@ export function Header() {
               {t('navAddRecipe')}
             </NavLink>
           )}
+          <div className="ml-auto shrink-0">
+            <LanguageToggle />
+          </div>
         </nav>
 
         <div className="order-2 ml-auto flex max-w-full flex-wrap items-center justify-end gap-2 sm:order-3 sm:ml-0 sm:flex-nowrap sm:gap-4">
@@ -289,7 +292,6 @@ export function Header() {
           ) : (
             <UserRoleToggle />
           )}
-          <LanguageToggle />
         </div>
       </div>
       <AuthModal
