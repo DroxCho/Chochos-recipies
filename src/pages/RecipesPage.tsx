@@ -129,12 +129,16 @@ export function RecipesPage() {
   const pageSize = 12;
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isDishTypeMenuOpen, setIsDishTypeMenuOpen] = useState(false);
+  const [isCuisineMenuOpen, setIsCuisineMenuOpen] = useState(false);
   const [isMainProductMenuOpen, setIsMainProductMenuOpen] = useState(false);
   const selectedDishType = parseDishTypeFilter(searchParams.get('dishType'));
   const selectedCuisine = parseCuisineFilter(searchParams.get('cuisine'));
   const mainProductsParam = searchParams.get('mainProducts');
   const selectedMainProducts = useMemo(() => parseMainProductsFilter(mainProductsParam), [mainProductsParam]);
   const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
+  const dishTypeMenuRef = useRef<HTMLDivElement | null>(null);
+  const cuisineMenuRef = useRef<HTMLDivElement | null>(null);
   const mainProductMenuRef = useRef<HTMLDivElement | null>(null);
 
   const dishTypeOptions: Array<{ value: 'all' | RecipeDishType; label: string }> = [
@@ -209,19 +213,63 @@ export function RecipesPage() {
   }, [searchQuery, selectedCuisine, selectedDishType, selectedMainProducts]);
 
   useEffect(() => {
-    if (!isMainProductMenuOpen) {
+    if (!isDishTypeMenuOpen && !isCuisineMenuOpen && !isMainProductMenuOpen) {
       return;
     }
 
     function handleClickOutside(event: MouseEvent) {
+      if (!dishTypeMenuRef.current?.contains(event.target as Node)) {
+        setIsDishTypeMenuOpen(false);
+      }
+
+      if (!cuisineMenuRef.current?.contains(event.target as Node)) {
+        setIsCuisineMenuOpen(false);
+      }
+
       if (!mainProductMenuRef.current?.contains(event.target as Node)) {
         setIsMainProductMenuOpen(false);
       }
     }
 
+    function handleEsc(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsDishTypeMenuOpen(false);
+        setIsCuisineMenuOpen(false);
+        setIsMainProductMenuOpen(false);
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isMainProductMenuOpen]);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [isCuisineMenuOpen, isDishTypeMenuOpen, isMainProductMenuOpen]);
+
+  function setDishTypeFilter(value: 'all' | RecipeDishType) {
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (value === 'all') {
+      nextParams.delete('dishType');
+    } else {
+      nextParams.set('dishType', value);
+    }
+
+    setSearchParams(nextParams, { replace: true });
+  }
+
+  function setCuisineFilter(value: 'all' | RecipeCuisine) {
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (value === 'all') {
+      nextParams.delete('cuisine');
+    } else {
+      nextParams.set('cuisine', value);
+    }
+
+    setSearchParams(nextParams, { replace: true });
+  }
 
   function toggleMainProductSelection(productValue: MainProductValue) {
     const nextParams = new URLSearchParams(searchParams);
@@ -303,57 +351,89 @@ export function RecipesPage() {
           />
         </label>
 
-        <label className="order-2 flex items-center gap-2 text-sm text-slate-700 whitespace-nowrap">
-          <span>{t('dishType')}</span>
-          <select
-            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
-            onChange={(event) => {
-              const value = event.target.value as 'all' | RecipeDishType;
-              const nextParams = new URLSearchParams(searchParams);
-
-              if (value === 'all') {
-                nextParams.delete('dishType');
-              } else {
-                nextParams.set('dishType', value);
-              }
-
-              setSearchParams(nextParams, { replace: true });
+        <div className="order-2 relative max-w-full shrink-0" ref={dishTypeMenuRef}>
+          <span className="mr-2 text-sm text-slate-700">{t('dishType')}</span>
+          <button
+            aria-expanded={isDishTypeMenuOpen}
+            aria-haspopup="menu"
+            className="w-full min-w-48 rounded-md border border-slate-300 bg-white px-3 py-1 text-left text-sm text-slate-700 sm:w-auto"
+            onClick={() => {
+              setIsDishTypeMenuOpen((open) => !open);
+              setIsCuisineMenuOpen(false);
             }}
-            value={selectedDishType}
+            type="button"
           >
-            {dishTypeOptions.map((option) => (
-              <option key={`dish-type-filter-${option.value}`} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+            {dishTypeOptions.find((option) => option.value === selectedDishType)?.label ?? t('allDishTypes')}
+          </button>
 
-        <label className="order-3 flex items-center gap-2 text-sm text-slate-700 whitespace-nowrap">
-          <span>{t('cuisineType')}</span>
-          <select
-            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
-            onChange={(event) => {
-              const value = event.target.value as 'all' | RecipeCuisine;
-              const nextParams = new URLSearchParams(searchParams);
+          {isDishTypeMenuOpen && (
+            <div className="absolute left-0 top-full z-30 mt-1 w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-lg sm:w-80" role="menu">
+              <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                {dishTypeOptions.map((option) => {
+                  const isSelected = selectedDishType === option.value;
 
-              if (value === 'all') {
-                nextParams.delete('cuisine');
-              } else {
-                nextParams.set('cuisine', value);
-              }
+                  return (
+                    <button
+                      key={`dish-type-filter-${option.value}`}
+                      className={`flex w-full items-center rounded px-2 py-1.5 text-left text-sm ${isSelected ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
+                      onClick={() => {
+                        setDishTypeFilter(option.value);
+                        setIsDishTypeMenuOpen(false);
+                      }}
+                      role="menuitemradio"
+                      aria-checked={isSelected}
+                      type="button"
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
 
-              setSearchParams(nextParams, { replace: true });
+        <div className="order-3 relative max-w-full shrink-0" ref={cuisineMenuRef}>
+          <span className="mr-2 text-sm text-slate-700">{t('cuisineType')}</span>
+          <button
+            aria-expanded={isCuisineMenuOpen}
+            aria-haspopup="menu"
+            className="w-full min-w-48 rounded-md border border-slate-300 bg-white px-3 py-1 text-left text-sm text-slate-700 sm:w-auto"
+            onClick={() => {
+              setIsCuisineMenuOpen((open) => !open);
+              setIsDishTypeMenuOpen(false);
             }}
-            value={selectedCuisine}
+            type="button"
           >
-            {cuisineOptions.map((option) => (
-              <option key={`cuisine-filter-${option.value}`} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+            {cuisineOptions.find((option) => option.value === selectedCuisine)?.label ?? t('allCuisines')}
+          </button>
+
+          {isCuisineMenuOpen && (
+            <div className="absolute left-0 top-full z-30 mt-1 w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-lg sm:w-80" role="menu">
+              <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                {cuisineOptions.map((option) => {
+                  const isSelected = selectedCuisine === option.value;
+
+                  return (
+                    <button
+                      key={`cuisine-filter-${option.value}`}
+                      className={`flex w-full items-center rounded px-2 py-1.5 text-left text-sm ${isSelected ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
+                      onClick={() => {
+                        setCuisineFilter(option.value);
+                        setIsCuisineMenuOpen(false);
+                      }}
+                      role="menuitemradio"
+                      aria-checked={isSelected}
+                      type="button"
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="order-4 relative max-w-full shrink-0" ref={mainProductMenuRef}>
           <span className="mr-2 text-sm text-slate-700">{t('mainIngredient')}</span>
