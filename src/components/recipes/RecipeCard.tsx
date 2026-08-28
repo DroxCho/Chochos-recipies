@@ -136,11 +136,19 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
       .split(',')
       .map((item) => item.trim())
       .filter(Boolean);
+    const selectedSet = new Set(selectedMainProducts);
 
-    if (selectedMainProducts.length === 1 && selectedMainProducts[0] === mainProduct) {
+    if (selectedSet.has(mainProduct)) {
+      selectedSet.delete(mainProduct);
+    } else {
+      selectedSet.add(mainProduct);
+    }
+
+    const nextValues = [...selectedSet];
+    if (nextValues.length === 0) {
       nextParams.delete('mainProducts');
     } else {
-      nextParams.set('mainProducts', mainProduct);
+      nextParams.set('mainProducts', nextValues.join(','));
     }
 
     const query = nextParams.toString();
