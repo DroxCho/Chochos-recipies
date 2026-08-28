@@ -139,6 +139,7 @@ export function ProfilePage() {
   const dragStartRef = useRef<{ x: number; y: number; startX: number; startY: number } | null>(null);
   const previousEditorZoomRef = useRef(1);
   const editorPreviewRef = useRef<HTMLDivElement | null>(null);
+  const profilePhotoInputRef = useRef<HTMLInputElement | null>(null);
 
   const managedUsers = useMemo(() => {
     const profiles = readProfiles();
@@ -678,6 +679,10 @@ export function ProfilePage() {
     reader.readAsDataURL(file);
   }
 
+  function openProfilePhotoPicker() {
+    profilePhotoInputRef.current?.click();
+  }
+
   useEffect(() => {
     if (!isPhotoEditorOpen || selectionSquare.size <= 0) {
       return;
@@ -746,28 +751,85 @@ export function ProfilePage() {
         <div className="flex flex-col gap-2 text-sm text-slate-700">
           <span>{t('photoItem')} {requiredMark}</span>
           <div className="flex flex-wrap items-center gap-4">
-            {profilePhotoDataUrl ? (
-              <img
-                alt={t('photoItem')}
-                className={`rounded-full border object-cover ${inputBorderClass(Boolean(fieldErrors.photo))}`}
-                style={{ width: '150px', height: '150px' }}
-                src={profilePhotoDataUrl}
+            <div className="relative" style={{ width: '150px', height: '150px' }}>
+              <input
+                ref={profilePhotoInputRef}
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  handleProfilePhotoSelect(event.target.files?.[0] ?? null);
+                  if (fieldErrors.photo) {
+                    setFieldErrors((current) => ({ ...current, photo: false }));
+                  }
+                  event.currentTarget.value = '';
+                }}
+                type="file"
               />
-            ) : (
-              <div
-                className={`flex flex-col items-center justify-center rounded-full border border-dashed bg-slate-50 text-slate-500 ${inputBorderClass(Boolean(fieldErrors.photo))}`}
-                style={{ width: '150px', height: '150px' }}
-              >
-                <span aria-hidden="true" className="flex h-28 w-28 items-center justify-center rounded-full border border-slate-300 bg-white">
-                  <svg viewBox="0 0 24 24" className="h-16 w-16 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="9" />
-                    <circle cx="12" cy="9" r="2.5" />
-                    <path d="M7.5 17c1.2-2 2.8-3 4.5-3s3.3 1 4.5 3" />
-                  </svg>
-                </span>
-                <span className="mt-3 px-4 text-center text-xs leading-4">{t('noPhotoPlaceholder')}</span>
-              </div>
-            )}
+
+              {profilePhotoDataUrl ? (
+                <>
+                  <img
+                    alt={t('photoItem')}
+                    className={`h-full w-full rounded-full border object-cover ${inputBorderClass(Boolean(fieldErrors.photo))}`}
+                    src={profilePhotoDataUrl}
+                  />
+
+                  <div className="absolute inset-x-2 bottom-2 flex items-center justify-center gap-1 rounded-full border border-slate-300 bg-white/95 px-1.5 py-1 shadow-sm">
+                    <button
+                      aria-label={t('uploadPhoto')}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50"
+                      onClick={openProfilePhotoPicker}
+                      title={t('uploadPhoto')}
+                      type="button"
+                    >
+                      ↺
+                    </button>
+                    <button
+                      aria-label={t('openPhotoEditor')}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50"
+                      onClick={() => openPhotoEditor()}
+                      title={t('openPhotoEditor')}
+                      type="button"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      aria-label={t('removePhoto')}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50"
+                      onClick={() => {
+                        setProfilePhotoDataUrl('');
+                        setFieldErrors((current) => ({ ...current, photo: true }));
+                        setPhotoError(null);
+                        if (successMessage) {
+                          setSuccessMessage('');
+                        }
+                      }}
+                      title={t('removePhoto')}
+                      type="button"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <button
+                  aria-label={t('uploadPhoto')}
+                  className={`flex h-full w-full flex-col items-center justify-center rounded-full border border-dashed bg-slate-50 text-slate-500 ${inputBorderClass(Boolean(fieldErrors.photo))}`}
+                  onClick={openProfilePhotoPicker}
+                  type="button"
+                >
+                  <span aria-hidden="true" className="flex h-28 w-28 items-center justify-center rounded-full border border-slate-300 bg-white">
+                    <svg viewBox="0 0 24 24" className="h-16 w-16 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="9" />
+                      <circle cx="12" cy="9" r="2.5" />
+                      <path d="M7.5 17c1.2-2 2.8-3 4.5-3s3.3 1 4.5 3" />
+                    </svg>
+                  </span>
+                  <span className="mt-3 px-4 text-center text-xs leading-4">{t('noPhotoPlaceholder')}</span>
+                </button>
+              )}
+            </div>
+
             <div className="flex flex-col items-start gap-2">
               <div className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700">
                 {t('profileRoleLabel')}: {roleLabel}
@@ -782,48 +844,6 @@ export function ProfilePage() {
                 </button>
               ) : null}
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <label className="inline-flex cursor-pointer items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
-              <input
-                accept="image/*"
-                className="hidden"
-                onChange={(event) => {
-                  handleProfilePhotoSelect(event.target.files?.[0] ?? null);
-                  if (fieldErrors.photo) {
-                    setFieldErrors((current) => ({ ...current, photo: false }));
-                  }
-                  event.currentTarget.value = '';
-                }}
-                type="file"
-              />
-              {t('uploadPhoto')}
-            </label>
-            {profilePhotoDataUrl && (
-              <button
-                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                onClick={() => openPhotoEditor()}
-                type="button"
-              >
-                {t('openPhotoEditor')}
-              </button>
-            )}
-            {profilePhotoDataUrl && (
-              <button
-                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                onClick={() => {
-                  setProfilePhotoDataUrl('');
-                  setFieldErrors((current) => ({ ...current, photo: true }));
-                  setPhotoError(null);
-                  if (successMessage) {
-                    setSuccessMessage('');
-                  }
-                }}
-                type="button"
-              >
-                {t('removePhoto')}
-              </button>
-            )}
           </div>
           {fieldErrors.photo && <span className="text-xs text-rose-700">{t('validationFieldRequired')}</span>}
           {photoError && <span className="text-xs text-rose-700">{t(photoError)}</span>}
