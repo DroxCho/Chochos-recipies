@@ -38,6 +38,42 @@ function complexityToStars(complexity?: Recipe['complexity']): number {
   return 0;
 }
 
+function toDishTypeLabelKey(value: Recipe['dishType']): TranslationKey {
+  return value === 'dessert'
+    ? 'dishTypeDessert'
+    : value === 'soup'
+    ? 'dishTypeSoup'
+    : value === 'salad'
+    ? 'dishTypeSalad'
+    : value === 'appetizer'
+    ? 'dishTypeAppetizer'
+    : value === 'breakfast'
+    ? 'dishTypeBreakfast'
+    : 'dishTypeMain';
+}
+
+function toCuisineLabelKey(value: Recipe['cuisine']): TranslationKey {
+  return value === 'bulgarian'
+    ? 'cuisineBulgarian'
+    : value === 'french'
+    ? 'cuisineFrench'
+    : value === 'asian'
+    ? 'cuisineAsian'
+    : value === 'italian'
+    ? 'cuisineItalian'
+    : value === 'mexican'
+    ? 'cuisineMexican'
+    : value === 'spanish'
+    ? 'cuisineSpanish'
+    : value === 'turkish'
+    ? 'cuisineTurkish'
+    : value === 'vegan'
+    ? 'cuisineVegan'
+    : value === 'vegetarian'
+    ? 'cuisineVegetarian'
+    : 'cuisineInternational';
+}
+
 export function RecipeDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -104,7 +140,9 @@ export function RecipeDetailsPage() {
         servings: currentRecipe.servings,
         complexity: currentRecipe.complexity,
         dishType: currentRecipe.dishType,
+        dishTypes: currentRecipe.dishTypes,
         cuisine: currentRecipe.cuisine,
+        cuisines: currentRecipe.cuisines,
         ingredients: currentRecipe.ingredients,
         steps: currentRecipe.steps,
         notes: currentRecipe.notes,
@@ -143,7 +181,9 @@ export function RecipeDetailsPage() {
         servings: currentRecipe.servings,
         complexity: currentRecipe.complexity,
         dishType: currentRecipe.dishType,
+        dishTypes: currentRecipe.dishTypes,
         cuisine: currentRecipe.cuisine,
+        cuisines: currentRecipe.cuisines,
         ingredients: currentRecipe.ingredients,
         steps: currentRecipe.steps,
         notes: currentRecipe.notes,
@@ -188,7 +228,9 @@ export function RecipeDetailsPage() {
         servings: currentRecipe.servings,
         complexity: currentRecipe.complexity,
         dishType: currentRecipe.dishType,
+        dishTypes: currentRecipe.dishTypes,
         cuisine: currentRecipe.cuisine,
+        cuisines: currentRecipe.cuisines,
         ingredients: currentRecipe.ingredients,
         steps: currentRecipe.steps,
         notes: currentRecipe.notes,
@@ -235,7 +277,9 @@ export function RecipeDetailsPage() {
         servings: currentRecipe.servings,
         complexity: currentRecipe.complexity,
         dishType: currentRecipe.dishType,
+        dishTypes: currentRecipe.dishTypes,
         cuisine: currentRecipe.cuisine,
+        cuisines: currentRecipe.cuisines,
         ingredients: currentRecipe.ingredients,
         steps: currentRecipe.steps,
         notes: currentRecipe.notes,
@@ -629,10 +673,29 @@ export function RecipeDetailsPage() {
   const canEditCurrentRecipe = canEditRecipe(role, currentRecipe, userId);
   const canApproveCurrentRecipe = canApproveRecipe(role) && currentRecipe.status === 'pending';
   const canSeeStatus = role === 'admin' || currentRecipe.ownerId === userId;
-  const activeDishType = new URLSearchParams(location.search).get('dishType');
-  const activeCuisine = new URLSearchParams(location.search).get('cuisine');
-  const isDishTypeActive = activeDishType === (currentRecipe.dishType ?? 'main');
-  const isCuisineActive = activeCuisine === (currentRecipe.cuisine ?? 'international');
+  const searchParams = new URLSearchParams(location.search);
+  const selectedDishTypeFilters = new Set(
+    (searchParams.get('dishTypes') ?? searchParams.get('dishType') ?? '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean),
+  );
+  const selectedCuisineFilters = new Set(
+    (searchParams.get('cuisines') ?? searchParams.get('cuisine') ?? '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean),
+  );
+  const recipeDishTypes: NonNullable<Recipe['dishTypes']> = currentRecipe.dishTypes?.length
+    ? currentRecipe.dishTypes
+    : currentRecipe.dishType
+    ? [currentRecipe.dishType]
+    : ['main'];
+  const recipeCuisines: NonNullable<Recipe['cuisines']> = currentRecipe.cuisines?.length
+    ? currentRecipe.cuisines
+    : currentRecipe.cuisine
+    ? [currentRecipe.cuisine]
+    : ['international'];
   const statusLabel =
     currentRecipe.status === 'pending'
       ? t('pendingStatus')
@@ -642,39 +705,6 @@ export function RecipeDetailsPage() {
       ? t('changesRequestedStatus')
       : t('approvedStatus');
   const complexityStars = complexityToStars(currentRecipe.complexity);
-  const dishTypeLabelKey: TranslationKey =
-    currentRecipe.dishType === 'dessert'
-      ? 'dishTypeDessert'
-      : currentRecipe.dishType === 'soup'
-      ? 'dishTypeSoup'
-      : currentRecipe.dishType === 'salad'
-      ? 'dishTypeSalad'
-      : currentRecipe.dishType === 'appetizer'
-      ? 'dishTypeAppetizer'
-      : currentRecipe.dishType === 'breakfast'
-      ? 'dishTypeBreakfast'
-      : 'dishTypeMain';
-
-  const cuisineLabelKey: TranslationKey =
-    currentRecipe.cuisine === 'bulgarian'
-      ? 'cuisineBulgarian'
-      : currentRecipe.cuisine === 'french'
-      ? 'cuisineFrench'
-      : currentRecipe.cuisine === 'asian'
-      ? 'cuisineAsian'
-      : currentRecipe.cuisine === 'italian'
-      ? 'cuisineItalian'
-      : currentRecipe.cuisine === 'mexican'
-      ? 'cuisineMexican'
-      : currentRecipe.cuisine === 'spanish'
-      ? 'cuisineSpanish'
-      : currentRecipe.cuisine === 'turkish'
-      ? 'cuisineTurkish'
-      : currentRecipe.cuisine === 'vegan'
-      ? 'cuisineVegan'
-      : currentRecipe.cuisine === 'vegetarian'
-      ? 'cuisineVegetarian'
-      : 'cuisineInternational';
   const recipeIngredients = currentRecipe.ingredients?.map((item) => item.trim()).filter(Boolean) ?? [];
   const recipeSteps = currentRecipe.steps?.map((item) => item.trim()).filter(Boolean) ?? [];
   const recipeNotes = currentRecipe.notes?.trim() ?? '';
@@ -716,19 +746,49 @@ export function RecipeDetailsPage() {
     const nextParams = new URLSearchParams(location.search);
 
     if (nextDishType) {
-      if (nextParams.get('dishType') === nextDishType) {
-        nextParams.delete('dishType');
+      const selected = new Set(
+        (nextParams.get('dishTypes') ?? nextParams.get('dishType') ?? '')
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean),
+      );
+
+      if (selected.has(nextDishType)) {
+        selected.delete(nextDishType);
       } else {
-        nextParams.set('dishType', nextDishType);
+        selected.add(nextDishType);
       }
+
+      if (selected.size === 0) {
+        nextParams.delete('dishTypes');
+      } else {
+        nextParams.set('dishTypes', Array.from(selected).join(','));
+      }
+
+      nextParams.delete('dishType');
     }
 
     if (nextCuisine) {
-      if (nextParams.get('cuisine') === nextCuisine) {
-        nextParams.delete('cuisine');
+      const selected = new Set(
+        (nextParams.get('cuisines') ?? nextParams.get('cuisine') ?? '')
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean),
+      );
+
+      if (selected.has(nextCuisine)) {
+        selected.delete(nextCuisine);
       } else {
-        nextParams.set('cuisine', nextCuisine);
+        selected.add(nextCuisine);
       }
+
+      if (selected.size === 0) {
+        nextParams.delete('cuisines');
+      } else {
+        nextParams.set('cuisines', Array.from(selected).join(','));
+      }
+
+      nextParams.delete('cuisine');
     }
 
     const query = nextParams.toString();
@@ -997,24 +1057,38 @@ export function RecipeDetailsPage() {
         </p>
       )}
       <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-            isDishTypeActive ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-700'
-          }`}
-          onClick={() => navigateWithMergedFilters(currentRecipe.dishType ?? 'main')}
-          type="button"
-        >
-          {t(dishTypeLabelKey)}
-        </button>
-        <button
-          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-            isCuisineActive ? 'bg-sky-700 text-white' : 'bg-sky-50 text-sky-700'
-          }`}
-          onClick={() => navigateWithMergedFilters(undefined, currentRecipe.cuisine ?? 'international')}
-          type="button"
-        >
-          {t(cuisineLabelKey)}
-        </button>
+        {recipeDishTypes.map((dishType) => {
+          const isActive = selectedDishTypeFilters.has(dishType);
+
+          return (
+            <button
+              key={`dish-type-tag-${dishType}`}
+              className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                isActive ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-700'
+              }`}
+              onClick={() => navigateWithMergedFilters(dishType)}
+              type="button"
+            >
+              {t(toDishTypeLabelKey(dishType))}
+            </button>
+          );
+        })}
+        {recipeCuisines.map((cuisine) => {
+          const isActive = selectedCuisineFilters.has(cuisine);
+
+          return (
+            <button
+              key={`cuisine-tag-${cuisine}`}
+              className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                isActive ? 'bg-sky-700 text-white' : 'bg-sky-50 text-sky-700'
+              }`}
+              onClick={() => navigateWithMergedFilters(undefined, cuisine)}
+              type="button"
+            >
+              {t(toCuisineLabelKey(cuisine))}
+            </button>
+          );
+        })}
       </div>
       {currentRecipe.reviewComment && (
         <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">{currentRecipe.reviewComment}</p>
