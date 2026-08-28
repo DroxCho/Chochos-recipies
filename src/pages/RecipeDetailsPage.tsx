@@ -1148,7 +1148,7 @@ export function RecipeDetailsPage() {
                 onClick={handleToggleRecipeTried}
                 type="button"
               >
-                {t('triedRecipe')}
+                {`${t('triedRecipe')}${isRecipeTried ? '!' : '?'}`}
               </button>
             )}
             {canMessageCreator && (
