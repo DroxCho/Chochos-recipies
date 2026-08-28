@@ -3,6 +3,7 @@ import supabaseUsersSnapshot from '../data/supabaseUsersSnapshot.json';
 const PROFILE_STORAGE_KEY = 'recipes_user_profiles_v1';
 
 interface LocalProfile {
+  alias?: string;
   fullName?: string;
 }
 
@@ -56,14 +57,26 @@ export function getUserDisplayName(userId: string, ownerRole?: 'registered' | 'a
   const canonicalUserId = resolveCanonicalUserId(userId, ownerRole);
 
   const profiles = readLocalProfiles();
-  const fullName = profiles[canonicalUserId]?.fullName?.trim();
+  const profile = profiles[canonicalUserId];
+  const alias = profile?.alias?.trim();
+  if (alias) {
+    return alias;
+  }
+
+  const fullName = profile?.fullName?.trim();
   if (fullName) {
     return fullName;
   }
 
   const snapshotUser = snapshotUsers.find((user) => user.id === canonicalUserId);
-  if (snapshotUser?.email) {
-    return snapshotUser.email;
+  const email = snapshotUser?.email?.trim();
+  if (email) {
+    const atIndex = email.indexOf('@');
+    if (atIndex > 0) {
+      return email.slice(0, atIndex);
+    }
+
+    return email;
   }
 
   return canonicalUserId;
