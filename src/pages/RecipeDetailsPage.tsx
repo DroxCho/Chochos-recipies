@@ -968,7 +968,7 @@ export function RecipeDetailsPage() {
                       aria-label={t('favoriteRecipe')}
                       className={`instant-tooltip inline-flex h-12 w-12 items-center justify-center rounded-full border-2 text-2xl leading-none shadow-md transition-colors ${
                         isRecipeFavorite
-                          ? 'border-rose-700 bg-rose-600 text-white'
+                          ? 'border-rose-400 bg-rose-200 text-rose-700'
                           : 'border-slate-300 bg-white text-slate-300 hover:border-slate-400 hover:text-slate-500'
                       }`}
                       onClick={handleToggleRecipeFavorite}
@@ -1022,7 +1022,7 @@ export function RecipeDetailsPage() {
                   aria-label={t('favoriteRecipe')}
                   className={`instant-tooltip inline-flex h-10 w-10 items-center justify-center rounded-full border-2 text-xl leading-none shadow-md transition-colors ${
                     isRecipeFavorite
-                      ? 'border-rose-700 bg-rose-600 text-white'
+                      ? 'border-rose-400 bg-rose-200 text-rose-700'
                       : 'border-slate-300 bg-white text-slate-300 hover:border-slate-400 hover:text-slate-500'
                   }`}
                   onClick={handleToggleRecipeFavorite}

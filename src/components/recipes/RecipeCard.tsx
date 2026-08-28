@@ -268,7 +268,7 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
                 aria-label={t('favoriteRecipe')}
                 className={`instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border-2 text-base leading-none shadow-sm transition-colors ${
                   isRecipeFavorite
-                    ? 'border-rose-700 bg-rose-600 text-white'
+                    ? 'border-rose-400 bg-rose-200 text-rose-700'
                     : 'border-slate-300 bg-white text-slate-300 hover:border-slate-400 hover:text-slate-500'
                 }`}
                 onClick={handleToggleFavorite}
