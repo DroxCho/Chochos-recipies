@@ -996,7 +996,7 @@ export function PublicUserCardModal() {
 
             <div className="grid gap-4 md:grid-cols-[320px,1fr]">
               <div
-                className="relative mx-auto h-72 w-72 overflow-hidden rounded-lg border border-slate-300 bg-slate-100"
+                className="relative mx-auto h-[min(68vw,18rem)] w-[min(68vw,18rem)] overflow-hidden rounded-lg border border-slate-300 bg-slate-100 sm:h-72 sm:w-72"
                 onWheel={handleEditorWheel}
               >
                 <img
@@ -1066,8 +1066,8 @@ export function PublicUserCardModal() {
       ) : null}
 
       {isRecipesModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/75 p-4" onClick={() => setIsRecipesModalOpen(false)}>
-          <div className="w-full max-w-2xl rounded-xl bg-white p-4 shadow-xl" onClick={(event) => event.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-slate-900/75 p-3 sm:items-center sm:p-4" onClick={() => setIsRecipesModalOpen(false)}>
+          <div className="flex max-h-[calc(100vh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-xl bg-white p-4 shadow-xl sm:max-h-[calc(100vh-2rem)]" onClick={(event) => event.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <h5 className="text-base font-semibold text-slate-900">{t('userRecipesModalTitle')}</h5>
@@ -1103,7 +1103,7 @@ export function PublicUserCardModal() {
             ) : null}
 
             {!isLoadingRecipes && userRecipes.length > 0 ? (
-              <div className="max-h-[55vh] space-y-2 overflow-y-auto">
+              <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                 {userRecipes.map((recipe) => {
                   const localizedRecipe = getLocalizedRecipe(recipe, language);
                   const recipeImage = recipe.photoUrls?.[0]?.trim();

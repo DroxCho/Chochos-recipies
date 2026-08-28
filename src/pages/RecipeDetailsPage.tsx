@@ -1196,8 +1196,8 @@ export function RecipeDetailsPage() {
       </Link>
 
       {isPreparationWizardOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/70 p-4">
-          <div className="w-full max-w-2xl rounded-xl bg-white p-5 shadow-xl">
+        <div className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto bg-slate-900/70 p-3 sm:items-center sm:p-4">
+          <div className="w-full max-w-2xl max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-xl bg-white p-4 shadow-xl sm:max-h-[calc(100vh-2rem)] sm:p-5">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-lg font-semibold text-slate-900">{t('prepWizardCookingPrefix')} {localizedRecipe.title}</h3>
@@ -1222,7 +1222,7 @@ export function RecipeDetailsPage() {
                 <p className="text-xs font-medium text-slate-500">{Math.round(preparationProgressPercent)}%</p>
               </div>
 
-              <div className="mx-10">
+              <div className="mx-2 sm:mx-10">
                 <div className="relative h-10">
                   <div
                     aria-label="Preparation wizard progress"
@@ -1376,7 +1376,7 @@ export function RecipeDetailsPage() {
               </div>
             )}
 
-            <div className="mt-5 flex items-center gap-2">
+            <div className="mt-5 flex flex-wrap items-center gap-2">
               {preparationStep > 1 && (
                 <button
                   className="inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700"

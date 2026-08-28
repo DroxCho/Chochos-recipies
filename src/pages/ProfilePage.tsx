@@ -1175,7 +1175,7 @@ export function ProfilePage() {
 
             <div className="grid gap-4 md:grid-cols-[320px,1fr]">
               <div
-                className="relative mx-auto h-72 w-72 overflow-hidden rounded-lg border border-slate-300 bg-slate-100"
+                className="relative mx-auto h-[min(68vw,18rem)] w-[min(68vw,18rem)] overflow-hidden rounded-lg border border-slate-300 bg-slate-100 sm:h-72 sm:w-72"
                 onWheel={handleEditorWheel}
               >
                 <img

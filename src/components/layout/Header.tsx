@@ -114,10 +114,10 @@ export function Header() {
 
   return (
     <header className="rustic-header border-b border-slate-200 bg-white">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4">
-        <h1 className="text-lg font-semibold tracking-tight text-slate-900">{t('appTitle')}</h1>
-        <div className="flex items-center gap-4">
-          <nav className="flex items-center gap-4" aria-label={t('navAria')}>
+      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 sm:h-16 sm:flex-nowrap sm:justify-between sm:px-4">
+        <h1 className="order-1 truncate text-base font-semibold tracking-tight text-slate-900 sm:text-lg">{t('appTitle')}</h1>
+
+        <nav className="order-3 flex w-full items-center gap-4 overflow-x-auto pb-1 text-sm sm:order-2 sm:w-auto sm:overflow-visible sm:pb-0" aria-label={t('navAria')}>
           <NavLink to="/" end className={linkClass}>
             {t('navHome')}
           </NavLink>
@@ -129,7 +129,9 @@ export function Header() {
               {t('navAddRecipe')}
             </NavLink>
           )}
-          </nav>
+        </nav>
+
+        <div className="order-2 ml-auto flex items-center gap-2 sm:order-3 sm:ml-0 sm:gap-4">
           {isSignedIn && (
             <NavLink
               aria-label={t('navFavorites')}
