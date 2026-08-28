@@ -4,7 +4,7 @@ import { useLanguage } from '../../i18n/useLanguage';
 
 type AuthTab = 'login' | 'register' | 'reset';
 type OAuthProvider = 'google' | 'apple' | 'facebook' | 'github';
-const SHOW_SOCIAL_LOGIN_OPTIONS = true;
+const SHOW_SOCIAL_LOGIN_OPTIONS = false;
 
 interface AuthModalProps {
   isOpen: boolean;
