@@ -32,6 +32,7 @@ type MainProductValue =
   | 'riba'
   | 'oriz'
   | 'svinsko-meso'
+  | 'pasta'
   | 'sladoled'
   | 'soleni-pechiva'
   | 'teleshko-meso'
@@ -56,6 +57,7 @@ const MAIN_PRODUCT_VALUES: MainProductValue[] = [
   'riba',
   'oriz',
   'svinsko-meso',
+  'pasta',
   'sladoled',
   'soleni-pechiva',
   'teleshko-meso',
@@ -803,6 +805,7 @@ export function RecipeForm({
     { value: 'riba', label: 'Риба' },
     { value: 'oriz', label: 'Ориз' },
     { value: 'svinsko-meso', label: 'Свинско месо' },
+    { value: 'pasta', label: 'Паста' },
     { value: 'sladoled', label: 'Сладолед' },
     { value: 'soleni-pechiva', label: 'Солени печива' },
     { value: 'teleshko-meso', label: 'Телешко месо' },

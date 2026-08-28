@@ -67,6 +67,10 @@ function ProductGlyph({ iconType }: { iconType: MainProductIconType }) {
     );
   }
 
+  if (iconType === 'pasta') {
+    return <span className="text-[14px] leading-none" aria-hidden="true">🍝</span>;
+  }
+
   if (iconType === 'seafood') {
     return (
       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -139,6 +143,7 @@ function toneClasses(iconType: MainProductIconType): string {
   if (iconType === 'dairy') return 'border-indigo-300 bg-indigo-50 text-indigo-700';
   if (iconType === 'fish') return 'border-sky-300 bg-sky-50 text-sky-700';
   if (iconType === 'seafood') return 'border-teal-300 bg-teal-50 text-teal-700';
+  if (iconType === 'pasta') return 'border-orange-300 bg-orange-50 text-orange-700';
   if (iconType === 'dessert') return 'border-pink-300 bg-pink-50 text-pink-700';
   if (iconType === 'pastry') return 'border-amber-300 bg-amber-50 text-amber-700';
   if (iconType === 'egg') return 'border-yellow-300 bg-yellow-50 text-yellow-700';

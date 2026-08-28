@@ -19,6 +19,7 @@ export type MainProductValue =
   | 'riba'
   | 'oriz'
   | 'svinsko-meso'
+  | 'pasta'
   | 'sladoled'
   | 'soleni-pechiva'
   | 'teleshko-meso'
@@ -38,6 +39,7 @@ export type MainProductIconType =
   | 'dairy'
   | 'seafood'
   | 'fish'
+  | 'pasta'
   | 'dessert'
   | 'pastry'
   | 'egg';
@@ -68,6 +70,7 @@ const MAIN_PRODUCT_META: Record<MainProductValue, MainProductMeta> = {
   riba: { icon: '🐟', iconType: 'fish', labelBg: 'Риба', labelEn: 'Fish' },
   oriz: { icon: '🍚', iconType: 'rice', labelBg: 'Ориз', labelEn: 'Rice' },
   'svinsko-meso': { icon: '🐖', iconType: 'meat', labelBg: 'Свинско месо', labelEn: 'Pork' },
+  pasta: { icon: '🍝', iconType: 'pasta', labelBg: 'Паста', labelEn: 'Pasta' },
   sladoled: { icon: '🍨', iconType: 'dessert', labelBg: 'Сладолед', labelEn: 'Ice cream' },
   'soleni-pechiva': { icon: '🥨', iconType: 'pastry', labelBg: 'Солени печива', labelEn: 'Savory pastries' },
   'teleshko-meso': { icon: '🐄', iconType: 'meat', labelBg: 'Телешко месо', labelEn: 'Beef' },
