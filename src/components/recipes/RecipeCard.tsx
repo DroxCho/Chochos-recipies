@@ -268,14 +268,14 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
                 aria-label={t('favoriteRecipe')}
                 className={`instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border-2 text-base leading-none shadow-sm transition-colors ${
                   isRecipeFavorite
-                    ? 'border-rose-200 bg-rose-50 text-rose-600'
-                    : 'border-slate-300 bg-white/90 text-slate-400 hover:bg-slate-50'
+                    ? 'border-rose-700 bg-rose-600 text-white'
+                    : 'border-slate-300 bg-white text-slate-300 hover:border-slate-400 hover:text-slate-500'
                 }`}
                 onClick={handleToggleFavorite}
                 data-tooltip={t('favoriteRecipe')}
                 type="button"
               >
-                {'\u2665'}
+                {isRecipeFavorite ? '\u2665' : '\u2661'}
               </button>
             )}
             </div>

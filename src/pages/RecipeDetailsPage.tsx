@@ -968,14 +968,14 @@ export function RecipeDetailsPage() {
                       aria-label={t('favoriteRecipe')}
                       className={`instant-tooltip inline-flex h-12 w-12 items-center justify-center rounded-full border-2 text-2xl leading-none shadow-md transition-colors ${
                         isRecipeFavorite
-                          ? 'border-rose-200 bg-rose-50 text-rose-600'
-                          : 'border-slate-300 bg-white/90 text-slate-400 hover:bg-slate-50'
+                          ? 'border-rose-700 bg-rose-600 text-white'
+                          : 'border-slate-300 bg-white text-slate-300 hover:border-slate-400 hover:text-slate-500'
                       }`}
                       onClick={handleToggleRecipeFavorite}
                       data-tooltip={t('favoriteRecipe')}
                       type="button"
                     >
-                      {'\u2665'}
+                      {isRecipeFavorite ? '\u2665' : '\u2661'}
                     </button>
                   )}
                   </div>
@@ -1022,14 +1022,14 @@ export function RecipeDetailsPage() {
                   aria-label={t('favoriteRecipe')}
                   className={`instant-tooltip inline-flex h-10 w-10 items-center justify-center rounded-full border-2 text-xl leading-none shadow-md transition-colors ${
                     isRecipeFavorite
-                      ? 'border-rose-200 bg-rose-50 text-rose-600'
-                      : 'border-slate-300 bg-white/95 text-slate-400 hover:bg-slate-50'
+                      ? 'border-rose-700 bg-rose-600 text-white'
+                      : 'border-slate-300 bg-white text-slate-300 hover:border-slate-400 hover:text-slate-500'
                   }`}
                   onClick={handleToggleRecipeFavorite}
                   data-tooltip={t('favoriteRecipe')}
                   type="button"
                 >
-                  {'\u2665'}
+                  {isRecipeFavorite ? '\u2665' : '\u2661'}
                 </button>
               )}
               </div>
