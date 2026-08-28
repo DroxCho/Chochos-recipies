@@ -995,7 +995,7 @@ export function ProfilePage() {
                 className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
                 onClick={() => setIsUserManagementModalOpen(false)}
               >
-                {t('cancel')}
+                X
               </button>
             </div>
 
@@ -1105,7 +1105,7 @@ export function ProfilePage() {
                 className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
                 onClick={closeManagedUserCard}
               >
-                {t('cancel')}
+                X
               </button>
             </div>
 
@@ -1177,7 +1177,7 @@ export function ProfilePage() {
                 className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
                 onClick={closePublicUserCard}
               >
-                {t('cancel')}
+                X
               </button>
             </div>
 
@@ -1224,7 +1224,7 @@ export function ProfilePage() {
                 className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
                 onClick={() => setIsPhotoEditorOpen(false)}
               >
-                {t('cancel')}
+                X
               </button>
             </div>
 

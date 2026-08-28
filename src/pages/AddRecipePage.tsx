@@ -45,7 +45,7 @@ export function AddRecipePage() {
               onClick={() => navigate('/recipes')}
               type="button"
             >
-              {t('cancel')}
+              X
             </button>
           </div>
           {error && <p className="mb-3 text-sm text-amber-700">{error}</p>}

@@ -1980,7 +1980,7 @@ export function RecipeForm({
                 className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
                 onClick={() => setIsPhotoEditorOpen(false)}
               >
-                {t('cancel')}
+                X
               </button>
             </div>
 
