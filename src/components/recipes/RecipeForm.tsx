@@ -993,6 +993,8 @@ export function RecipeForm({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    const isSaveIntent = submitter?.value === 'save';
 
     const normalizedIngredients = ingredients.map((item) => item.trim()).filter(Boolean);
     const normalizedSteps = steps.map((item) => item.trim()).filter(Boolean);
@@ -1103,7 +1105,7 @@ export function RecipeForm({
       return Object.keys(errors).length > 0;
     }
 
-    if (multiStep && currentStep < totalSteps) {
+    if (multiStep && currentStep < totalSteps && !isSaveIntent) {
       const stepErrors = validateStep(currentStep);
       if (hasValidationErrors(stepErrors)) {
         setError(null);
@@ -1947,12 +1949,24 @@ export function RecipeForm({
           </button>
         )}
 
+        {multiStep && currentStep < totalSteps && (
+          <button
+            className="inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-60"
+            disabled={isSubmitting}
+            type="submit"
+            value="next"
+          >
+            {t('wizardNext')}
+          </button>
+        )}
+
         <button
           className="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
           disabled={isSubmitting}
           type="submit"
+          value="save"
         >
-          {isSubmitting ? t('saving') : multiStep && currentStep < totalSteps ? t('wizardNext') : t(submitLabelKey)}
+          {isSubmitting ? t('saving') : t(submitLabelKey)}
         </button>
       </div>
 
