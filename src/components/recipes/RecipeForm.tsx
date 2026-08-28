@@ -700,6 +700,57 @@ export function RecipeForm({
     return 'complexityRequiredHint';
   }
 
+  function isWizardStepFilled(stepNumber: number): boolean {
+    if (stepNumber === 1) {
+      return Boolean(
+        title.trim() &&
+          description.trim().length >= 10 &&
+          prepMinutes > 0 &&
+          servings > 0 &&
+          complexity &&
+          dishType &&
+          cuisine &&
+          mainProducts.length > 0,
+      );
+    }
+
+    if (stepNumber === 2) {
+      return ingredients.some((ingredient) => ingredient.trim().length > 0);
+    }
+
+    if (stepNumber === 3) {
+      return steps.some((step) => step.trim().length > 0);
+    }
+
+    if (stepNumber === 4) {
+      return true;
+    }
+
+    if (stepNumber === 5) {
+      const firstPhoto = (photoUrls[0] ?? '').trim();
+      return Boolean(firstPhoto) && isValidPhotoSource(firstPhoto);
+    }
+
+    return false;
+  }
+
+  function canJumpToWizardStep(stepNumber: number): boolean {
+    if (!multiStep || stepNumber >= currentStep) {
+      return false;
+    }
+
+    return isWizardStepFilled(stepNumber);
+  }
+
+  function jumpToWizardStep(stepNumber: number) {
+    if (!canJumpToWizardStep(stepNumber)) {
+      return;
+    }
+
+    setError(null);
+    setCurrentStep(stepNumber);
+  }
+
   const dishTypeOptions: Array<{ value: RecipeDishType; label: TranslationKey }> = [
     { value: 'main', label: 'dishTypeMain' },
     { value: 'dessert', label: 'dishTypeDessert' },
@@ -1051,19 +1102,21 @@ export function RecipeForm({
                 />
               </div>
 
-              <ol className="pointer-events-none relative grid h-full grid-cols-5 items-center">
+              <ol className="relative grid h-full grid-cols-5 items-center">
                 {wizardStepLabels.map((stepLabel, index) => {
                   const stepNumber = index + 1;
                   const isCompleted = stepNumber < currentStep;
                   const isCurrent = stepNumber === currentStep;
+                  const canJump = canJumpToWizardStep(stepNumber);
                   const mobileLabelPositionClass = index % 2 === 0
                     ? 'top-full mt-2'
                     : 'bottom-full mb-2';
 
                   return (
                     <li key={`wizard-progress-dot-${stepLabel}`} className="relative flex justify-center">
-                      <span
-                        className={`inline-flex items-center justify-center rounded-full border font-semibold transition-all duration-200 ${
+                      <button
+                        aria-label={`${t('wizardStepLabel')} ${stepNumber}`}
+                        className={`inline-flex items-center justify-center rounded-full border font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 ${
                           isCurrent ? 'h-10 w-10 text-base' : 'h-6 w-6 text-xs'
                         } ${
                           isCurrent
@@ -1071,10 +1124,13 @@ export function RecipeForm({
                             : isCompleted
                             ? 'border-emerald-600 bg-emerald-600 text-white'
                             : 'border-slate-300 bg-white text-slate-600'
-                        }`}
+                        } ${canJump ? 'cursor-pointer' : 'cursor-default'}`}
+                        disabled={!canJump}
+                        onClick={() => jumpToWizardStep(stepNumber)}
+                        type="button"
                       >
                         {stepNumber}
-                      </span>
+                      </button>
                       <span
                         className={`absolute left-1/2 -translate-x-1/2 text-center leading-tight sm:hidden ${mobileLabelPositionClass} ${
                           isCurrent
