@@ -1065,7 +1065,7 @@ export function RecipeForm({
               </button>
 
               {isMainProductMenuOpen && (
-                <div className="absolute left-0 top-full z-30 mt-1 w-full rounded-md border border-slate-200 bg-white p-2 shadow-lg">
+                <div className="absolute left-0 top-full z-30 mt-1 w-[min(22rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-2 shadow-lg sm:w-full">
                   <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
                     {mainProductOptions.map((option) => {
                       const checked = mainProducts.includes(option.value);

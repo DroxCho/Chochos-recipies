@@ -355,10 +355,10 @@ export function RecipesPage() {
           </select>
         </label>
 
-        <div className="order-4 relative shrink-0 whitespace-nowrap" ref={mainProductMenuRef}>
+        <div className="order-4 relative max-w-full shrink-0" ref={mainProductMenuRef}>
           <span className="mr-2 text-sm text-slate-700">{t('mainIngredient')}</span>
           <button
-            className="min-w-48 rounded-md border border-slate-300 bg-white px-3 py-1 text-left text-sm text-slate-700"
+            className="w-full min-w-48 rounded-md border border-slate-300 bg-white px-3 py-1 text-left text-sm text-slate-700 sm:w-auto"
             onClick={() => setIsMainProductMenuOpen((open) => !open)}
             type="button"
           >
@@ -368,7 +368,7 @@ export function RecipesPage() {
           </button>
 
           {isMainProductMenuOpen && (
-            <div className="absolute left-0 top-full z-30 mt-1 w-80 rounded-md border border-slate-200 bg-white p-2 shadow-lg">
+            <div className="absolute left-0 top-full z-30 mt-1 w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-2 shadow-lg sm:w-80">
               <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
                 {MAIN_PRODUCT_OPTIONS.map((option) => {
                   const checked = selectedMainProducts.includes(option.value);

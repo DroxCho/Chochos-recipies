@@ -168,7 +168,7 @@ export function Header() {
             </button>
 
             {isAuthMenuOpen && (
-              <div className="absolute right-0 top-full z-30 mt-2 min-w-[140px] rounded-md border border-slate-200 bg-white p-1 shadow-md" role="menu">
+              <div className="absolute left-0 top-full z-30 mt-2 w-[min(16rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-md sm:left-auto sm:right-0 sm:min-w-[140px] sm:w-auto" role="menu">
                 {isSignedIn && (
                   <button
                     className="block rounded px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
