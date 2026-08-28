@@ -161,6 +161,7 @@ export function PublicUserCardModal() {
   const dragStartRef = useRef<{ x: number; y: number; startX: number; startY: number } | null>(null);
   const previousEditorZoomRef = useRef(1);
   const editorPreviewRef = useRef<HTMLDivElement | null>(null);
+  const profilePhotoInputRef = useRef<HTMLInputElement | null>(null);
   const snapshotUsers = useMemo(
     () => ((supabaseUsersSnapshot as { users?: SnapshotUser[] }).users ?? []),
     [],
@@ -702,6 +703,10 @@ export function PublicUserCardModal() {
     reader.readAsDataURL(file);
   }
 
+  function openProfilePhotoPicker() {
+    profilePhotoInputRef.current?.click();
+  }
+
   function openPhotoEditor() {
     const source = (profileDraft.profilePhotoOriginalDataUrl || profileDraft.profilePhotoDataUrl).trim();
     if (!source) {
@@ -905,55 +910,72 @@ export function PublicUserCardModal() {
           {role === 'admin' && isEditingUserProfile ? (
             <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3">
               <div className="flex flex-wrap items-center gap-3">
-                {profileDraft.profilePhotoDataUrl ? (
-                  <img
-                    alt={t('photoItem')}
-                    className="h-20 w-20 rounded-full border border-slate-200 object-cover"
-                    src={profileDraft.profilePhotoDataUrl}
+                <div className="relative h-20 w-20">
+                  <input
+                    ref={profilePhotoInputRef}
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      handleProfilePhotoSelect(event.target.files?.[0] ?? null);
+                      event.currentTarget.value = '';
+                    }}
+                    type="file"
                   />
-                ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full border border-dashed border-slate-300 bg-white px-2 text-center text-xs text-slate-500">
-                    {t('noPhotoPlaceholder')}
-                  </div>
-                )}
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <label className="inline-flex cursor-pointer items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">
-                    <input
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(event) => {
-                        handleProfilePhotoSelect(event.target.files?.[0] ?? null);
-                        event.currentTarget.value = '';
-                      }}
-                      type="file"
-                    />
-                    {t('uploadPhoto')}
-                  </label>
                   {profileDraft.profilePhotoDataUrl ? (
+                    <>
+                      <img
+                        alt={t('photoItem')}
+                        className="h-full w-full rounded-full border border-slate-200 object-cover"
+                        src={profileDraft.profilePhotoDataUrl}
+                      />
+
+                      <div className="absolute inset-x-1 bottom-1 flex items-center justify-center gap-1 rounded-full border border-slate-300 bg-white/95 px-1 py-0.5 shadow-sm">
+                        <button
+                          aria-label={t('uploadPhoto')}
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-300 bg-white text-xs text-slate-700 hover:bg-slate-50"
+                          onClick={openProfilePhotoPicker}
+                          title={t('uploadPhoto')}
+                          type="button"
+                        >
+                          ↺
+                        </button>
+                        <button
+                          aria-label={t('openPhotoEditor')}
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-300 bg-white text-xs text-slate-700 hover:bg-slate-50"
+                          onClick={openPhotoEditor}
+                          title={t('openPhotoEditor')}
+                          type="button"
+                        >
+                          ✎
+                        </button>
+                        <button
+                          aria-label={t('removePhoto')}
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-300 bg-white text-xs text-slate-700 hover:bg-slate-50"
+                          onClick={() =>
+                            setProfileDraft((current) => ({
+                              ...current,
+                              profilePhotoDataUrl: '',
+                              profilePhotoOriginalDataUrl: '',
+                            }))
+                          }
+                          title={t('removePhoto')}
+                          type="button"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </>
+                  ) : (
                     <button
+                      aria-label={t('uploadPhoto')}
+                      className="flex h-full w-full items-center justify-center rounded-full border border-dashed border-slate-300 bg-white px-2 text-center text-xs text-slate-500"
+                      onClick={openProfilePhotoPicker}
                       type="button"
-                      className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                      onClick={openPhotoEditor}
                     >
-                      {t('openPhotoEditor')}
+                      {t('uploadPhoto')}
                     </button>
-                  ) : null}
-                  {profileDraft.profilePhotoDataUrl ? (
-                    <button
-                      type="button"
-                      className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                      onClick={() =>
-                        setProfileDraft((current) => ({
-                          ...current,
-                          profilePhotoDataUrl: '',
-                          profilePhotoOriginalDataUrl: '',
-                        }))
-                      }
-                    >
-                      {t('removePhoto')}
-                    </button>
-                  ) : null}
+                  )}
                 </div>
               </div>
 
