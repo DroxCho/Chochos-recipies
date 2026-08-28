@@ -58,8 +58,8 @@ export function UserMessagesBanner() {
 
   function formatMessageTextForDisplay(text: string): string {
     return text
-      .replace(/Коментар:\s*/gi, 'Коментар:\n')
-      .replace(/Описание:\s*/gi, 'Описание:\n')
+      .replace(/Коментар:\s*\n+\s*/gi, 'Коментар: ')
+      .replace(/Описание:\s*\n+\s*/gi, 'Описание: ')
       .trim();
   }
 

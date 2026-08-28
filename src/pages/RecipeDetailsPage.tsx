@@ -474,10 +474,8 @@ export function RecipeDetailsPage() {
 
     const reportText = [
       `Доклад за коментар в рецептата "${currentRecipe.title}"`,
-      'Коментар:',
-      `"${comment.text}"`,
-      'Описание:',
-      trimmedDescription,
+      `Коментар: "${comment.text}"`,
+      `Описание: ${trimmedDescription}`,
     ].join('\n');
 
     const canonicalAdminId = getUserProfileLinkId('admin-user-1', 'admin');
