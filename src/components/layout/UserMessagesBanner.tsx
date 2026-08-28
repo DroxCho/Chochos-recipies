@@ -74,6 +74,8 @@ export function UserMessagesBanner() {
             {(() => {
               const reporterId = message.fromUserId ?? extractLegacyReporterId(message.text);
               const reporterAlias = message.fromUserAlias ?? (reporterId ? getUserDisplayName(reporterId, 'registered') : '');
+              const reportedAuthorId = message.reportedAuthorUserId ?? null;
+              const reportedAuthorAlias = message.reportedAuthorAlias ?? (reportedAuthorId ? getUserDisplayName(reportedAuthorId, 'registered') : '');
               const messageText = sanitizeMessageText(message.text);
 
               return (
@@ -87,6 +89,18 @@ export function UserMessagesBanner() {
                         type="button"
                       >
                         {reporterAlias}
+                      </button>
+                    </p>
+                  )}
+                  {reportedAuthorId && reportedAuthorAlias && (
+                    <p className="mb-1 text-xs text-amber-900">
+                      Оплакване от:{' '}
+                      <button
+                        className="font-medium text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-800"
+                        onClick={() => openPublicUserCard(reportedAuthorId, 'registered')}
+                        type="button"
+                      >
+                        {reportedAuthorAlias}
                       </button>
                     </p>
                   )}
