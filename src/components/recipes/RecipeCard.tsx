@@ -315,7 +315,15 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
                 data-tooltip={t('favoriteRecipe')}
                 type="button"
               >
-                {isRecipeFavorite ? '\u2665' : '\u2661'}
+                {isRecipeFavorite ? (
+                  <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 21s-6.7-4.35-9.33-8.28C.86 10.02 1.67 6.5 4.83 5.2 7.14 4.25 9.8 5.1 12 7.08c2.2-1.98 4.86-2.83 7.17-1.88 3.16 1.3 3.97 4.82 2.16 7.52C18.7 16.65 12 21 12 21z" />
+                  </svg>
+                ) : (
+                  <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 21s-6.7-4.35-9.33-8.28C.86 10.02 1.67 6.5 4.83 5.2 7.14 4.25 9.8 5.1 12 7.08c2.2-1.98 4.86-2.83 7.17-1.88 3.16 1.3 3.97 4.82 2.16 7.52C18.7 16.65 12 21 12 21z" />
+                  </svg>
+                )}
               </button>
             )}
             </div>
