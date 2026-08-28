@@ -34,6 +34,7 @@ interface LocalProfile {
   city?: string;
   bio?: string;
   profilePhotoDataUrl?: string;
+  profilePhotoOriginalDataUrl?: string;
 }
 
 type LocalProfilesMap = Record<string, LocalProfile>;
@@ -47,6 +48,7 @@ interface UserCardSummary {
   city: string;
   bio: string;
   profilePhotoDataUrl: string;
+  profilePhotoOriginalDataUrl: string;
   isBlocked: boolean;
   isDeleted: boolean;
 }
@@ -149,6 +151,7 @@ export function PublicUserCardModal() {
     city: '',
     bio: '',
     profilePhotoDataUrl: '',
+    profilePhotoOriginalDataUrl: '',
   });
   const [profileSavedMessage, setProfileSavedMessage] = useState('');
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
@@ -345,7 +348,11 @@ export function PublicUserCardModal() {
         selectionSquare.size,
         editorZoom,
       );
-      setProfileDraft((current) => ({ ...current, profilePhotoDataUrl: nextPhoto }));
+      setProfileDraft((current) => ({
+        ...current,
+        profilePhotoDataUrl: nextPhoto,
+        profilePhotoOriginalDataUrl: current.profilePhotoOriginalDataUrl || source,
+      }));
       setIsPhotoEditorOpen(false);
     } finally {
       setIsApplyingPhotoEdit(false);
@@ -422,6 +429,7 @@ export function PublicUserCardModal() {
       city: toTrimmedText(profile?.city),
       bio: toTrimmedText(profile?.bio),
       profilePhotoDataUrl: profile?.profilePhotoDataUrl ?? '',
+      profilePhotoOriginalDataUrl: profile?.profilePhotoOriginalDataUrl ?? '',
       isBlocked: Boolean(control?.blocked),
       isDeleted: Boolean(control?.deleted),
     } satisfies UserCardSummary;
@@ -443,6 +451,7 @@ export function PublicUserCardModal() {
       city: selectedUser.city,
       bio: selectedUser.bio,
       profilePhotoDataUrl: selectedUser.profilePhotoDataUrl,
+      profilePhotoOriginalDataUrl: selectedUser.profilePhotoOriginalDataUrl,
     });
     setIsEditingUserProfile(true);
   }, [role, selectedUser]);
@@ -644,6 +653,7 @@ export function PublicUserCardModal() {
       city: selectedUser.city,
       bio: selectedUser.bio,
       profilePhotoDataUrl: selectedUser.profilePhotoDataUrl,
+      profilePhotoOriginalDataUrl: selectedUser.profilePhotoOriginalDataUrl,
     });
     setProfileSavedMessage('');
     setIsEditingUserProfile(true);
@@ -661,6 +671,7 @@ export function PublicUserCardModal() {
       city: profileDraft.city.trim(),
       bio: profileDraft.bio.trim(),
       profilePhotoDataUrl: profileDraft.profilePhotoDataUrl || undefined,
+      profilePhotoOriginalDataUrl: profileDraft.profilePhotoOriginalDataUrl || undefined,
     };
 
     writeProfiles(profiles);
@@ -692,7 +703,7 @@ export function PublicUserCardModal() {
   }
 
   function openPhotoEditor() {
-    const source = profileDraft.profilePhotoDataUrl.trim();
+    const source = (profileDraft.profilePhotoOriginalDataUrl || profileDraft.profilePhotoDataUrl).trim();
     if (!source) {
       return;
     }
@@ -931,7 +942,13 @@ export function PublicUserCardModal() {
                     <button
                       type="button"
                       className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                      onClick={() => setProfileDraft((current) => ({ ...current, profilePhotoDataUrl: '' }))}
+                      onClick={() =>
+                        setProfileDraft((current) => ({
+                          ...current,
+                          profilePhotoDataUrl: '',
+                          profilePhotoOriginalDataUrl: '',
+                        }))
+                      }
                     >
                       {t('removePhoto')}
                     </button>
