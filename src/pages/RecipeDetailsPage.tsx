@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { canApproveRecipe, canEditRecipe, canParticipate } from '../auth/roles';
 import { useUserRole } from '../auth/useUserRole';
@@ -454,6 +454,12 @@ export function RecipeDetailsPage() {
     const nextValue = !isRecipeFavorite;
     setIsRecipeFavorite(nextValue);
     setUserRecipeFavorite(userId, currentRecipe.id, nextValue);
+  }
+
+  function handleRegisteredRequiredAction(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    setApprovalError(t('registeredRequiredTooltip'));
   }
 
   function refreshRecipeRating(recipeId: string) {
@@ -963,21 +969,22 @@ export function RecipeDetailsPage() {
                       ✓
                     </span>
                   )}
-                  {canUseSocialRating && (
-                    <button
-                      aria-label={t('favoriteRecipe')}
-                      className={`instant-tooltip inline-flex h-12 w-12 items-center justify-center rounded-full border-2 text-2xl leading-none shadow-md transition-colors ${
-                        isRecipeFavorite
+                  <button
+                    aria-label={t('favoriteRecipe')}
+                    aria-disabled={!canUseSocialRating}
+                    className={`instant-tooltip inline-flex h-12 w-12 items-center justify-center rounded-full border-2 text-2xl leading-none shadow-md transition-colors ${
+                      canUseSocialRating
+                        ? isRecipeFavorite
                           ? 'border-rose-400 bg-rose-200 text-rose-700'
                           : 'border-slate-300 bg-white text-slate-300 hover:border-slate-400 hover:text-slate-500'
-                      }`}
-                      onClick={handleToggleRecipeFavorite}
-                      data-tooltip={t('favoriteRecipe')}
-                      type="button"
-                    >
-                      {isRecipeFavorite ? '\u2665' : '\u2661'}
-                    </button>
-                  )}
+                        : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-300'
+                    }`}
+                    onClick={canUseSocialRating ? handleToggleRecipeFavorite : handleRegisteredRequiredAction}
+                    data-tooltip={canUseSocialRating ? t('favoriteRecipe') : t('registeredRequiredTooltip')}
+                    type="button"
+                  >
+                    {canUseSocialRating && isRecipeFavorite ? '\u2665' : '\u2661'}
+                  </button>
                   </div>
                 </div>
               )}
@@ -1017,21 +1024,22 @@ export function RecipeDetailsPage() {
                   ✓
                 </span>
               )}
-              {canUseSocialRating && (
-                <button
-                  aria-label={t('favoriteRecipe')}
-                  className={`instant-tooltip inline-flex h-10 w-10 items-center justify-center rounded-full border-2 text-xl leading-none shadow-md transition-colors ${
-                    isRecipeFavorite
+              <button
+                aria-label={t('favoriteRecipe')}
+                aria-disabled={!canUseSocialRating}
+                className={`instant-tooltip inline-flex h-10 w-10 items-center justify-center rounded-full border-2 text-xl leading-none shadow-md transition-colors ${
+                  canUseSocialRating
+                    ? isRecipeFavorite
                       ? 'border-rose-400 bg-rose-200 text-rose-700'
                       : 'border-slate-300 bg-white text-slate-300 hover:border-slate-400 hover:text-slate-500'
-                  }`}
-                  onClick={handleToggleRecipeFavorite}
-                  data-tooltip={t('favoriteRecipe')}
-                  type="button"
-                >
-                  {isRecipeFavorite ? '\u2665' : '\u2661'}
-                </button>
-              )}
+                    : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-300'
+                }`}
+                onClick={canUseSocialRating ? handleToggleRecipeFavorite : handleRegisteredRequiredAction}
+                data-tooltip={canUseSocialRating ? t('favoriteRecipe') : t('registeredRequiredTooltip')}
+                type="button"
+              >
+                {canUseSocialRating && isRecipeFavorite ? '\u2665' : '\u2661'}
+              </button>
               </div>
             </div>
           )}
@@ -1077,29 +1085,32 @@ export function RecipeDetailsPage() {
             <span className="text-slate-500">({t('ratingNoVotes')})</span>
           )}
         </span>
-        {canUseSocialRating && (
-          <span className="inline-flex items-center gap-1 text-slate-600">
-            {t('myRatingLabel')}:
-            <span className="inline-flex items-center gap-0.5">
-              {[1, 2, 3, 4, 5].map((value) => {
-                const highlighted = value <= userRecipeRating;
+        <span className="inline-flex items-center gap-1 text-slate-600">
+          {t('myRatingLabel')}:
+          <span className="inline-flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((value) => {
+              const highlighted = value <= userRecipeRating;
 
-                return (
-                  <button
-                    key={`recipe-my-rating-${value}`}
-                    aria-label={`${t('myRatingLabel')} ${value}`}
-                    className={`instant-tooltip cursor-pointer text-base leading-none ${highlighted ? 'text-emerald-500' : 'text-slate-300'}`}
-                    onClick={() => handleRateRecipe(value)}
-                    data-tooltip={`${t('myRatingLabel')} ${value}`}
-                    type="button"
-                  >
-                    ★
-                  </button>
-                );
-              })}
-            </span>
+              return (
+                <button
+                  key={`recipe-my-rating-${value}`}
+                  aria-label={`${t('myRatingLabel')} ${value}`}
+                  aria-disabled={!canUseSocialRating}
+                  className={`instant-tooltip text-base leading-none ${
+                    canUseSocialRating
+                      ? `cursor-pointer ${highlighted ? 'text-emerald-500' : 'text-slate-300'}`
+                      : 'cursor-not-allowed text-slate-300'
+                  }`}
+                  onClick={canUseSocialRating ? () => handleRateRecipe(value) : handleRegisteredRequiredAction}
+                  data-tooltip={canUseSocialRating ? `${t('myRatingLabel')} ${value}` : t('registeredRequiredTooltip')}
+                  type="button"
+                >
+                  ★
+                </button>
+              );
+            })}
           </span>
-        )}
+        </span>
       </div>
       {recipeIngredients.length > 0 && (
         <section className="mt-6">
@@ -1132,35 +1143,47 @@ export function RecipeDetailsPage() {
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-700">{t('userActionsSection')}</p>
           <div className="flex flex-wrap items-center gap-3">
             <button
-              className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
-              onClick={openPreparationWizard}
+              aria-disabled={!canWriteComments}
+              className={`instant-tooltip inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                canWriteComments
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  : 'cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400'
+              }`}
+              onClick={canWriteComments ? openPreparationWizard : handleRegisteredRequiredAction}
+              data-tooltip={canWriteComments ? t('prepWizardStart') : t('registeredRequiredTooltip')}
               type="button"
             >
               {t('prepWizardStart')}
             </button>
-            {canUseTried && (
-              <button
-                className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                  isRecipeTried
+            <button
+              aria-disabled={!canUseTried}
+              className={`instant-tooltip inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                canUseTried
+                  ? isRecipeTried
                     ? 'bg-emerald-600 text-white hover:bg-emerald-700'
                     : 'border border-emerald-600 bg-transparent text-emerald-700 hover:bg-emerald-50'
-                }`}
-                onClick={handleToggleRecipeTried}
-                type="button"
-              >
-                {`${t('triedRecipe')}${isRecipeTried ? '!' : '?'}`}
-              </button>
-            )}
-            {canMessageCreator && (
-              <button
-                className="inline-flex items-center rounded-md bg-amber-500 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-amber-600 disabled:opacity-60"
-                disabled={isSendingAuthorMessage}
-                onClick={() => setShowAuthorMessageDialog(true)}
-                type="button"
-              >
-                {t('messageRecipeCreator')}
-              </button>
-            )}
+                  : 'cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400'
+              }`}
+              onClick={canUseTried ? handleToggleRecipeTried : handleRegisteredRequiredAction}
+              data-tooltip={canUseTried ? t('triedRecipe') : t('registeredRequiredTooltip')}
+              type="button"
+            >
+              {`${t('triedRecipe')}${canUseTried && isRecipeTried ? '!' : '?'}`}
+            </button>
+            <button
+              aria-disabled={!canMessageCreator || isSendingAuthorMessage}
+              className={`instant-tooltip inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                canMessageCreator
+                  ? 'bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-60'
+                  : 'cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400'
+              }`}
+              disabled={canMessageCreator ? isSendingAuthorMessage : false}
+              onClick={canMessageCreator ? () => setShowAuthorMessageDialog(true) : handleRegisteredRequiredAction}
+              data-tooltip={canMessageCreator ? t('messageRecipeCreator') : t('registeredRequiredTooltip')}
+              type="button"
+            >
+              {t('messageRecipeCreator')}
+            </button>
           </div>
         </div>
 
@@ -1298,39 +1321,47 @@ export function RecipeDetailsPage() {
           {comments.length === 0 && <p className="text-sm text-slate-500">{t('noComments')}</p>}
           {rootComments.map((comment) => renderCommentItem(comment))}
         </div>
-        {canWriteComments ? (
-          <div className="mt-3">
-            {replyingToCommentId && (
-              <div className="mb-2 flex flex-wrap items-center gap-2 rounded-md border border-sky-200 bg-sky-50 px-2 py-1.5 text-xs text-sky-800">
-                <span>{t('replyingToComment')} {getReplyPreviewLabel(replyingToCommentId)}</span>
-                <button
-                  className="rounded border border-sky-300 bg-white px-2 py-0.5 text-xs text-sky-700"
-                  onClick={() => setReplyingToCommentId(null)}
-                  type="button"
-                >
-                  {t('cancelReply')}
-                </button>
-              </div>
-            )}
-            <textarea
-              className="min-h-24 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-              onChange={(event) => setCommentText(event.target.value)}
-              placeholder={replyingToCommentId ? t('replyPlaceholder') : t('commentsPlaceholder')}
-              value={commentText}
-            />
-            <div className="mt-2">
+        <div className="mt-3">
+          {canWriteComments && replyingToCommentId && (
+            <div className="mb-2 flex flex-wrap items-center gap-2 rounded-md border border-sky-200 bg-sky-50 px-2 py-1.5 text-xs text-sky-800">
+              <span>{t('replyingToComment')} {getReplyPreviewLabel(replyingToCommentId)}</span>
               <button
-                className="rounded-md bg-sky-400 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-sky-500"
-                onClick={handlePostComment}
+                className="rounded border border-sky-300 bg-white px-2 py-0.5 text-xs text-sky-700"
+                onClick={() => setReplyingToCommentId(null)}
                 type="button"
               >
-                {t('sendComment')}
+                {t('cancelReply')}
               </button>
             </div>
+          )}
+          <textarea
+            className={`min-h-24 w-full rounded-md border px-3 py-2 text-sm ${
+              canWriteComments
+                ? 'border-slate-300 bg-white'
+                : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
+            }`}
+            onChange={(event) => setCommentText(event.target.value)}
+            placeholder={canWriteComments ? (replyingToCommentId ? t('replyPlaceholder') : t('commentsPlaceholder')) : t('registeredRequiredTooltip')}
+            readOnly={!canWriteComments}
+            value={commentText}
+          />
+          <div className="mt-2">
+            <button
+              aria-disabled={!canWriteComments}
+              className={`instant-tooltip rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                canWriteComments
+                  ? 'bg-sky-400 text-white hover:bg-sky-500'
+                  : 'cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400'
+              }`}
+              onClick={canWriteComments ? handlePostComment : handleRegisteredRequiredAction}
+              data-tooltip={canWriteComments ? t('sendComment') : t('registeredRequiredTooltip')}
+              type="button"
+            >
+              {t('sendComment')}
+            </button>
           </div>
-        ) : (
-          <p className="mt-3 text-sm text-slate-500">{t('commentsOnlyRegistered')}</p>
-        )}
+          {!canWriteComments && <p className="mt-2 text-xs text-slate-500">{t('commentsOnlyRegistered')}</p>}
+        </div>
       </div>
       <Link
         className="mt-6 inline-flex items-center rounded-md border border-slate-300 bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-200"
