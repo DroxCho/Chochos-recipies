@@ -72,6 +72,7 @@ export function RecipeDetailsPage() {
   const [authorMessage, setAuthorMessage] = useState('');
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<RecipeComment[]>([]);
+  const [replyingToCommentId, setReplyingToCommentId] = useState<string | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState('');
   const [reportingCommentId, setReportingCommentId] = useState<string | null>(null);
@@ -315,10 +316,20 @@ export function RecipeDetailsPage() {
     }
 
     setApprovalError(null);
-    addRecipeComment(userId, currentRecipe.id, trimmedComment);
+    const isValidReplyTarget = replyingToCommentId
+      ? comments.some((comment) => comment.id === replyingToCommentId)
+      : false;
+
+    addRecipeComment(userId, currentRecipe.id, trimmedComment, isValidReplyTarget ? replyingToCommentId : null);
     setCommentText('');
+    setReplyingToCommentId(null);
     setReviewSuccess(t('commentSent'));
     setComments(getRecipeComments(currentRecipe.id));
+  }
+
+  function handleStartReply(comment: RecipeComment) {
+    setReplyingToCommentId(comment.id);
+    setApprovalError(null);
   }
 
   function handleStartEditComment(comment: RecipeComment) {
@@ -367,6 +378,9 @@ export function RecipeDetailsPage() {
     if (editingCommentId === comment.id) {
       setEditingCommentId(null);
       setEditingCommentText('');
+    }
+    if (replyingToCommentId === comment.id) {
+      setReplyingToCommentId(null);
     }
     setReviewSuccess(t('commentDeleted'));
     setApprovalError(null);
@@ -582,6 +596,20 @@ export function RecipeDetailsPage() {
     'prepWizardSuccessTitle',
   ];
   const roundedAverageRating = Math.round((recipeRatingAverage || 0) * 2) / 2;
+  const commentById = new Map(comments.map((comment) => [comment.id, comment]));
+  const rootComments = comments.filter(
+    (comment) => !comment.parentCommentId || !commentById.has(comment.parentCommentId),
+  );
+  const repliesByParent = comments.reduce((accumulator, comment) => {
+    if (!comment.parentCommentId || !commentById.has(comment.parentCommentId)) {
+      return accumulator;
+    }
+
+    const existing = accumulator.get(comment.parentCommentId) ?? [];
+    existing.push(comment);
+    accumulator.set(comment.parentCommentId, existing);
+    return accumulator;
+  }, new Map<string, RecipeComment[]>());
   const mainProductMetas = currentRecipe?.mainProducts?.length
     ? getMainProductsMeta(currentRecipe.mainProducts, language)
     : (() => {
@@ -612,6 +640,155 @@ export function RecipeDetailsPage() {
 
     const query = nextParams.toString();
     navigate(`/recipes${query ? `?${query}` : ''}`);
+  }
+
+  function getCommentAuthorLabel(comment: RecipeComment): string {
+    const displayName = getUserDisplayName(comment.userId, 'registered');
+    const safeDisplayName = displayName === comment.userId ? t('unknownCommentAuthor') : displayName;
+    if (comment.userId === userId) {
+      return safeDisplayName ? `${t('currentUserLabel')} (${safeDisplayName})` : t('currentUserLabel');
+    }
+
+    return safeDisplayName;
+  }
+
+  function getReplyPreviewLabel(commentId: string): string {
+    const target = commentById.get(commentId);
+    if (!target) {
+      return '';
+    }
+
+    return getCommentAuthorLabel(target);
+  }
+
+  function renderCommentItem(comment: RecipeComment, depth: number = 0) {
+    const replies = repliesByParent.get(comment.id) ?? [];
+    const isReply = depth > 0;
+
+    return (
+      <div
+        key={comment.id}
+        className={`rounded-md border border-slate-200 bg-white px-3 py-2 ${isReply ? 'ml-4 mt-2 border-l-4 border-l-sky-200' : ''}`}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-xs text-slate-500">
+            {getCommentAuthorLabel(comment)} · {new Date(comment.createdAt).toLocaleString()}
+          </p>
+          {canReportComments && (
+            <div className="group relative inline-flex">
+              <button
+                aria-label={t('reportToAdmin')}
+                className="inline-flex h-5 w-5 items-center justify-center bg-red-600 text-xs font-black leading-none text-white [clip-path:polygon(50%_0%,0%_100%,100%_100%)]"
+                onClick={() => {
+                  setReportingCommentId(comment.id);
+                  setReportDescription('');
+                  setApprovalError(null);
+                }}
+                type="button"
+              >
+                !
+              </button>
+              <span className="pointer-events-none absolute -top-8 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded bg-slate-900 px-2 py-1 text-[11px] text-white opacity-0 transition-opacity duration-75 group-hover:opacity-100 group-focus-within:opacity-100">
+                {t('reportToAdmin')}
+              </span>
+            </div>
+          )}
+        </div>
+        {editingCommentId === comment.id ? (
+          <div className="mt-2">
+            <textarea
+              className="min-h-20 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              onChange={(event) => setEditingCommentText(event.target.value)}
+              value={editingCommentText}
+            />
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                className="rounded-md bg-emerald-700 px-3 py-1.5 text-sm font-medium text-white"
+                onClick={handleSaveCommentEdit}
+                type="button"
+              >
+                {t('saveComment')}
+              </button>
+              <button
+                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700"
+                onClick={() => {
+                  setEditingCommentId(null);
+                  setEditingCommentText('');
+                }}
+                type="button"
+              >
+                {t('cancel')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p className="mt-1 whitespace-pre-line text-sm text-slate-800">{comment.text}</p>
+            {(canWriteComments || comment.userId === userId) && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {canWriteComments && (
+                  <button
+                    className="rounded-md border border-sky-300 bg-white px-2 py-1 text-xs text-sky-700"
+                    onClick={() => handleStartReply(comment)}
+                    type="button"
+                  >
+                    {t('replyComment')}
+                  </button>
+                )}
+                {comment.userId === userId && canWriteComments && (
+                  <button
+                    className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                    onClick={() => handleStartEditComment(comment)}
+                    type="button"
+                  >
+                    {t('editComment')}
+                  </button>
+                )}
+                {comment.userId === userId && canWriteComments && (
+                  <button
+                    className="rounded-md border border-rose-300 bg-white px-2 py-1 text-xs text-rose-700"
+                    onClick={() => handleDeleteComment(comment)}
+                    type="button"
+                  >
+                    {t('deleteComment')}
+                  </button>
+                )}
+              </div>
+            )}
+          </>
+        )}
+        {reportingCommentId === comment.id && canReportComments && (
+          <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3">
+            <textarea
+              className="min-h-20 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              onChange={(event) => setReportDescription(event.target.value)}
+              placeholder={t('reportDescriptionPlaceholder')}
+              value={reportDescription}
+            />
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white"
+                onClick={() => handleSendCommentReport(comment)}
+                type="button"
+              >
+                {t('sendReport')}
+              </button>
+              <button
+                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700"
+                onClick={() => {
+                  setReportingCommentId(null);
+                  setReportDescription('');
+                }}
+                type="button"
+              >
+                {t('cancel')}
+              </button>
+            </div>
+          </div>
+        )}
+        {replies.length > 0 && <div className="mt-2 space-y-2">{replies.map((reply) => renderCommentItem(reply, depth + 1))}</div>}
+      </div>
+    );
   }
 
   return (
@@ -1058,120 +1235,26 @@ export function RecipeDetailsPage() {
         <h3 className="text-sm font-semibold text-slate-900">{t('commentsTitle')}</h3>
         <div className="mt-3 space-y-2">
           {comments.length === 0 && <p className="text-sm text-slate-500">{t('noComments')}</p>}
-          {comments.map((comment) => (
-            <div key={comment.id} className="rounded-md border border-slate-200 bg-white px-3 py-2">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-xs text-slate-500">
-                  {comment.userId === userId ? t('currentUserLabel') : comment.userId} · {new Date(comment.createdAt).toLocaleString()}
-                </p>
-                {canReportComments && (
-                  <div className="group relative inline-flex">
-                    <button
-                      aria-label={t('reportToAdmin')}
-                      className="inline-flex h-5 w-5 items-center justify-center bg-red-600 text-xs font-black leading-none text-white [clip-path:polygon(50%_0%,0%_100%,100%_100%)]"
-                      onClick={() => {
-                        setReportingCommentId(comment.id);
-                        setReportDescription('');
-                        setApprovalError(null);
-                      }}
-                      type="button"
-                    >
-                      !
-                    </button>
-                    <span className="pointer-events-none absolute -top-8 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded bg-slate-900 px-2 py-1 text-[11px] text-white opacity-0 transition-opacity duration-75 group-hover:opacity-100 group-focus-within:opacity-100">
-                      {t('reportToAdmin')}
-                    </span>
-                  </div>
-                )}
-              </div>
-              {editingCommentId === comment.id ? (
-                <div className="mt-2">
-                  <textarea
-                    className="min-h-20 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-                    onChange={(event) => setEditingCommentText(event.target.value)}
-                    value={editingCommentText}
-                  />
-                  <div className="mt-2 flex items-center gap-2">
-                    <button
-                      className="rounded-md bg-emerald-700 px-3 py-1.5 text-sm font-medium text-white"
-                      onClick={handleSaveCommentEdit}
-                      type="button"
-                    >
-                      {t('saveComment')}
-                    </button>
-                    <button
-                      className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700"
-                      onClick={() => {
-                        setEditingCommentId(null);
-                        setEditingCommentText('');
-                      }}
-                      type="button"
-                    >
-                      {t('cancel')}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p className="mt-1 whitespace-pre-line text-sm text-slate-800">{comment.text}</p>
-                  {comment.userId === userId && canWriteComments && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <button
-                        className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
-                        onClick={() => handleStartEditComment(comment)}
-                        type="button"
-                      >
-                        {t('editComment')}
-                      </button>
-                      <button
-                        className="rounded-md border border-rose-300 bg-white px-2 py-1 text-xs text-rose-700"
-                        onClick={() => handleDeleteComment(comment)}
-                        type="button"
-                      >
-                        {t('deleteComment')}
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-              {reportingCommentId === comment.id && canReportComments && (
-                <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3">
-                  <textarea
-                    className="min-h-20 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-                    onChange={(event) => setReportDescription(event.target.value)}
-                    placeholder={t('reportDescriptionPlaceholder')}
-                    value={reportDescription}
-                  />
-                  <div className="mt-2 flex items-center gap-2">
-                    <button
-                      className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white"
-                      onClick={() => handleSendCommentReport(comment)}
-                      type="button"
-                    >
-                      {t('sendReport')}
-                    </button>
-                    <button
-                      className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700"
-                      onClick={() => {
-                        setReportingCommentId(null);
-                        setReportDescription('');
-                      }}
-                      type="button"
-                    >
-                      {t('cancel')}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+          {rootComments.map((comment) => renderCommentItem(comment))}
         </div>
         {canWriteComments ? (
           <div className="mt-3">
+            {replyingToCommentId && (
+              <div className="mb-2 flex flex-wrap items-center gap-2 rounded-md border border-sky-200 bg-sky-50 px-2 py-1.5 text-xs text-sky-800">
+                <span>{t('replyingToComment')} {getReplyPreviewLabel(replyingToCommentId)}</span>
+                <button
+                  className="rounded border border-sky-300 bg-white px-2 py-0.5 text-xs text-sky-700"
+                  onClick={() => setReplyingToCommentId(null)}
+                  type="button"
+                >
+                  {t('cancelReply')}
+                </button>
+              </div>
+            )}
             <textarea
               className="min-h-24 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
               onChange={(event) => setCommentText(event.target.value)}
-              placeholder={t('commentsPlaceholder')}
+              placeholder={replyingToCommentId ? t('replyPlaceholder') : t('commentsPlaceholder')}
               value={commentText}
             />
             <div className="mt-2">

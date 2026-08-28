@@ -4,6 +4,7 @@ export interface RecipeComment {
   userId: string;
   text: string;
   createdAt: string;
+  parentCommentId?: string | null;
 }
 
 const RECIPE_COMMENTS_KEY = 'recipes-comments-v1';
@@ -39,13 +40,19 @@ export function getRecipeComments(recipeId: string): RecipeComment[] {
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 }
 
-export function addRecipeComment(userId: string, recipeId: string, text: string): RecipeComment {
+export function addRecipeComment(
+  userId: string,
+  recipeId: string,
+  text: string,
+  parentCommentId?: string | null,
+): RecipeComment {
   const next: RecipeComment = {
     id: `comment-${Date.now()}`,
     recipeId,
     userId,
     text,
     createdAt: new Date().toISOString(),
+    parentCommentId: parentCommentId ?? null,
   };
 
   writeComments([...readComments(), next]);
