@@ -771,29 +771,47 @@ export function RecipeDetailsPage() {
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 {canWriteComments && (
                   <button
-                    className="rounded-md border border-sky-300 bg-white px-2 py-1 text-xs text-sky-700"
+                    aria-label={t('replyComment')}
+                    className="instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-md border border-sky-300 bg-white text-sky-700 transition-colors hover:bg-sky-50"
                     onClick={() => handleStartReply(comment)}
+                    data-tooltip={t('replyComment')}
                     type="button"
                   >
-                    {t('replyComment')}
+                    <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 17L4 12l5-5" />
+                      <path d="M20 18v-2a6 6 0 0 0-6-6H4" />
+                    </svg>
                   </button>
                 )}
                 {comment.userId === userId && canWriteComments && (
                   <button
-                    className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                    aria-label={t('editComment')}
+                    className="instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 transition-colors hover:bg-slate-100"
                     onClick={() => handleStartEditComment(comment)}
+                    data-tooltip={t('editComment')}
                     type="button"
                   >
-                    {t('editComment')}
+                    <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                    </svg>
                   </button>
                 )}
                 {comment.userId === userId && canWriteComments && (
                   <button
-                    className="rounded-md border border-rose-300 bg-white px-2 py-1 text-xs text-rose-700"
+                    aria-label={t('deleteComment')}
+                    className="instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-md border border-rose-300 bg-white text-rose-700 transition-colors hover:bg-rose-50"
                     onClick={() => handleDeleteComment(comment)}
+                    data-tooltip={t('deleteComment')}
                     type="button"
                   >
-                    {t('deleteComment')}
+                    <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 6h18" />
+                      <path d="M8 6V4h8v2" />
+                      <path d="M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v6" />
+                      <path d="M14 11v6" />
+                    </svg>
                   </button>
                 )}
               </div>
