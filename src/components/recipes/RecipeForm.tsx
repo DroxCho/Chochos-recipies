@@ -138,6 +138,8 @@ export function RecipeForm({
   const [steps, setSteps] = useState<string[]>(
     initialValues?.steps && initialValues.steps.length > 0 ? initialValues.steps : [''],
   );
+  const [insertIngredientAfterIndex, setInsertIngredientAfterIndex] = useState<number | null>(null);
+  const [insertIngredientText, setInsertIngredientText] = useState('');
   const [insertStepAfterIndex, setInsertStepAfterIndex] = useState<number | null>(null);
   const [insertStepText, setInsertStepText] = useState('');
   const [notes, setNotes] = useState(initialValues?.notes ?? '');
@@ -175,6 +177,7 @@ export function RecipeForm({
   const hasEmptyStepField = steps.some((item) => item.trim().length === 0);
   const canAddIngredientInput = !hasEmptyIngredientField;
   const canAddStepInput = !hasEmptyStepField;
+  const isInsertIngredientOverlayOpen = insertIngredientAfterIndex !== null;
   const isInsertStepOverlayOpen = insertStepAfterIndex !== null;
 
   function updateListValue(
@@ -206,6 +209,16 @@ export function RecipeForm({
     setInsertStepText('');
   }
 
+  function openInsertIngredientOverlay(afterIndex: number) {
+    setInsertIngredientAfterIndex(afterIndex);
+    setInsertIngredientText('');
+  }
+
+  function closeInsertIngredientOverlay() {
+    setInsertIngredientAfterIndex(null);
+    setInsertIngredientText('');
+  }
+
   function closeInsertStepOverlay() {
     setInsertStepAfterIndex(null);
     setInsertStepText('');
@@ -227,6 +240,24 @@ export function RecipeForm({
     });
     clearIndexedFieldErrors('step');
     closeInsertStepOverlay();
+  }
+
+  function handleInsertIngredient() {
+    if (insertIngredientAfterIndex === null) {
+      return;
+    }
+
+    const trimmedIngredient = insertIngredientText.trim();
+    if (!trimmedIngredient) {
+      return;
+    }
+
+    setIngredients((current) => {
+      const insertionIndex = insertIngredientAfterIndex + 1;
+      return [...current.slice(0, insertionIndex), trimmedIngredient, ...current.slice(insertionIndex)];
+    });
+    clearIndexedFieldErrors('ingredient');
+    closeInsertIngredientOverlay();
   }
 
   function clearFieldError(field: string) {
@@ -1362,24 +1393,36 @@ export function RecipeForm({
           {!multiStep && <h4 className="text-sm font-semibold text-slate-900">{t('ingredients')} {requiredMark}</h4>}
           <div className="mt-2 grid gap-2">
             {ingredients.map((ingredient, index) => (
-              <label key={`ingredient-${index}`} className="flex flex-col gap-1 text-sm text-slate-700">
-                <span>
-                  {t('ingredientItem')} {index + 1} {index === 0 ? requiredMark : null}
-                </span>
-                <input
-                  className={`rounded-md border px-3 py-2 ${inputBorderClass(Boolean(fieldErrors[`ingredient-${index}`]))}`}
-                  value={ingredient}
-                  onChange={(event) => {
-                    updateListValue(setIngredients, index, event.target.value);
-                    clearFieldError(`ingredient-${index}`);
-                  }}
-                  placeholder={t('ingredientPlaceholder')}
-                  required={index === 0}
-                />
-                {fieldErrors[`ingredient-${index}`] && (
-                  <span className="text-xs text-rose-700">{t(fieldErrors[`ingredient-${index}`] as TranslationKey)}</span>
+              <div key={`ingredient-${index}`}>
+                <label className="flex flex-col gap-1 text-sm text-slate-700">
+                  <span>
+                    {t('ingredientItem')} {index + 1} {index === 0 ? requiredMark : null}
+                  </span>
+                  <input
+                    className={`rounded-md border px-3 py-2 ${inputBorderClass(Boolean(fieldErrors[`ingredient-${index}`]))}`}
+                    value={ingredient}
+                    onChange={(event) => {
+                      updateListValue(setIngredients, index, event.target.value);
+                      clearFieldError(`ingredient-${index}`);
+                    }}
+                    placeholder={t('ingredientPlaceholder')}
+                    required={index === 0}
+                  />
+                  {fieldErrors[`ingredient-${index}`] && (
+                    <span className="text-xs text-rose-700">{t(fieldErrors[`ingredient-${index}`] as TranslationKey)}</span>
+                  )}
+                </label>
+
+                {index < ingredients.length - 1 && (
+                  <button
+                    className="mt-1 inline-flex text-xs text-slate-600 underline underline-offset-2 hover:text-slate-900"
+                    onClick={() => openInsertIngredientOverlay(index)}
+                    type="button"
+                  >
+                    {t('insertIngredientLink')}
+                  </button>
                 )}
-              </label>
+              </div>
             ))}
           </div>
           <button
@@ -1577,7 +1620,7 @@ export function RecipeForm({
                 onClick={closeInsertStepOverlay}
                 type="button"
               >
-                {t('cancel')}
+                Х
               </button>
             </div>
 
@@ -1603,6 +1646,48 @@ export function RecipeForm({
                 type="button"
               >
                 {t('insertStepConfirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isInsertIngredientOverlayOpen && (
+        <div className="fixed inset-0 z-[71] flex items-center justify-center bg-slate-900/55 p-4">
+          <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
+            <div className="mb-3 flex items-center justify-between">
+              <h4 className="text-base font-semibold text-slate-900">{t('insertIngredientTitle')}</h4>
+              <button
+                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700"
+                onClick={closeInsertIngredientOverlay}
+                type="button"
+              >
+                Х
+              </button>
+            </div>
+
+            <textarea
+              className="min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              onChange={(event) => setInsertIngredientText(event.target.value)}
+              placeholder={t('insertIngredientPlaceholder')}
+              value={insertIngredientText}
+            />
+
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <button
+                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700"
+                onClick={closeInsertIngredientOverlay}
+                type="button"
+              >
+                {t('cancel')}
+              </button>
+              <button
+                className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+                disabled={insertIngredientText.trim().length === 0}
+                onClick={handleInsertIngredient}
+                type="button"
+              >
+                {t('insertIngredientConfirm')}
               </button>
             </div>
           </div>
