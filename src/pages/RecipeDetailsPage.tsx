@@ -617,9 +617,9 @@ export function RecipeDetailsPage() {
   return (
     <section aria-label="recipe-details-page" className="min-h-[320px]">
       <div className="fixed inset-0 z-40 bg-slate-900/40" aria-hidden="true" />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => navigate(recipesListPath)}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden p-4" onClick={() => navigate(recipesListPath)}>
         <div
-          className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl"
+          className="max-h-[90vh] w-full max-w-3xl overflow-x-hidden overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="mb-4 flex items-start justify-between gap-3">
