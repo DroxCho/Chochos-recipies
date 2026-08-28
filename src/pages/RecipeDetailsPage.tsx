@@ -1,8 +1,10 @@
-import { useEffect, useState, type MouseEvent } from 'react';
+import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { readUserAdminControls, resolveManagedRole } from '../auth/userAdminControls';
 import { canApproveRecipe, canEditRecipe, canParticipate } from '../auth/roles';
 import { useUserRole } from '../auth/useUserRole';
 import { deleteRecipeById, insertRecipe, updateRecipe } from '../data/recipes';
+import supabaseUsersSnapshot from '../data/supabaseUsersSnapshot.json';
 import { useRecipeDetails } from '../hooks/useRecipes';
 import { getLocalizedRecipe } from '../i18n/recipeContent';
 import type { TranslationKey } from '../i18n/translations';
@@ -42,6 +44,12 @@ const CUISINE_ICONS: Record<RecipeCuisine, string> = {
 interface RecipeDetailsLocationState {
   created?: boolean;
   updated?: boolean;
+}
+
+interface SnapshotUser {
+  id: string;
+  email: string | null;
+  role?: string;
 }
 
 function complexityToStars(complexity?: Recipe['complexity']): number {
@@ -115,6 +123,8 @@ export function RecipeDetailsPage() {
   const [isUnpublishing, setIsUnpublishing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
+  const [isTransferringOwnership, setIsTransferringOwnership] = useState(false);
+  const [targetOwnerId, setTargetOwnerId] = useState('');
   const [isSendingAuthorMessage, setIsSendingAuthorMessage] = useState(false);
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [showAuthorMessageDialog, setShowAuthorMessageDialog] = useState(false);
@@ -144,6 +154,29 @@ export function RecipeDetailsPage() {
 
   const currentRecipe = approvalOverride && approvalOverride.id === recipe?.id ? approvalOverride : recipe;
   const creatorName = currentRecipe ? getUserDisplayName(currentRecipe.ownerId, currentRecipe.ownerRole) : '';
+
+  const transferableUsers = useMemo(() => {
+    const controls = readUserAdminControls();
+    const snapshotUsers = ((supabaseUsersSnapshot as { users?: SnapshotUser[] }).users ?? []);
+
+    return snapshotUsers
+      .filter((entry) => {
+        const managedRole = resolveManagedRole(controls[entry.id]);
+        const effectiveRole = managedRole ?? (entry.role === 'admin' ? 'admin' : 'registered');
+        return effectiveRole === 'registered' && entry.id !== currentRecipe?.ownerId;
+      })
+      .map((entry) => ({
+        id: entry.id,
+        label: entry.email?.trim() || entry.id,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [currentRecipe?.ownerId]);
+
+  useEffect(() => {
+    if (!transferableUsers.some((entry) => entry.id === targetOwnerId)) {
+      setTargetOwnerId(transferableUsers[0]?.id ?? '');
+    }
+  }, [targetOwnerId, transferableUsers]);
 
   async function handleApprove() {
     if (!currentRecipe || !canApproveRecipe(role)) {
@@ -383,6 +416,50 @@ export function RecipeDetailsPage() {
       setApprovalError(t('errorCreateRecipe'));
     } finally {
       setIsCopying(false);
+    }
+  }
+
+  async function handleTransferOwnership() {
+    if (!currentRecipe || role !== 'admin' || !targetOwnerId) {
+      return;
+    }
+
+    setIsTransferringOwnership(true);
+    setApprovalError(null);
+    setReviewSuccess(null);
+
+    try {
+      const updatedRecipe = await updateRecipe({
+        id: currentRecipe.id,
+        title: currentRecipe.title,
+        description: currentRecipe.description,
+        prepMinutes: currentRecipe.prepMinutes,
+        servings: currentRecipe.servings,
+        complexity: currentRecipe.complexity,
+        dishType: currentRecipe.dishType,
+        dishTypes: currentRecipe.dishTypes,
+        cuisine: currentRecipe.cuisine,
+        cuisines: currentRecipe.cuisines,
+        mainProduct: currentRecipe.mainProduct,
+        mainProducts: currentRecipe.mainProducts,
+        ingredients: currentRecipe.ingredients,
+        steps: currentRecipe.steps,
+        notes: currentRecipe.notes,
+        photoUrls: currentRecipe.photoUrls,
+        photoOriginalUrl: currentRecipe.photoOriginalUrl,
+        ownerId: targetOwnerId,
+        ownerRole: 'registered',
+        status: currentRecipe.status,
+        reviewComment: currentRecipe.reviewComment,
+        metaOnly: true,
+      });
+
+      setApprovalOverride(updatedRecipe);
+      setReviewSuccess(t('ownershipTransferSuccess'));
+    } catch {
+      setApprovalError(t('errorUpdateRecipe'));
+    } finally {
+      setIsTransferringOwnership(false);
     }
   }
 
@@ -1467,7 +1544,7 @@ export function RecipeDetailsPage() {
               )}
               <button
                 className="inline-flex items-center rounded-md bg-slate-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60"
-                disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting || isCopying || currentRecipe.status === 'pending'}
+                disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting || isCopying || isTransferringOwnership || currentRecipe.status === 'pending'}
                 onClick={handleUnpublish}
                 type="button"
               >
@@ -1475,7 +1552,7 @@ export function RecipeDetailsPage() {
               </button>
               <button
                 className="inline-flex items-center rounded-md bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60"
-                disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting || isCopying}
+                disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting || isCopying || isTransferringOwnership}
                 onClick={handleCopyRecipe}
                 type="button"
               >
@@ -1483,12 +1560,45 @@ export function RecipeDetailsPage() {
               </button>
               <button
                 className="inline-flex items-center rounded-md bg-rose-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60"
-                disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting || isCopying}
+                disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting || isCopying || isTransferringOwnership}
                 onClick={handleDelete}
                 type="button"
               >
                 {t('deleteRecipe')}
               </button>
+            </div>
+            <div className="mt-3 rounded-md border border-rose-200 bg-white p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-rose-700">{t('ownershipTransferTitle')}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <label className="sr-only" htmlFor="ownership-target-user">
+                  {t('ownershipTransferLabel')}
+                </label>
+                <select
+                  id="ownership-target-user"
+                  className="min-w-56 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800"
+                  disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting || isCopying || isTransferringOwnership || transferableUsers.length === 0}
+                  onChange={(event) => setTargetOwnerId(event.target.value)}
+                  value={targetOwnerId}
+                >
+                  {transferableUsers.length === 0 ? (
+                    <option value="">{t('ownershipTransferNoUsers')}</option>
+                  ) : (
+                    transferableUsers.map((entry) => (
+                      <option key={`ownership-target-${entry.id}`} value={entry.id}>
+                        {entry.label}
+                      </option>
+                    ))
+                  )}
+                </select>
+                <button
+                  className="inline-flex items-center rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60"
+                  disabled={!targetOwnerId || transferableUsers.length === 0 || isApproving || isRejecting || isReturning || isUnpublishing || isDeleting || isCopying || isTransferringOwnership}
+                  onClick={handleTransferOwnership}
+                  type="button"
+                >
+                  {isTransferringOwnership ? t('saving') : t('ownershipTransferButton')}
+                </button>
+              </div>
             </div>
           </div>
         )}
