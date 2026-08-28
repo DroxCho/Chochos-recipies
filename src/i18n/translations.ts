@@ -2,7 +2,7 @@ export type Language = 'bg' | 'en';
 
 export const translations = {
   bg: {
-    appTitle: 'Рецепти',
+    appTitle: 'Рецептите на Чочо',
     navHome: 'Начало',
     navRecipes: 'Рецепти',
     navAddRecipe: 'Добави рецепта',
@@ -194,7 +194,7 @@ export const translations = {
     backToRecipes: 'Назад към рецепти',
     prepLabel: 'Време',
     servingsLabel: 'Порции',
-    footerBrand: 'Рецепти',
+    footerBrand: 'Рецептите на Чочо',
     validationTitleMin: 'Заглавието трябва да е поне 2 символа.',
     validationDescriptionMin: 'Описанието трябва да е поне 10 символа.',
     validationRequiredField: 'Всички полета са задължителни.',
@@ -281,7 +281,7 @@ export const translations = {
     profileSaveSuccess: 'Профилът е обновен успешно.',
   },
   en: {
-    appTitle: 'Recipes',
+    appTitle: 'Рецептите на Чочо',
     navHome: 'Home',
     navRecipes: 'Recipes',
     navAddRecipe: 'Add recipe',
@@ -473,7 +473,7 @@ export const translations = {
     backToRecipes: 'Back to recipes',
     prepLabel: 'Prep',
     servingsLabel: 'Servings',
-    footerBrand: 'Recipes',
+    footerBrand: 'Рецептите на Чочо',
     validationTitleMin: 'Title must be at least 2 characters.',
     validationDescriptionMin: 'Description must be at least 10 characters.',
     validationRequiredField: 'All fields are required.',
