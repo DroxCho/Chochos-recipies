@@ -149,9 +149,11 @@ export function ProfilePage() {
       .map((user) => {
         const control = userControls[user.id];
         const fullName = profiles[user.id]?.fullName?.trim() ?? '';
+        const photo = profiles[user.id]?.profilePhotoDataUrl?.trim() ?? '';
         return {
           ...user,
           fullName,
+          profilePhotoDataUrl: photo,
           selectedRole: normalizeManagedRole(control?.role ?? user.role),
           isBlocked: Boolean(control?.blocked),
         };
@@ -1017,13 +1019,33 @@ export function ProfilePage() {
 
               {filteredManagedUsers.map((entry) => {
                 const isCurrentUser = Boolean(userId) && entry.id === userId;
+                const displayName = getUserNameFallback(
+                  entry.fullName,
+                  entry.email ?? '',
+                  entry.id,
+                  entry.isBlocked ? 'blocked' : entry.selectedRole,
+                );
 
                 return (
                   <div key={entry.id} className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-[1.6fr_auto_auto_auto] md:items-center">
-                    <div>
-                      <p className="text-sm font-medium text-slate-800">{t('profileFieldFullName')}: {getUserNameFallback(entry.fullName, entry.email ?? '', entry.id, entry.isBlocked ? 'blocked' : entry.selectedRole)}</p>
-                      <p className="text-xs text-slate-600">{t('profileFieldEmail')}: {entry.email || '-'}</p>
-                      <p className="text-xs text-slate-500">{t('profileFieldUserId')}: {entry.id}</p>
+                    <div className="flex min-w-0 items-center gap-3">
+                      {entry.profilePhotoDataUrl ? (
+                        <img
+                          alt={displayName}
+                          className="h-12 w-12 shrink-0 rounded-full border border-slate-200 object-cover"
+                          src={entry.profilePhotoDataUrl}
+                        />
+                      ) : (
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-dashed border-slate-300 bg-white text-[10px] text-slate-500">
+                          {t('noPhotoPlaceholder')}
+                        </div>
+                      )}
+
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-800">{t('profileFieldFullName')}: {displayName}</p>
+                        <p className="truncate text-xs text-slate-600">{t('profileFieldEmail')}: {entry.email || '-'}</p>
+                        <p className="truncate text-xs text-slate-500">{t('profileFieldUserId')}: {entry.id}</p>
+                      </div>
                     </div>
 
                     <div>
