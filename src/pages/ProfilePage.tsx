@@ -825,7 +825,7 @@ export function ProfilePage() {
                       <path d="M7.5 17c1.2-2 2.8-3 4.5-3s3.3 1 4.5 3" />
                     </svg>
                   </span>
-                  <span className="mt-3 px-4 text-center text-xs leading-4">{t('noPhotoPlaceholder')}</span>
+                  <span className="mt-3 px-4 text-center text-xs leading-4">{t('uploadPhoto')}</span>
                 </button>
               )}
             </div>
