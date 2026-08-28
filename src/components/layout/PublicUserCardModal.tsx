@@ -772,6 +772,7 @@ export function PublicUserCardModal() {
   }
 
   const selectedRole = selectedUser.isBlocked ? 'blocked' : selectedUser.role;
+  const selectedUserAlias = getFallbackName(selectedUser.fullName, selectedUser.email, selectedUser.id);
   const selectedRoleLabel = selectedRole === 'admin'
     ? t('roleAdmin')
     : selectedRole === 'blocked'
@@ -798,7 +799,7 @@ export function PublicUserCardModal() {
               {selectedUser.profilePhotoDataUrl ? (
                 <div className="relative inline-flex">
                   <img
-                    alt={selectedUser.fullName || selectedUser.id}
+                    alt={selectedUserAlias}
                     className="h-20 w-20 rounded-full border border-slate-200 object-cover"
                     src={selectedUser.profilePhotoDataUrl}
                   />
@@ -815,7 +816,7 @@ export function PublicUserCardModal() {
               ) : null}
 
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-slate-900">{selectedUser.fullName || selectedUser.id}</p>
+                <p className="font-medium text-slate-900">{selectedUserAlias}</p>
                 <p className={`text-xs ${selectedUser.isBlocked || selectedUser.isDeleted ? 'text-rose-700' : 'text-emerald-700'}`}>
                   {t('userStatusLabel')}: {selectedUser.isDeleted ? t('deleteUser') : selectedUser.isBlocked ? t('userStatusBlocked') : t('userStatusActive')}
                 </p>
@@ -874,7 +875,7 @@ export function PublicUserCardModal() {
             </div>
 
             {role === 'admin' ? (
-              <p className="mt-1 text-xs text-slate-500">{t('profileFieldUserId')}: {selectedUser.id}</p>
+              <p className="mt-1 text-xs text-slate-500">{t('profileFieldFullName')}: {selectedUserAlias}</p>
             ) : null}
           </div>
 
