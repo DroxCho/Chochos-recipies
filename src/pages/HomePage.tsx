@@ -118,7 +118,9 @@ export function HomePage() {
           {activeSlide.imageUrl ? (
             <img
               alt={activeSlide.title}
-              className="h-[320px] w-full object-cover sm:h-[360px]"
+              className={`h-[320px] w-full object-cover sm:h-[360px] ${
+                isStaticFirstSlide ? 'scale-110 sm:scale-125' : ''
+              }`}
               loading="lazy"
               src={activeSlide.imageUrl}
             />
