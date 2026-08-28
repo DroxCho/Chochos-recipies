@@ -100,7 +100,7 @@ export function EditRecipePage() {
               onClick={() => navigate(`/recipes/${recipe.id}`)}
               type="button"
             >
-              {t('cancel')}
+              Х
             </button>
           </div>
           <RecipeForm
