@@ -309,7 +309,7 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
                 className={`instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border-2 text-base leading-none shadow-sm transition-colors ${
                   isRecipeFavorite
                     ? 'border-rose-400 bg-rose-200 text-rose-700'
-                    : 'border-[3px] border-red-900 bg-white text-red-900 hover:border-red-950 hover:text-red-950'
+                    : 'border-red-900 bg-white text-red-900 hover:border-red-950 hover:text-red-950'
                 }`}
                 onClick={handleToggleFavorite}
                 data-tooltip={t('favoriteRecipe')}
