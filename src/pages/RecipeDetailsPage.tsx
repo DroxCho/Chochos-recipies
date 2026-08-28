@@ -2,7 +2,7 @@ import { useEffect, useState, type MouseEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { canApproveRecipe, canEditRecipe, canParticipate } from '../auth/roles';
 import { useUserRole } from '../auth/useUserRole';
-import { deleteRecipeById, updateRecipe } from '../data/recipes';
+import { deleteRecipeById, insertRecipe, updateRecipe } from '../data/recipes';
 import { useRecipeDetails } from '../hooks/useRecipes';
 import { getLocalizedRecipe } from '../i18n/recipeContent';
 import type { TranslationKey } from '../i18n/translations';
@@ -114,6 +114,7 @@ export function RecipeDetailsPage() {
   const [isReturning, setIsReturning] = useState(false);
   const [isUnpublishing, setIsUnpublishing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
   const [isSendingAuthorMessage, setIsSendingAuthorMessage] = useState(false);
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [showAuthorMessageDialog, setShowAuthorMessageDialog] = useState(false);
@@ -342,6 +343,46 @@ export function RecipeDetailsPage() {
       setApprovalError(t('errorUpdateRecipe'));
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  async function handleCopyRecipe() {
+    if (!currentRecipe || role !== 'admin' || !userId) {
+      return;
+    }
+
+    setIsCopying(true);
+    setApprovalError(null);
+    setReviewSuccess(null);
+
+    try {
+      const copiedRecipe = await insertRecipe({
+        title: `${currentRecipe.title} (copy)`,
+        description: currentRecipe.description,
+        prepMinutes: currentRecipe.prepMinutes,
+        servings: currentRecipe.servings,
+        complexity: currentRecipe.complexity,
+        dishType: currentRecipe.dishType,
+        dishTypes: currentRecipe.dishTypes,
+        cuisine: currentRecipe.cuisine,
+        cuisines: currentRecipe.cuisines,
+        mainProduct: currentRecipe.mainProduct,
+        mainProducts: currentRecipe.mainProducts,
+        ingredients: currentRecipe.ingredients,
+        steps: currentRecipe.steps,
+        notes: currentRecipe.notes,
+        photoUrls: currentRecipe.photoUrls,
+        photoOriginalUrl: currentRecipe.photoOriginalUrl,
+        status: 'approved',
+        ownerId: userId,
+        ownerRole: 'admin',
+      });
+
+      navigate(`/recipes/${copiedRecipe.id}/edit`, { state: { copied: true } });
+    } catch {
+      setApprovalError(t('errorCreateRecipe'));
+    } finally {
+      setIsCopying(false);
     }
   }
 
@@ -1426,15 +1467,23 @@ export function RecipeDetailsPage() {
               )}
               <button
                 className="inline-flex items-center rounded-md bg-slate-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60"
-                disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting || currentRecipe.status === 'pending'}
+                disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting || isCopying || currentRecipe.status === 'pending'}
                 onClick={handleUnpublish}
                 type="button"
               >
                 {t('unpublishRecipe')}
               </button>
               <button
+                className="inline-flex items-center rounded-md bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60"
+                disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting || isCopying}
+                onClick={handleCopyRecipe}
+                type="button"
+              >
+                {isCopying ? t('saving') : t('copyRecipe')}
+              </button>
+              <button
                 className="inline-flex items-center rounded-md bg-rose-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60"
-                disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting}
+                disabled={isApproving || isRejecting || isReturning || isUnpublishing || isDeleting || isCopying}
                 onClick={handleDelete}
                 type="button"
               >
