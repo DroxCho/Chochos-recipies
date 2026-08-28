@@ -165,10 +165,10 @@ export function Header() {
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 sm:h-16 sm:flex-nowrap sm:justify-between sm:px-4">
         <NavLink className="order-1 inline-flex items-center" to="/" aria-label={t('appTitle')}>
           <span className="sr-only">{t('appTitle')}</span>
-          <span className="inline-flex h-10 w-44 overflow-hidden rounded-md sm:h-11 sm:w-52">
+          <span className="inline-flex h-12 w-56 sm:h-14 sm:w-64">
             <img
               alt={t('appTitle')}
-              className="h-full w-full object-cover object-center"
+              className="h-full w-full object-contain object-left"
               loading="eager"
               src="/logo-header.png"
             />
