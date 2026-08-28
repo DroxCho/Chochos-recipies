@@ -93,6 +93,7 @@ export function HomePage() {
   }, [heroSlides.length]);
 
   const activeSlide = heroSlides[activeSlideIndex] ?? null;
+  const isStaticFirstSlide = activeSlide?.id === 'hero-static-first';
 
   function goToPreviousSlide() {
     if (heroSlides.length <= 1) {
@@ -127,19 +128,23 @@ export function HomePage() {
             </div>
           )}
 
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+          {!isStaticFirstSlide && (
+            <>
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
 
-          <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-slate-200/90">{t('homeLatestRecipesTitle')}</p>
-            <h3 className="mt-1 text-xl font-semibold text-white sm:text-2xl">{activeSlide.title}</h3>
-            <p className="mt-2 max-w-2xl text-sm text-slate-100/95">{activeSlide.description}</p>
-            <Link
-              className="mt-3 inline-flex rounded-md border border-white/30 bg-white/15 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/25"
-              to={activeSlide.linkTo}
-            >
-              {t('viewDetails')}
-            </Link>
-          </div>
+              <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-slate-200/90">{t('homeLatestRecipesTitle')}</p>
+                <h3 className="mt-1 text-xl font-semibold text-white sm:text-2xl">{activeSlide.title}</h3>
+                <p className="mt-2 max-w-2xl text-sm text-slate-100/95">{activeSlide.description}</p>
+                <Link
+                  className="mt-3 inline-flex rounded-md border border-white/30 bg-white/15 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/25"
+                  to={activeSlide.linkTo}
+                >
+                  {t('viewDetails')}
+                </Link>
+              </div>
+            </>
+          )}
 
           {heroSlides.length > 1 && (
             <>
