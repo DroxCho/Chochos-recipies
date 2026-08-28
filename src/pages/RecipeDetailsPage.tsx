@@ -661,9 +661,19 @@ export function RecipeDetailsPage() {
     return getCommentAuthorLabel(target);
   }
 
+  function getReplyParentLabel(comment: RecipeComment): string {
+    const parentId = comment.parentCommentId;
+    if (!parentId) {
+      return '';
+    }
+
+    return getReplyPreviewLabel(parentId);
+  }
+
   function renderCommentItem(comment: RecipeComment, depth: number = 0) {
     const replies = repliesByParent.get(comment.id) ?? [];
     const isReply = depth > 0;
+    const replyParentLabel = getReplyParentLabel(comment);
 
     return (
       <div
@@ -694,6 +704,11 @@ export function RecipeDetailsPage() {
             </div>
           )}
         </div>
+        {isReply && replyParentLabel && (
+          <p className="mt-1 text-[11px] font-medium text-sky-700">
+            {t('replyToLabel')} {replyParentLabel}
+          </p>
+        )}
         {editingCommentId === comment.id ? (
           <div className="mt-2">
             <textarea
