@@ -57,6 +57,42 @@ function complexityToStars(complexity?: Recipe['complexity']): number {
   return 0;
 }
 
+function toDishTypeLabelKey(value: Recipe['dishType']): TranslationKey {
+  return value === 'dessert'
+    ? 'dishTypeDessert'
+    : value === 'soup'
+    ? 'dishTypeSoup'
+    : value === 'salad'
+    ? 'dishTypeSalad'
+    : value === 'appetizer'
+    ? 'dishTypeAppetizer'
+    : value === 'breakfast'
+    ? 'dishTypeBreakfast'
+    : 'dishTypeMain';
+}
+
+function toCuisineLabelKey(value: Recipe['cuisine']): TranslationKey {
+  return value === 'bulgarian'
+    ? 'cuisineBulgarian'
+    : value === 'french'
+    ? 'cuisineFrench'
+    : value === 'asian'
+    ? 'cuisineAsian'
+    : value === 'italian'
+    ? 'cuisineItalian'
+    : value === 'mexican'
+    ? 'cuisineMexican'
+    : value === 'spanish'
+    ? 'cuisineSpanish'
+    : value === 'turkish'
+    ? 'cuisineTurkish'
+    : value === 'vegan'
+    ? 'cuisineVegan'
+    : value === 'vegetarian'
+    ? 'cuisineVegetarian'
+    : 'cuisineInternational';
+}
+
 export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardProps) {
   const { t, language } = useLanguage();
   const { role, userId } = useUserRole();
@@ -73,8 +109,22 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
   const recipeImage = recipe.photoUrls?.[0]?.trim();
   const complexityStars = complexityToStars(recipe.complexity);
   const canSeeStatus = role === 'admin' || recipe.ownerId === userId;
-  const selectedDishType = searchParams.get('dishType');
-  const selectedCuisine = searchParams.get('cuisine');
+  const selectedDishTypes = useMemo(
+    () =>
+      (searchParams.get('dishTypes') ?? searchParams.get('dishType') ?? '')
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean),
+    [searchParams],
+  );
+  const selectedCuisines = useMemo(
+    () =>
+      (searchParams.get('cuisines') ?? searchParams.get('cuisine') ?? '')
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean),
+    [searchParams],
+  );
   const selectedMainProducts = useMemo(
     () =>
       (searchParams.get('mainProducts') ?? '')
@@ -84,8 +134,16 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
     [searchParams],
   );
   const listQuery = searchParams.toString();
-  const isDishTypeActive = selectedDishType === (recipe.dishType ?? 'main');
-  const isCuisineActive = selectedCuisine === (recipe.cuisine ?? 'international');
+  const recipeDishTypes: NonNullable<Recipe['dishTypes']> = recipe.dishTypes?.length
+    ? recipe.dishTypes
+    : recipe.dishType
+    ? [recipe.dishType]
+    : ['main'];
+  const recipeCuisines: NonNullable<Recipe['cuisines']> = recipe.cuisines?.length
+    ? recipe.cuisines
+    : recipe.cuisine
+    ? [recipe.cuisine]
+    : ['international'];
   const canDeleteFromCard = role === 'admin' && typeof onDelete === 'function';
   const isRecipeTried = canUseTried && hasUserTriedRecipe(userId, recipe.id);
   const [isRecipeFavorite, setIsRecipeFavorite] = useState(false);
@@ -133,19 +191,49 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
     const nextParams = new URLSearchParams(searchParams);
 
     if (nextDishType) {
-      if (nextParams.get('dishType') === nextDishType) {
-        nextParams.delete('dishType');
+      const selected = new Set(
+        (nextParams.get('dishTypes') ?? nextParams.get('dishType') ?? '')
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean),
+      );
+
+      if (selected.has(nextDishType)) {
+        selected.delete(nextDishType);
       } else {
-        nextParams.set('dishType', nextDishType);
+        selected.add(nextDishType);
       }
+
+      if (selected.size === 0) {
+        nextParams.delete('dishTypes');
+      } else {
+        nextParams.set('dishTypes', Array.from(selected).join(','));
+      }
+
+      nextParams.delete('dishType');
     }
 
     if (nextCuisine) {
-      if (nextParams.get('cuisine') === nextCuisine) {
-        nextParams.delete('cuisine');
+      const selected = new Set(
+        (nextParams.get('cuisines') ?? nextParams.get('cuisine') ?? '')
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean),
+      );
+
+      if (selected.has(nextCuisine)) {
+        selected.delete(nextCuisine);
       } else {
-        nextParams.set('cuisine', nextCuisine);
+        selected.add(nextCuisine);
       }
+
+      if (selected.size === 0) {
+        nextParams.delete('cuisines');
+      } else {
+        nextParams.set('cuisines', Array.from(selected).join(','));
+      }
+
+      nextParams.delete('cuisine');
     }
 
     const query = nextParams.toString();
@@ -197,40 +285,6 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
       : recipe.status === 'changes_requested'
       ? t('changesRequestedStatus')
       : t('approvedStatus');
-
-  const dishTypeLabelKey: TranslationKey =
-    recipe.dishType === 'dessert'
-      ? 'dishTypeDessert'
-      : recipe.dishType === 'soup'
-      ? 'dishTypeSoup'
-      : recipe.dishType === 'salad'
-      ? 'dishTypeSalad'
-      : recipe.dishType === 'appetizer'
-      ? 'dishTypeAppetizer'
-      : recipe.dishType === 'breakfast'
-      ? 'dishTypeBreakfast'
-      : 'dishTypeMain';
-
-  const cuisineLabelKey: TranslationKey =
-    recipe.cuisine === 'bulgarian'
-      ? 'cuisineBulgarian'
-      : recipe.cuisine === 'french'
-      ? 'cuisineFrench'
-      : recipe.cuisine === 'asian'
-      ? 'cuisineAsian'
-      : recipe.cuisine === 'italian'
-      ? 'cuisineItalian'
-      : recipe.cuisine === 'mexican'
-      ? 'cuisineMexican'
-      : recipe.cuisine === 'spanish'
-      ? 'cuisineSpanish'
-      : recipe.cuisine === 'turkish'
-      ? 'cuisineTurkish'
-      : recipe.cuisine === 'vegan'
-      ? 'cuisineVegan'
-      : recipe.cuisine === 'vegetarian'
-      ? 'cuisineVegetarian'
-      : 'cuisineInternational';
 
   async function handleDeleteFromCard(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -358,62 +412,76 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
             {statusLabel}
           </p>
         )}
-        <p
-          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-            isDishTypeActive ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-700'
-          }`}
-        >
-          <span
-            className="cursor-pointer"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              navigateWithMergedFilters(recipe.dishType ?? 'main');
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                event.stopPropagation();
-                navigateWithMergedFilters(recipe.dishType ?? 'main');
-              }
-            }}
-            role="button"
-            tabIndex={0}
-          >
-            <span className="inline-flex items-center gap-1">
-              <span aria-hidden="true" className="text-sm leading-none">{DISH_TYPE_ICONS[recipe.dishType ?? 'main']}</span>
-              <span>{t(dishTypeLabelKey)}</span>
-            </span>
-          </span>
-        </p>
-        <p
-          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-            isCuisineActive ? 'bg-sky-700 text-white' : 'bg-sky-50 text-sky-700'
-          }`}
-        >
-          <span
-            className="cursor-pointer"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              navigateWithMergedFilters(undefined, recipe.cuisine ?? 'international');
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                event.stopPropagation();
-                navigateWithMergedFilters(undefined, recipe.cuisine ?? 'international');
-              }
-            }}
-            role="button"
-            tabIndex={0}
-          >
-            <span className="inline-flex items-center gap-1">
-              <span aria-hidden="true" className="text-sm leading-none">{CUISINE_ICONS[recipe.cuisine ?? 'international']}</span>
-              <span>{t(cuisineLabelKey)}</span>
-            </span>
-          </span>
-        </p>
+        {recipeDishTypes.map((dishType) => {
+          const isActive = selectedDishTypes.includes(dishType);
+
+          return (
+            <p
+              key={`recipe-card-dish-${recipe.id}-${dishType}`}
+              className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                isActive ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-700'
+              }`}
+            >
+              <span
+                className="cursor-pointer"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  navigateWithMergedFilters(dishType);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    navigateWithMergedFilters(dishType);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+              >
+                <span className="inline-flex items-center gap-1">
+                  <span aria-hidden="true" className="text-sm leading-none">{DISH_TYPE_ICONS[dishType]}</span>
+                  <span>{t(toDishTypeLabelKey(dishType))}</span>
+                </span>
+              </span>
+            </p>
+          );
+        })}
+        {recipeCuisines.map((cuisine) => {
+          const isActive = selectedCuisines.includes(cuisine);
+
+          return (
+            <p
+              key={`recipe-card-cuisine-${recipe.id}-${cuisine}`}
+              className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                isActive ? 'bg-sky-700 text-white' : 'bg-sky-50 text-sky-700'
+              }`}
+            >
+              <span
+                className="cursor-pointer"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  navigateWithMergedFilters(undefined, cuisine);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    navigateWithMergedFilters(undefined, cuisine);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+              >
+                <span className="inline-flex items-center gap-1">
+                  <span aria-hidden="true" className="text-sm leading-none">{CUISINE_ICONS[cuisine]}</span>
+                  <span>{t(toCuisineLabelKey(cuisine))}</span>
+                </span>
+              </span>
+            </p>
+          );
+        })}
       </div>
       <h3 className="text-lg font-semibold text-slate-900">{localizedRecipe.title}</h3>
       <p className="mt-1 text-xs text-slate-500">
