@@ -170,9 +170,12 @@ export function RecipeForm({
   const cuisineMenuRef = useRef<HTMLDivElement | null>(null);
   const mainProductMenuRef = useRef<HTMLDivElement | null>(null);
   const totalSteps = 5;
+  const isEditMode = Boolean(initialValues);
+  const areAllWizardStepsUnlocked = multiStep && isEditMode;
   const wizardStepLabels: TranslationKey[] = ['wizardStep1', 'wizardStep2', 'wizardStep3', 'wizardStep4', 'wizardStep5'];
   const progressPercent = ((currentStep - 1) / (totalSteps - 1)) * 100;
-  const isProgressComplete = progressPercent >= 100;
+  const wizardProgressPercent = areAllWizardStepsUnlocked ? 100 : progressPercent;
+  const isProgressComplete = wizardProgressPercent >= 100;
   const hasEmptyIngredientField = ingredients.some((item) => item.trim().length === 0);
   const hasEmptyStepField = steps.some((item) => item.trim().length === 0);
   const canAddIngredientInput = !hasEmptyIngredientField;
@@ -735,7 +738,15 @@ export function RecipeForm({
   }
 
   function canJumpToWizardStep(stepNumber: number): boolean {
-    if (!multiStep || stepNumber >= currentStep) {
+    if (!multiStep) {
+      return false;
+    }
+
+    if (areAllWizardStepsUnlocked) {
+      return stepNumber !== currentStep;
+    }
+
+    if (stepNumber >= currentStep) {
       return false;
     }
 
@@ -1080,7 +1091,7 @@ export function RecipeForm({
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
               {t('wizardStepLabel')} {currentStep}/{totalSteps}
             </p>
-            <p className="text-xs font-medium text-slate-500">{Math.round(progressPercent)}%</p>
+            <p className="text-xs font-medium text-slate-500">{Math.round(wizardProgressPercent)}%</p>
           </div>
 
           <div className="mx-4 sm:mx-12">
@@ -1098,14 +1109,14 @@ export function RecipeForm({
                   className={`h-full rounded-full transition-all duration-300 ${
                     isProgressComplete ? 'bg-emerald-600' : 'bg-emerald-500'
                   }`}
-                  style={{ width: `${progressPercent}%` }}
+                  style={{ width: `${wizardProgressPercent}%` }}
                 />
               </div>
 
               <ol className="relative grid h-full grid-cols-5 items-center">
                 {wizardStepLabels.map((stepLabel, index) => {
                   const stepNumber = index + 1;
-                  const isCompleted = stepNumber < currentStep;
+                  const isCompleted = areAllWizardStepsUnlocked || stepNumber < currentStep;
                   const isCurrent = stepNumber === currentStep;
                   const canJump = canJumpToWizardStep(stepNumber);
                   const mobileLabelPositionClass = index % 2 === 0
@@ -1119,8 +1130,10 @@ export function RecipeForm({
                         className={`inline-flex items-center justify-center rounded-full border font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 ${
                           isCurrent ? 'h-10 w-10 text-base' : 'h-6 w-6 text-xs'
                         } ${
-                          isCurrent
+                          isCurrent && !areAllWizardStepsUnlocked
                             ? 'border-orange-500 bg-orange-500 text-white'
+                            : isCurrent && areAllWizardStepsUnlocked
+                            ? 'border-emerald-700 bg-emerald-600 text-white'
                             : isCompleted
                             ? 'border-emerald-600 bg-emerald-600 text-white'
                             : 'border-slate-300 bg-white text-slate-600'
@@ -1133,8 +1146,10 @@ export function RecipeForm({
                       </button>
                       <span
                         className={`absolute left-1/2 -translate-x-1/2 text-center leading-tight sm:hidden ${mobileLabelPositionClass} ${
-                          isCurrent
+                          isCurrent && !areAllWizardStepsUnlocked
                             ? 'text-sm font-semibold text-orange-600'
+                            : isCurrent && areAllWizardStepsUnlocked
+                            ? 'text-sm font-semibold text-emerald-700'
                             : isCompleted
                             ? 'text-[10px] font-medium text-emerald-700'
                             : 'text-[10px] text-slate-600'
@@ -1159,8 +1174,10 @@ export function RecipeForm({
                   <li key={`wizard-progress-label-${stepLabel}`} className="flex justify-center">
                     <span
                       className={`${
-                        isCurrent
+                        isCurrent && !areAllWizardStepsUnlocked
                           ? 'text-base font-semibold text-orange-600'
+                          : isCurrent && areAllWizardStepsUnlocked
+                          ? 'text-base font-semibold text-emerald-700'
                           : isCompleted
                           ? 'text-xs font-medium text-emerald-700'
                           : 'text-xs text-slate-600'
