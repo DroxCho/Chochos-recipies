@@ -6,6 +6,8 @@ import { getLocalizedRecipe } from '../i18n/recipeContent';
 import { useLanguage } from '../i18n/useLanguage';
 import type { Recipe } from '../types/recipe';
 
+const FIRST_HERO_IMAGE_URL = '/hero-first.png';
+
 function extractCreatedAtFromId(recipeId: string): number {
   const match = recipeId.match(/-(\d{10,})$/);
   if (!match) {
@@ -46,17 +48,30 @@ export function HomePage() {
   }, [recipes]);
 
   const heroSlides = useMemo(
-    () =>
-      latestRecipes.map((recipe) => {
+    () => {
+      const recipeSlides = latestRecipes.map((recipe) => {
         const localized = getLocalizedRecipe(recipe, language);
         return {
           id: recipe.id,
+          linkTo: `/recipes/${recipe.id}`,
           title: localized.title,
           description: trimDescription(localized.description),
           imageUrl: recipe.photoUrls?.find((item) => item.trim())?.trim() ?? '',
         };
-      }),
-    [language, latestRecipes],
+      });
+
+      return [
+        {
+          id: 'hero-static-first',
+          linkTo: '/recipes',
+          title: t('homeLatestRecipesTitle'),
+          description: t('homeLatestRecipesSubtitle'),
+          imageUrl: FIRST_HERO_IMAGE_URL,
+        },
+        ...recipeSlides,
+      ];
+    },
+    [language, latestRecipes, t],
   );
 
   useEffect(() => {
@@ -120,7 +135,7 @@ export function HomePage() {
             <p className="mt-2 max-w-2xl text-sm text-slate-100/95">{activeSlide.description}</p>
             <Link
               className="mt-3 inline-flex rounded-md border border-white/30 bg-white/15 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/25"
-              to={`/recipes/${activeSlide.id}`}
+              to={activeSlide.linkTo}
             >
               {t('viewDetails')}
             </Link>
