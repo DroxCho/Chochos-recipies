@@ -37,20 +37,53 @@ export function Header() {
   const { t } = useLanguage();
   const { role, setRole, userId } = useUserRole();
   const isSignedIn = role !== 'visitor';
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null);
   const [isAuthMenuOpen, setIsAuthMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalInitialTab, setAuthModalInitialTab] = useState<'login' | 'register'>('login');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [profilePhotoDataUrl, setProfilePhotoDataUrl] = useState('');
   const authMenuRef = useRef<HTMLDivElement | null>(null);
+  const activeUserId = userId ?? sessionUserId;
 
   useEffect(() => {
-    setProfilePhotoDataUrl(readUserProfilePhoto(userId));
-  }, [userId]);
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setSessionUserId(null);
+      return;
+    }
+
+    let isMounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!isMounted) {
+        return;
+      }
+
+      setSessionUserId(data.session?.user?.id ?? null);
+    });
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) {
+        return;
+      }
+
+      setSessionUserId(session?.user?.id ?? null);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    setProfilePhotoDataUrl(readUserProfilePhoto(activeUserId));
+  }, [activeUserId]);
 
   useEffect(() => {
     function refreshProfilePhoto() {
-      setProfilePhotoDataUrl(readUserProfilePhoto(userId));
+      setProfilePhotoDataUrl(readUserProfilePhoto(activeUserId));
     }
 
     window.addEventListener('storage', refreshProfilePhoto);
@@ -59,7 +92,7 @@ export function Header() {
       window.removeEventListener('storage', refreshProfilePhoto);
       window.removeEventListener('profile-updated', refreshProfilePhoto);
     };
-  }, [userId]);
+  }, [activeUserId]);
 
   useEffect(() => {
     if (!isAuthMenuOpen) {
