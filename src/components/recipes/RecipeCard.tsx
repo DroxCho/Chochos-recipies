@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getLocalizedRecipe } from '../../i18n/recipeContent';
 import type { TranslationKey } from '../../i18n/translations';
@@ -53,6 +53,14 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
   const canSeeStatus = role === 'admin' || recipe.ownerId === userId;
   const selectedDishType = searchParams.get('dishType');
   const selectedCuisine = searchParams.get('cuisine');
+  const selectedMainProducts = useMemo(
+    () =>
+      (searchParams.get('mainProducts') ?? '')
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean),
+    [searchParams],
+  );
   const listQuery = searchParams.toString();
   const isDishTypeActive = selectedDishType === (recipe.dishType ?? 'main');
   const isCuisineActive = selectedCuisine === (recipe.cuisine ?? 'international');
@@ -137,6 +145,19 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
 
     const query = nextParams.toString();
     navigate(`/recipes${query ? `?${query}` : ''}`);
+  }
+
+  function dismissTooltip(button: HTMLButtonElement) {
+    button.blur();
+    const tooltipText = button.getAttribute('data-tooltip');
+    if (!tooltipText) {
+      return;
+    }
+
+    button.setAttribute('data-tooltip', '');
+    window.requestAnimationFrame(() => {
+      button.setAttribute('data-tooltip', tooltipText);
+    });
   }
   const statusLabel =
     recipe.status === 'pending'
@@ -235,14 +256,23 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
             {mainProductMetas.length > 0 && (
               <div className="flex flex-wrap items-center gap-1">
                 {mainProductMetas.map((item) => (
+                  (() => {
+                    const isMainProductActive = selectedMainProducts.includes(item.key);
+
+                    return (
                   <button
                     key={`main-product-icon-${item.key}`}
                     aria-label={`${t('mainIngredient')}: ${item.label}`}
-                    className="instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-base text-slate-900 shadow-sm transition hover:scale-105"
+                    className={`instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border text-base shadow-sm transition hover:scale-105 ${
+                      isMainProductActive
+                        ? 'border-amber-500 bg-amber-50 text-amber-700 ring-2 ring-amber-300/70'
+                        : 'border-slate-300 bg-white text-slate-900'
+                    }`}
                     data-tooltip={`${t('mainIngredient')}: ${item.label}`}
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
+                      dismissTooltip(event.currentTarget);
                       navigateWithMainProductFilter(item.key);
                     }}
                     style={{ fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif' }}
@@ -250,6 +280,8 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
                   >
                     {item.icon}
                   </button>
+                    );
+                  })()
                 ))}
               </div>
             )}
