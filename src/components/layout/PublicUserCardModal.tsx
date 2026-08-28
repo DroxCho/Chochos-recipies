@@ -874,7 +874,7 @@ export function PublicUserCardModal() {
               </div>
             </div>
 
-            {role === 'admin' ? (
+            {role === 'admin' || role === 'registered' ? (
               <p className="mt-1 text-xs text-slate-500">{t('profileFieldUserId')}: {selectedUser.id}</p>
             ) : null}
           </div>
