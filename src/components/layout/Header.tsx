@@ -165,12 +165,19 @@ export function Header() {
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 sm:h-16 sm:flex-nowrap sm:justify-between sm:px-4">
         <NavLink className="order-1 inline-flex -translate-y-1.5 items-center sm:-translate-y-2" to="/" aria-label={t('appTitle')}>
           <span className="sr-only">{t('appTitle')}</span>
-          <span className="inline-flex h-12 sm:h-14">
+          <span className="inline-flex h-12 items-center gap-1.5 sm:h-14">
+            <img
+              alt=""
+              aria-hidden="true"
+              className="h-full w-auto shrink-0 object-contain"
+              loading="eager"
+              src="/logo-hat.png"
+            />
             <img
               alt={t('appTitle')}
-              className="h-full w-auto max-w-none object-contain object-left"
+              className="h-9 w-auto max-w-none object-contain sm:h-10"
               loading="eager"
-              src="/logo-header.png"
+              src="/logo-text.png"
             />
           </span>
         </NavLink>
