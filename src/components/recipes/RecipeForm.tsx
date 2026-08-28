@@ -904,8 +904,8 @@ export function RecipeForm({
             <p className="text-xs font-medium text-slate-500">{Math.round(progressPercent)}%</p>
           </div>
 
-          <div className="mx-12">
-            <div className="relative h-10">
+          <div className="mx-4 sm:mx-12">
+            <div className="relative h-24 sm:h-10">
               <div
                 aria-label="Wizard progress"
                 className="absolute top-1/2 h-2 -translate-y-1/2 overflow-hidden rounded-full bg-slate-200"
@@ -928,9 +928,12 @@ export function RecipeForm({
                   const stepNumber = index + 1;
                   const isCompleted = stepNumber < currentStep;
                   const isCurrent = stepNumber === currentStep;
+                  const mobileLabelPositionClass = index % 2 === 0
+                    ? 'top-full mt-2'
+                    : 'bottom-full mb-2';
 
                   return (
-                    <li key={`wizard-progress-dot-${stepLabel}`} className="flex justify-center">
+                    <li key={`wizard-progress-dot-${stepLabel}`} className="relative flex justify-center">
                       <span
                         className={`inline-flex items-center justify-center rounded-full border font-semibold transition-all duration-200 ${
                           isCurrent ? 'h-10 w-10 text-base' : 'h-6 w-6 text-xs'
@@ -944,13 +947,25 @@ export function RecipeForm({
                       >
                         {stepNumber}
                       </span>
+                      <span
+                        className={`absolute left-1/2 -translate-x-1/2 text-center leading-tight sm:hidden ${mobileLabelPositionClass} ${
+                          isCurrent
+                            ? 'text-sm font-semibold text-orange-600'
+                            : isCompleted
+                            ? 'text-[10px] font-medium text-emerald-700'
+                            : 'text-[10px] text-slate-600'
+                        }`}
+                        style={{ width: '4.75rem' }}
+                      >
+                        {t(stepLabel)}
+                      </span>
                     </li>
                   );
                 })}
               </ol>
             </div>
 
-            <ol className="mt-6 grid grid-cols-5">
+            <ol className="mt-6 hidden grid-cols-5 sm:grid">
               {wizardStepLabels.map((stepLabel, index) => {
                 const stepNumber = index + 1;
                 const isCompleted = stepNumber < currentStep;
