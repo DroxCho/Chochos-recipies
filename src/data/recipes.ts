@@ -1291,7 +1291,6 @@ function mapRecipeRow(row: RecipeRow): Recipe {
 
 export async function fetchRecipes(): Promise<Recipe[]> {
   const metaMap = readRecipeMetaMap();
-  const deletedIds = readDeletedRecipeIds();
 
   if (!hasSupabaseAnonKey) {
     return [];
@@ -1311,19 +1310,13 @@ export async function fetchRecipes(): Promise<Recipe[]> {
     throw error;
   }
 
-  const supabaseRecipes = ((data as RecipeRow[] | null | undefined)?.map((row) => mapRecipeRow(row)) ?? [])
-    .filter((recipe) => !deletedIds.has(recipe.id));
+  const supabaseRecipes = (data as RecipeRow[] | null | undefined)?.map((row) => mapRecipeRow(row)) ?? [];
 
   return supabaseRecipes.map((recipe) => applyMeta(recipe, metaMap));
 }
 
 export async function fetchRecipeById(id: string): Promise<Recipe | undefined> {
   const metaMap = readRecipeMetaMap();
-  const deletedIds = readDeletedRecipeIds();
-
-  if (deletedIds.has(id)) {
-    return undefined;
-  }
 
   if (!hasSupabaseAnonKey) {
     return undefined;
@@ -1584,17 +1577,20 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
 }
 
 export async function deleteRecipeById(id: string): Promise<void> {
-  const localRecipes = readLocalRecipes();
-  writeLocalRecipes(localRecipes.filter((recipe) => recipe.id !== id));
-  markRecipeDeleted(id);
-  removeRecipeMeta(id);
-
   if (!hasSupabaseAnonKey) {
+    const localRecipes = readLocalRecipes();
+    writeLocalRecipes(localRecipes.filter((recipe) => recipe.id !== id));
+    markRecipeDeleted(id);
+    removeRecipeMeta(id);
     return;
   }
 
   const supabase = getSupabaseClient();
   if (!supabase) {
+    const localRecipes = readLocalRecipes();
+    writeLocalRecipes(localRecipes.filter((recipe) => recipe.id !== id));
+    markRecipeDeleted(id);
+    removeRecipeMeta(id);
     return;
   }
 
@@ -1606,4 +1602,9 @@ export async function deleteRecipeById(id: string): Promise<void> {
   if (error) {
     throw error;
   }
+
+  const localRecipes = readLocalRecipes();
+  writeLocalRecipes(localRecipes.filter((recipe) => recipe.id !== id));
+  clearDeletedRecipeMark(id);
+  removeRecipeMeta(id);
 }
