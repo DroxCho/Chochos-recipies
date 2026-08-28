@@ -56,6 +56,13 @@ export function UserMessagesBanner() {
     return text.replace(/\n?Подател:\s*[^\n]+/gi, '').trim();
   }
 
+  function formatMessageTextForDisplay(text: string): string {
+    return text
+      .replace(/Коментар:\s*/gi, 'Коментар:\n')
+      .replace(/Описание:\s*/gi, 'Описание:\n')
+      .trim();
+  }
+
   return (
     <section className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
       <div className="flex items-center justify-between gap-3">
@@ -76,7 +83,7 @@ export function UserMessagesBanner() {
               const reporterAlias = message.fromUserAlias ?? (reporterId ? getUserDisplayName(reporterId, 'registered') : '');
               const reportedAuthorId = message.reportedAuthorUserId ?? null;
               const reportedAuthorAlias = message.reportedAuthorAlias ?? (reportedAuthorId ? getUserDisplayName(reportedAuthorId, 'registered') : '');
-              const messageText = sanitizeMessageText(message.text);
+              const messageText = formatMessageTextForDisplay(sanitizeMessageText(message.text));
 
               return (
                 <>
@@ -104,7 +111,7 @@ export function UserMessagesBanner() {
                       </button>
                     </p>
                   )}
-                  <p>{messageText}</p>
+                  <p className="whitespace-pre-line">{messageText}</p>
                 </>
               );
             })()}
