@@ -15,7 +15,29 @@ import { getRecipeAverageRating, getUserRecipeRating, setUserRecipeRating } from
 import { hasUserTriedRecipe, setUserTriedRecipe } from '../lib/recipeTried';
 import { getUserDisplayName, getUserProfileLinkId } from '../lib/userDisplay';
 import { addUserMessage } from '../lib/userMessages';
-import type { Recipe } from '../types/recipe';
+import type { Recipe, RecipeCuisine, RecipeDishType } from '../types/recipe';
+
+const DISH_TYPE_ICONS: Record<RecipeDishType, string> = {
+  main: '🍽️',
+  dessert: '🍰',
+  soup: '🍲',
+  salad: '🥗',
+  appetizer: '🥟',
+  breakfast: '🍳',
+};
+
+const CUISINE_ICONS: Record<RecipeCuisine, string> = {
+  bulgarian: '🇧🇬',
+  french: '🇫🇷',
+  asian: '🥢',
+  italian: '🇮🇹',
+  mexican: '🇲🇽',
+  spanish: '🇪🇸',
+  turkish: '🇹🇷',
+  vegan: '🌿',
+  vegetarian: '🥬',
+  international: '🌍',
+};
 
 interface RecipeDetailsLocationState {
   created?: boolean;
@@ -1069,7 +1091,10 @@ export function RecipeDetailsPage() {
               onClick={() => navigateWithMergedFilters(dishType)}
               type="button"
             >
-              {t(toDishTypeLabelKey(dishType))}
+              <span className="inline-flex items-center gap-1">
+                <span aria-hidden="true" className="text-sm leading-none">{DISH_TYPE_ICONS[dishType]}</span>
+                <span>{t(toDishTypeLabelKey(dishType))}</span>
+              </span>
             </button>
           );
         })}
@@ -1085,7 +1110,10 @@ export function RecipeDetailsPage() {
               onClick={() => navigateWithMergedFilters(undefined, cuisine)}
               type="button"
             >
-              {t(toCuisineLabelKey(cuisine))}
+              <span className="inline-flex items-center gap-1">
+                <span aria-hidden="true" className="text-sm leading-none">{CUISINE_ICONS[cuisine]}</span>
+                <span>{t(toCuisineLabelKey(cuisine))}</span>
+              </span>
             </button>
           );
         })}
