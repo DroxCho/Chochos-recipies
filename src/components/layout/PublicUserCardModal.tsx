@@ -446,21 +446,28 @@ export function PublicUserCardModal() {
   }, [role, selectedUser]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (!selectedUser || typeof window === 'undefined') {
       return;
     }
 
+    const html = document.documentElement;
     const previousOverflow = document.body.style.overflow;
     const previousOverscroll = document.body.style.overscrollBehavior;
+    const previousHtmlOverflow = html.style.overflow;
+    const previousHtmlOverscroll = html.style.overscrollBehavior;
 
     document.body.style.overflow = 'hidden';
     document.body.style.overscrollBehavior = 'none';
+    html.style.overflow = 'hidden';
+    html.style.overscrollBehavior = 'none';
 
     return () => {
       document.body.style.overflow = previousOverflow;
       document.body.style.overscrollBehavior = previousOverscroll;
+      html.style.overflow = previousHtmlOverflow;
+      html.style.overscrollBehavior = previousHtmlOverscroll;
     };
-  }, []);
+  }, [selectedUser]);
 
   const managedUsers = useMemo(() => {
     if (role !== 'admin') {
