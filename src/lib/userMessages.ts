@@ -8,12 +8,16 @@ export interface UserMessage {
   imageDataUrl?: string;
   fromUserId?: string;
   fromUserAlias?: string;
+  reportedAuthorUserId?: string;
+  reportedAuthorAlias?: string;
 }
 
 interface AddUserMessageOptions {
   imageDataUrl?: string;
   fromUserId?: string;
   fromUserAlias?: string;
+  reportedAuthorUserId?: string;
+  reportedAuthorAlias?: string;
 }
 
 const USER_MESSAGES_KEY = 'recipes_user_messages_v1';
@@ -60,6 +64,8 @@ export function addUserMessage(
     imageDataUrl: options?.imageDataUrl,
     fromUserId: options?.fromUserId,
     fromUserAlias: options?.fromUserAlias,
+    reportedAuthorUserId: options?.reportedAuthorUserId,
+    reportedAuthorAlias: options?.reportedAuthorAlias,
   };
 
   writeMessages([next, ...readMessages()]);

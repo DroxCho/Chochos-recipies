@@ -481,12 +481,16 @@ export function RecipeDetailsPage() {
     const canonicalAdminId = getUserProfileLinkId('admin-user-1', 'admin');
     const canonicalReporterId = getUserProfileLinkId(userId, 'registered');
     const reporterAlias = getUserDisplayName(canonicalReporterId || userId, 'registered');
+    const canonicalReportedAuthorId = getUserProfileLinkId(comment.userId, 'registered');
+    const reportedAuthorAlias = getUserDisplayName(canonicalReportedAuthorId || comment.userId, 'registered');
     const reportImageDataUrl = buildReportCommentScreenshot(comment);
 
     addUserMessage(canonicalAdminId, currentRecipe.id, reportText, {
       imageDataUrl: reportImageDataUrl || undefined,
       fromUserId: canonicalReporterId || userId,
       fromUserAlias: reporterAlias,
+      reportedAuthorUserId: canonicalReportedAuthorId || comment.userId,
+      reportedAuthorAlias,
     });
     setReportingCommentId(null);
     setReportDescription('');
