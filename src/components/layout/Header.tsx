@@ -163,7 +163,17 @@ export function Header() {
   return (
     <header className="rustic-header border-b border-slate-200 bg-white">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 sm:h-16 sm:flex-nowrap sm:justify-between sm:px-4">
-        <h1 className="order-1 truncate text-base font-semibold tracking-tight text-slate-900 sm:text-lg">{t('appTitle')}</h1>
+        <NavLink className="order-1 inline-flex items-center" to="/" aria-label={t('appTitle')}>
+          <span className="sr-only">{t('appTitle')}</span>
+          <span className="inline-flex h-10 w-44 overflow-hidden rounded-md sm:h-11 sm:w-52">
+            <img
+              alt={t('appTitle')}
+              className="h-full w-full object-cover object-center"
+              loading="eager"
+              src="/logo-header.png"
+            />
+          </span>
+        </NavLink>
 
         <nav className="order-3 flex w-full items-center gap-4 overflow-x-auto pb-1 text-sm sm:order-2 sm:w-auto sm:overflow-visible sm:pb-0" aria-label={t('navAria')}>
           <NavLink to="/" end className={linkClass}>
