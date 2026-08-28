@@ -476,13 +476,18 @@ export function RecipeDetailsPage() {
       `Доклад за коментар в рецептата "${currentRecipe.title}"`,
       `Коментар: "${comment.text}"`,
       `Описание: ${trimmedDescription}`,
-      `Подател: ${userId}`,
     ].join('\n');
 
     const canonicalAdminId = getUserProfileLinkId('admin-user-1', 'admin');
+    const canonicalReporterId = getUserProfileLinkId(userId, 'registered');
+    const reporterAlias = getUserDisplayName(canonicalReporterId || userId, 'registered');
     const reportImageDataUrl = buildReportCommentScreenshot(comment);
 
-    addUserMessage(canonicalAdminId, currentRecipe.id, reportText, reportImageDataUrl || undefined);
+    addUserMessage(canonicalAdminId, currentRecipe.id, reportText, {
+      imageDataUrl: reportImageDataUrl || undefined,
+      fromUserId: canonicalReporterId || userId,
+      fromUserAlias: reporterAlias,
+    });
     setReportingCommentId(null);
     setReportDescription('');
     setReviewSuccess(t('reportSent'));

@@ -6,6 +6,14 @@ export interface UserMessage {
   createdAt: string;
   read: boolean;
   imageDataUrl?: string;
+  fromUserId?: string;
+  fromUserAlias?: string;
+}
+
+interface AddUserMessageOptions {
+  imageDataUrl?: string;
+  fromUserId?: string;
+  fromUserAlias?: string;
 }
 
 const USER_MESSAGES_KEY = 'recipes_user_messages_v1';
@@ -40,7 +48,7 @@ export function addUserMessage(
   toUserId: string,
   recipeId: string,
   text: string,
-  imageDataUrl?: string,
+  options?: AddUserMessageOptions,
 ): void {
   const next: UserMessage = {
     id: `msg-${Date.now()}`,
@@ -49,7 +57,9 @@ export function addUserMessage(
     text,
     createdAt: new Date().toISOString(),
     read: false,
-    imageDataUrl,
+    imageDataUrl: options?.imageDataUrl,
+    fromUserId: options?.fromUserId,
+    fromUserAlias: options?.fromUserAlias,
   };
 
   writeMessages([next, ...readMessages()]);

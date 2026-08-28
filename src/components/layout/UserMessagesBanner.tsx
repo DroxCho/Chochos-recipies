@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { canParticipate } from '../../auth/roles';
 import { useUserRole } from '../../auth/useUserRole';
+import { openPublicUserCard } from '../../lib/publicUserCard';
+import { getUserDisplayName } from '../../lib/userDisplay';
 import { getUnreadUserMessages, markAllUserMessagesRead } from '../../lib/userMessages';
 
 export function UserMessagesBanner() {
@@ -45,6 +47,15 @@ export function UserMessagesBanner() {
     setVersion((current) => current + 1);
   }
 
+  function extractLegacyReporterId(text: string): string | null {
+    const match = text.match(/Подател:\s*([a-f0-9-]{36})/i);
+    return match?.[1] ?? null;
+  }
+
+  function sanitizeMessageText(text: string): string {
+    return text.replace(/\n?Подател:\s*[^\n]+/gi, '').trim();
+  }
+
   return (
     <section className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
       <div className="flex items-center justify-between gap-3">
@@ -60,7 +71,29 @@ export function UserMessagesBanner() {
       <ul className="mt-3 space-y-2 text-sm text-amber-900">
         {messages.map((message) => (
           <li key={message.id} className="rounded bg-white px-3 py-2">
-            <p>{message.text}</p>
+            {(() => {
+              const reporterId = message.fromUserId ?? extractLegacyReporterId(message.text);
+              const reporterAlias = message.fromUserAlias ?? (reporterId ? getUserDisplayName(reporterId, 'registered') : '');
+              const messageText = sanitizeMessageText(message.text);
+
+              return (
+                <>
+                  {reporterId && reporterAlias && (
+                    <p className="mb-1 text-xs text-amber-900">
+                      Подател:{' '}
+                      <button
+                        className="font-medium text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-800"
+                        onClick={() => openPublicUserCard(reporterId, 'registered')}
+                        type="button"
+                      >
+                        {reporterAlias}
+                      </button>
+                    </p>
+                  )}
+                  <p>{messageText}</p>
+                </>
+              );
+            })()}
             {message.imageDataUrl && (
               <img
                 alt="Докладван коментар"
