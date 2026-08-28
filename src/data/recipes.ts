@@ -605,7 +605,24 @@ interface RecipeRow {
   description: string | null;
   prep_minutes: number | null;
   servings: number | null;
+  complexity?: string | null;
+  dish_type?: string | null;
+  cuisine?: string | null;
+  main_product?: string | null;
+  main_products?: string[] | null;
+  ingredients?: string[] | null;
+  steps?: string[] | null;
+  notes?: string | null;
+  photo_urls?: string[] | null;
+  photo_original_url?: string | null;
+  status?: string | null;
+  review_comment?: string | null;
+  owner_id?: string | null;
+  owner_role?: string | null;
 }
+
+const RECIPE_SELECT_COLUMNS =
+  'id,title,description,prep_minutes,servings,complexity,dish_type,cuisine,main_product,main_products,ingredients,steps,notes,photo_urls,photo_original_url,status,review_comment,owner_id,owner_role';
 
 interface RecipeMeta {
   status: RecipeStatus;
@@ -1052,28 +1069,28 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
     ...(presetMeta ?? {}),
     ...(storedMeta ?? {}),
   };
-  const normalizedPhotoUrls = normalizeStringList(meta.photoUrls) ?? normalizeStringList(recipe.photoUrls);
-  const normalizedMainProducts = normalizeStringList(meta.mainProducts) ?? normalizeStringList(recipe.mainProducts);
-  const normalizedIngredients = normalizeStringList(meta.ingredients) ?? normalizeStringList(recipe.ingredients);
-  const normalizedSteps = normalizeStringList(meta.steps) ?? normalizeStringList(recipe.steps);
+  const normalizedPhotoUrls = normalizeStringList(recipe.photoUrls) ?? normalizeStringList(meta.photoUrls);
+  const normalizedMainProducts = normalizeStringList(recipe.mainProducts) ?? normalizeStringList(meta.mainProducts);
+  const normalizedIngredients = normalizeStringList(recipe.ingredients) ?? normalizeStringList(meta.ingredients);
+  const normalizedSteps = normalizeStringList(recipe.steps) ?? normalizeStringList(meta.steps);
   const normalizedNotes =
-    meta.notes !== undefined
-      ? (meta.notes.trim() ? meta.notes.trim() : undefined)
-      : (recipe.notes?.trim() ? recipe.notes.trim() : undefined);
-  const normalizedPhotoOriginalUrl = meta.photoOriginalUrl?.trim()
-    ? meta.photoOriginalUrl.trim()
-    : (recipe.photoOriginalUrl?.trim() ? recipe.photoOriginalUrl.trim() : normalizedPhotoUrls?.[0]);
+    recipe.notes !== undefined
+      ? (recipe.notes.trim() ? recipe.notes.trim() : undefined)
+      : (meta.notes?.trim() ? meta.notes.trim() : undefined);
+  const normalizedPhotoOriginalUrl = recipe.photoOriginalUrl?.trim()
+    ? recipe.photoOriginalUrl.trim()
+    : (meta.photoOriginalUrl?.trim() ? meta.photoOriginalUrl.trim() : normalizedPhotoUrls?.[0]);
 
   const withMeta: Recipe = {
     ...recipe,
-    status: meta.status ?? recipe.status,
-    reviewComment: meta.reviewComment ?? recipe.reviewComment,
-    ownerId: meta.ownerId ?? recipe.ownerId ?? defaultMeta.ownerId,
-    ownerRole: meta.ownerRole ?? recipe.ownerRole ?? defaultMeta.ownerRole,
-    complexity: meta.complexity ?? PRESET_RECIPE_META[recipe.id]?.complexity ?? 'medium',
-    dishType: meta.dishType ?? presetTags?.dishType ?? 'main',
-    cuisine: meta.cuisine ?? presetTags?.cuisine ?? 'international',
-    mainProduct: meta.mainProduct ?? recipe.mainProduct ?? normalizedMainProducts?.[0],
+    status: recipe.status ?? meta.status,
+    reviewComment: recipe.reviewComment ?? meta.reviewComment,
+    ownerId: recipe.ownerId ?? meta.ownerId ?? defaultMeta.ownerId,
+    ownerRole: recipe.ownerRole ?? meta.ownerRole ?? defaultMeta.ownerRole,
+    complexity: recipe.complexity ?? meta.complexity ?? PRESET_RECIPE_META[recipe.id]?.complexity ?? 'medium',
+    dishType: recipe.dishType ?? meta.dishType ?? presetTags?.dishType ?? 'main',
+    cuisine: recipe.cuisine ?? meta.cuisine ?? presetTags?.cuisine ?? 'international',
+    mainProduct: recipe.mainProduct ?? meta.mainProduct ?? normalizedMainProducts?.[0],
     mainProducts: normalizedMainProducts,
     ingredients: normalizedIngredients,
     steps: normalizedSteps,
@@ -1158,25 +1175,93 @@ function persistRecipeMeta(id: string, patch: Partial<RecipeMeta>): RecipeMeta {
 }
 
 function mapRecipeRow(row: RecipeRow): Recipe {
+  const complexity =
+    row.complexity === 'easy' || row.complexity === 'medium' || row.complexity === 'hard'
+      ? row.complexity
+      : undefined;
+  const dishType =
+    row.dish_type === 'main'
+    || row.dish_type === 'dessert'
+    || row.dish_type === 'soup'
+    || row.dish_type === 'salad'
+    || row.dish_type === 'appetizer'
+    || row.dish_type === 'breakfast'
+      ? row.dish_type
+      : undefined;
+  const cuisine =
+    row.cuisine === 'bulgarian'
+    || row.cuisine === 'french'
+    || row.cuisine === 'asian'
+    || row.cuisine === 'italian'
+    || row.cuisine === 'mexican'
+    || row.cuisine === 'spanish'
+    || row.cuisine === 'turkish'
+    || row.cuisine === 'vegan'
+    || row.cuisine === 'vegetarian'
+    || row.cuisine === 'international'
+      ? row.cuisine
+      : undefined;
+  const status =
+    row.status === 'pending'
+    || row.status === 'approved'
+    || row.status === 'rejected'
+    || row.status === 'changes_requested'
+      ? row.status
+      : 'approved';
+  const ownerRole = row.owner_role === 'registered' || row.owner_role === 'admin' ? row.owner_role : 'admin';
+
   return {
     id: row.id,
     title: row.title,
     description: row.description ?? '',
     prepMinutes: row.prep_minutes ?? 0,
     servings: row.servings ?? 0,
-    status: 'approved',
-    ownerId: 'admin-user-1',
-    ownerRole: 'admin',
+    complexity,
+    dishType,
+    cuisine,
+    mainProduct: row.main_product ?? undefined,
+    mainProducts: normalizeStringList(row.main_products ?? undefined),
+    ingredients: normalizeStringList(row.ingredients ?? undefined),
+    steps: normalizeStringList(row.steps ?? undefined),
+    notes: row.notes ?? undefined,
+    photoUrls: normalizeStringList(row.photo_urls ?? undefined),
+    photoOriginalUrl: row.photo_original_url ?? undefined,
+    status,
+    reviewComment: row.review_comment ?? undefined,
+    ownerId: row.owner_id ?? 'admin-user-1',
+    ownerRole,
   };
 }
 
 function mergeRecipesById(primary: Recipe[], secondary: Recipe[]): Recipe[] {
   const byId = new Map(primary.map((recipe) => [recipe.id, recipe]));
 
-  for (const recipe of secondary) {
-    if (!byId.has(recipe.id)) {
-      byId.set(recipe.id, recipe);
+  for (const fallback of secondary) {
+    const existing = byId.get(fallback.id);
+
+    if (!existing) {
+      byId.set(fallback.id, fallback);
+      continue;
     }
+
+    byId.set(fallback.id, {
+      ...fallback,
+      ...existing,
+      complexity: existing.complexity ?? fallback.complexity,
+      dishType: existing.dishType ?? fallback.dishType,
+      cuisine: existing.cuisine ?? fallback.cuisine,
+      mainProduct: existing.mainProduct ?? fallback.mainProduct,
+      mainProducts: normalizeStringList(existing.mainProducts) ?? normalizeStringList(fallback.mainProducts),
+      ingredients: normalizeStringList(existing.ingredients) ?? normalizeStringList(fallback.ingredients),
+      steps: normalizeStringList(existing.steps) ?? normalizeStringList(fallback.steps),
+      notes: existing.notes?.trim() ? existing.notes.trim() : fallback.notes,
+      photoUrls: normalizeStringList(existing.photoUrls) ?? normalizeStringList(fallback.photoUrls),
+      photoOriginalUrl: existing.photoOriginalUrl?.trim() ? existing.photoOriginalUrl.trim() : fallback.photoOriginalUrl,
+      status: existing.status ?? fallback.status,
+      reviewComment: existing.reviewComment ?? fallback.reviewComment,
+      ownerId: existing.ownerId ?? fallback.ownerId,
+      ownerRole: existing.ownerRole ?? fallback.ownerRole,
+    });
   }
 
   return Array.from(byId.values());
@@ -1198,7 +1283,7 @@ export async function fetchRecipes(): Promise<Recipe[]> {
 
   const { data, error } = await supabase
     .from('recipes')
-    .select('id,title,description,prep_minutes,servings')
+    .select(RECIPE_SELECT_COLUMNS)
     .order('title', { ascending: true });
 
   if (error) {
@@ -1233,7 +1318,7 @@ export async function fetchRecipeById(id: string): Promise<Recipe | undefined> {
 
   const { data, error } = await supabase
     .from('recipes')
-    .select('id,title,description,prep_minutes,servings')
+    .select(RECIPE_SELECT_COLUMNS)
     .eq('id', id)
     .maybeSingle();
 
@@ -1258,6 +1343,20 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
     description: input.description,
     prep_minutes: input.prepMinutes,
     servings: input.servings,
+    complexity: input.complexity ?? null,
+    dish_type: input.dishType ?? null,
+    cuisine: input.cuisine ?? null,
+    main_product: input.mainProduct ?? input.mainProducts?.[0] ?? null,
+    main_products: normalizeStringList(input.mainProducts) ?? null,
+    ingredients: normalizeStringList(input.ingredients) ?? null,
+    steps: normalizeStringList(input.steps) ?? null,
+    notes: input.notes?.trim() || null,
+    photo_urls: normalizeStringList(input.photoUrls) ?? null,
+    photo_original_url: input.photoOriginalUrl?.trim() || null,
+    status: input.status ?? 'approved',
+    review_comment: input.reviewComment ?? null,
+    owner_id: input.ownerId ?? 'admin-user-1',
+    owner_role: input.ownerRole ?? 'admin',
   };
 
   const metaPatch: Partial<RecipeMeta> = {
@@ -1319,7 +1418,7 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
   const { data, error } = await supabase
     .from('recipes')
     .insert(payload)
-    .select('id,title,description,prep_minutes,servings')
+    .select(RECIPE_SELECT_COLUMNS)
     .single();
 
   if (error) {
@@ -1337,6 +1436,21 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
     description: input.description,
     prep_minutes: input.prepMinutes,
     servings: input.servings,
+    complexity: input.complexity ?? null,
+    dish_type: input.dishType ?? null,
+    cuisine: input.cuisine ?? null,
+    main_product: input.mainProduct ?? input.mainProducts?.[0] ?? null,
+    main_products: normalizeStringList(input.mainProducts) ?? null,
+    ingredients: normalizeStringList(input.ingredients) ?? null,
+    steps: normalizeStringList(input.steps) ?? null,
+    notes: input.notes?.trim() || null,
+    photo_urls: normalizeStringList(input.photoUrls) ?? null,
+    photo_original_url: input.photoOriginalUrl?.trim() || null,
+    status: input.status ?? 'approved',
+    review_comment: input.reviewComment ?? null,
+    owner_id: input.ownerId ?? 'admin-user-1',
+    owner_role: input.ownerRole ?? 'admin',
+    updated_at: new Date().toISOString(),
   };
 
   const metaPatch: Partial<RecipeMeta> = {
@@ -1357,6 +1471,30 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
   };
 
   if (input.metaOnly) {
+    if (hasSupabaseAnonKey) {
+      const supabaseForMetaOnly = getSupabaseClient();
+
+      if (supabaseForMetaOnly) {
+        const { data, error } = await supabaseForMetaOnly
+          .from('recipes')
+          .update({
+            status: input.status ?? null,
+            review_comment: input.reviewComment ?? null,
+            owner_id: input.ownerId ?? null,
+            owner_role: input.ownerRole ?? null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', input.id)
+          .select(RECIPE_SELECT_COLUMNS)
+          .single();
+
+        if (!error && data) {
+          persistRecipeMeta(input.id, metaPatch);
+          return applyMeta(mapRecipeRow(data as RecipeRow), readRecipeMetaMap());
+        }
+      }
+    }
+
     const currentRecipe = await fetchRecipeById(input.id);
     if (!currentRecipe) {
       throw new Error('Recipe not found');
@@ -1400,7 +1538,7 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
     .from('recipes')
     .update(payload)
     .eq('id', input.id)
-    .select('id,title,description,prep_minutes,servings')
+    .select(RECIPE_SELECT_COLUMNS)
     .single();
 
   if (error || !data) {
