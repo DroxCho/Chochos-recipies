@@ -742,8 +742,8 @@ export function PublicUserCardModal() {
       : t('roleRegistered');
 
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-slate-900/70 p-4" onClick={() => closePublicUserCard()}>
-      <div className="w-full max-w-lg rounded-xl bg-white p-4 shadow-xl" onClick={(event) => event.stopPropagation()}>
+    <div className="fixed inset-0 z-[95] flex items-start justify-center overflow-y-auto bg-slate-900/70 p-3 sm:items-center sm:p-4" onClick={() => closePublicUserCard()}>
+      <div className="w-full max-w-lg max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-xl bg-white p-4 shadow-xl sm:max-h-[calc(100vh-2rem)]" onClick={(event) => event.stopPropagation()}>
         <div className="mb-3 flex items-center justify-between">
           <h4 className="text-base font-semibold text-slate-900">{t('userCardDetailsTitle')}</h4>
           <button
