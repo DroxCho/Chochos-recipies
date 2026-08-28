@@ -61,6 +61,28 @@ const MAIN_PRODUCT_VALUES: MainProductValue[] = [
   'teleshko-meso',
   'yastiya-s-yaitsa',
 ];
+
+const DISH_TYPE_ICONS: Record<RecipeDishType, string> = {
+  main: '🍽️',
+  dessert: '🍰',
+  soup: '🍲',
+  salad: '🥗',
+  appetizer: '🥟',
+  breakfast: '🍳',
+};
+
+const CUISINE_ICONS: Record<RecipeCuisine, string> = {
+  bulgarian: '🇧🇬',
+  french: '🇫🇷',
+  asian: '🥢',
+  italian: '🇮🇹',
+  mexican: '🇲🇽',
+  spanish: '🇪🇸',
+  turkish: '🇹🇷',
+  vegan: '🌿',
+  vegetarian: '🥬',
+  international: '🌍',
+};
 type FieldErrorMap = Partial<Record<string, TranslationKey>>;
 
 const PHOTO_EDITOR_PREVIEW_SIZE = 288;
@@ -659,11 +681,11 @@ export function RecipeForm({
       : `${mainProducts.length} ${t('selectedItems')}`;
 
   const selectedDishTypeLabel = dishType
-    ? (t(dishTypeOptions.find((option) => option.value === dishType)?.label ?? 'selectDishType'))
+    ? `${DISH_TYPE_ICONS[dishType]} ${t(dishTypeOptions.find((option) => option.value === dishType)?.label ?? 'selectDishType')}`
     : t('selectDishType');
 
   const selectedCuisineLabel = cuisine
-    ? (t(cuisineOptions.find((option) => option.value === cuisine)?.label ?? 'selectCuisineType'))
+    ? `${CUISINE_ICONS[cuisine]} ${t(cuisineOptions.find((option) => option.value === cuisine)?.label ?? 'selectCuisineType')}`
     : t('selectCuisineType');
 
   useEffect(() => {
@@ -1094,7 +1116,7 @@ export function RecipeForm({
                           aria-checked={isSelected}
                           type="button"
                         >
-                          {t(option.label)}
+                          {DISH_TYPE_ICONS[option.value]} {t(option.label)}
                         </button>
                       );
                     })}
@@ -1141,7 +1163,7 @@ export function RecipeForm({
                           aria-checked={isSelected}
                           type="button"
                         >
-                          {t(option.label)}
+                          {CUISINE_ICONS[option.value]} {t(option.label)}
                         </button>
                       );
                     })}
