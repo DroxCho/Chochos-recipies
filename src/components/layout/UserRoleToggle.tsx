@@ -21,6 +21,7 @@ export function UserRoleToggle() {
   const [canSwitchRole, setCanSwitchRole] = useState(role === 'admin');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const roleMenuRef = useRef<HTMLDivElement | null>(null);
+  const privilegedSessionUserIdRef = useRef<string | null>(role === 'admin' ? '__unknown__' : null);
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -41,28 +42,38 @@ export function UserRoleToggle() {
       }
 
       if (!sessionUser?.id) {
+        privilegedSessionUserIdRef.current = null;
         setCanSwitchRole(false);
         return;
       }
 
       const managedRole = resolveManagedRole(readUserAdminControls()[sessionUser.id]);
-      if (managedRole === 'admin') {
-        setCanSwitchRole(true);
-        return;
-      }
-
       if (managedRole === 'blocked' || managedRole === 'registered') {
+        privilegedSessionUserIdRef.current = null;
         setCanSwitchRole(false);
         return;
       }
 
+      if (privilegedSessionUserIdRef.current === sessionUser.id) {
+        setCanSwitchRole(true);
+        return;
+      }
+
+      if (managedRole === 'admin') {
+        privilegedSessionUserIdRef.current = sessionUser.id;
+        setCanSwitchRole(true);
+        return;
+      }
+
       if (sessionUser.app_metadata?.role === 'admin') {
+        privilegedSessionUserIdRef.current = sessionUser.id;
         setCanSwitchRole(true);
         return;
       }
 
       const snapshotRole = snapshotUsers.find((entry) => entry.id === sessionUser.id)?.role;
       if (snapshotRole === 'admin') {
+        privilegedSessionUserIdRef.current = sessionUser.id;
         setCanSwitchRole(true);
         return;
       }
@@ -78,10 +89,12 @@ export function UserRoleToggle() {
       }
 
       if (!error && profileData?.role === 'admin') {
+        privilegedSessionUserIdRef.current = sessionUser.id;
         setCanSwitchRole(true);
         return;
       }
 
+      privilegedSessionUserIdRef.current = null;
       setCanSwitchRole(false);
     }
 
@@ -140,11 +153,13 @@ export function UserRoleToggle() {
   ];
 
   if (!canSwitchRole) {
-    const roleLabel = role === 'registered'
-      ? t('roleRegistered')
-      : role === 'blocked'
-        ? t('roleBlocked')
-        : t('roleVisitor');
+    const roleLabel = role === 'admin'
+      ? t('roleAdmin')
+      : role === 'registered'
+        ? t('roleRegistered')
+        : role === 'blocked'
+          ? t('roleBlocked')
+          : t('roleVisitor');
 
     return (
       <span className="text-xs text-slate-600">{roleLabel}</span>
