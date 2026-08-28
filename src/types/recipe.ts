@@ -21,7 +21,9 @@ export interface Recipe {
   servings: number;
   complexity?: 'easy' | 'medium' | 'hard';
   dishType?: RecipeDishType;
+  dishTypes?: RecipeDishType[];
   cuisine?: RecipeCuisine;
+  cuisines?: RecipeCuisine[];
   mainProduct?: string;
   mainProducts?: string[];
   ingredients?: string[];
@@ -42,7 +44,9 @@ export interface CreateRecipeInput {
   servings: number;
   complexity?: 'easy' | 'medium' | 'hard';
   dishType?: RecipeDishType;
+  dishTypes?: RecipeDishType[];
   cuisine?: RecipeCuisine;
+  cuisines?: RecipeCuisine[];
   mainProduct?: string;
   mainProducts?: string[];
   ingredients?: string[];

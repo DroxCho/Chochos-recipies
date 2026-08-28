@@ -607,7 +607,9 @@ interface RecipeRow {
   servings: number | null;
   complexity?: string | null;
   dish_type?: string | null;
+  dish_types?: string[] | null;
   cuisine?: string | null;
+  cuisines?: string[] | null;
   main_product?: string | null;
   main_products?: string[] | null;
   ingredients?: string[] | null;
@@ -622,7 +624,7 @@ interface RecipeRow {
 }
 
 const RECIPE_SELECT_COLUMNS =
-  'id,title,description,prep_minutes,servings,complexity,dish_type,cuisine,main_product,main_products,ingredients,steps,notes,photo_urls,photo_original_url,status,review_comment,owner_id,owner_role';
+  'id,title,description,prep_minutes,servings,complexity,dish_type,dish_types,cuisine,cuisines,main_product,main_products,ingredients,steps,notes,photo_urls,photo_original_url,status,review_comment,owner_id,owner_role';
 
 interface RecipeMeta {
   status: RecipeStatus;
@@ -631,7 +633,9 @@ interface RecipeMeta {
   ownerRole: RecipeOwnerRole;
   complexity?: 'easy' | 'medium' | 'hard';
   dishType?: RecipeDishType;
+  dishTypes?: RecipeDishType[];
   cuisine?: RecipeCuisine;
+  cuisines?: RecipeCuisine[];
   mainProduct?: string;
   mainProducts?: string[];
   ingredients?: string[];
@@ -1012,6 +1016,38 @@ function normalizeStringList(items: string[] | undefined): string[] | undefined 
   return normalized.length > 0 ? normalized : undefined;
 }
 
+function normalizeRecipeDishTypeList(items: string[] | undefined): RecipeDishType[] | undefined {
+  const normalized = normalizeStringList(items)?.filter(
+    (item): item is RecipeDishType =>
+      item === 'main'
+      || item === 'dessert'
+      || item === 'soup'
+      || item === 'salad'
+      || item === 'appetizer'
+      || item === 'breakfast',
+  );
+
+  return normalized && normalized.length > 0 ? normalized : undefined;
+}
+
+function normalizeRecipeCuisineList(items: string[] | undefined): RecipeCuisine[] | undefined {
+  const normalized = normalizeStringList(items)?.filter(
+    (item): item is RecipeCuisine =>
+      item === 'bulgarian'
+      || item === 'french'
+      || item === 'asian'
+      || item === 'italian'
+      || item === 'mexican'
+      || item === 'spanish'
+      || item === 'turkish'
+      || item === 'vegan'
+      || item === 'vegetarian'
+      || item === 'international',
+  );
+
+  return normalized && normalized.length > 0 ? normalized : undefined;
+}
+
 function readRecipeMetaMap(): RecipeMetaMap {
   if (typeof window === 'undefined') {
     return {};
@@ -1070,6 +1106,16 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
     ...(storedMeta ?? {}),
   };
   const normalizedPhotoUrls = normalizeStringList(recipe.photoUrls) ?? normalizeStringList(meta.photoUrls);
+  const normalizedDishTypes = normalizeRecipeDishTypeList(recipe.dishTypes)
+    ?? normalizeRecipeDishTypeList(meta.dishTypes)
+    ?? (recipe.dishType ? [recipe.dishType] : undefined)
+    ?? (meta.dishType ? [meta.dishType] : undefined)
+    ?? (presetTags?.dishType ? [presetTags.dishType] : undefined);
+  const normalizedCuisines = normalizeRecipeCuisineList(recipe.cuisines)
+    ?? normalizeRecipeCuisineList(meta.cuisines)
+    ?? (recipe.cuisine ? [recipe.cuisine] : undefined)
+    ?? (meta.cuisine ? [meta.cuisine] : undefined)
+    ?? (presetTags?.cuisine ? [presetTags.cuisine] : undefined);
   const normalizedMainProducts = normalizeStringList(recipe.mainProducts) ?? normalizeStringList(meta.mainProducts);
   const normalizedIngredients = normalizeStringList(recipe.ingredients) ?? normalizeStringList(meta.ingredients);
   const normalizedSteps = normalizeStringList(recipe.steps) ?? normalizeStringList(meta.steps);
@@ -1088,8 +1134,10 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
     ownerId: recipe.ownerId ?? meta.ownerId ?? defaultMeta.ownerId,
     ownerRole: recipe.ownerRole ?? meta.ownerRole ?? defaultMeta.ownerRole,
     complexity: recipe.complexity ?? meta.complexity ?? PRESET_RECIPE_META[recipe.id]?.complexity ?? 'medium',
-    dishType: recipe.dishType ?? meta.dishType ?? presetTags?.dishType ?? 'main',
-    cuisine: recipe.cuisine ?? meta.cuisine ?? presetTags?.cuisine ?? 'international',
+    dishType: recipe.dishType ?? normalizedDishTypes?.[0] ?? meta.dishType ?? presetTags?.dishType ?? 'main',
+    dishTypes: normalizedDishTypes,
+    cuisine: recipe.cuisine ?? normalizedCuisines?.[0] ?? meta.cuisine ?? presetTags?.cuisine ?? 'international',
+    cuisines: normalizedCuisines,
     mainProduct: recipe.mainProduct ?? meta.mainProduct ?? normalizedMainProducts?.[0],
     mainProducts: normalizedMainProducts,
     ingredients: normalizedIngredients,
@@ -1126,7 +1174,9 @@ function persistRecipeMeta(id: string, patch: Partial<RecipeMeta>): RecipeMeta {
     ...patch,
     reviewComment: patch.reviewComment ?? current.reviewComment,
     dishType: patch.dishType ?? current.dishType,
+    dishTypes: normalizeRecipeDishTypeList(patch.dishTypes ?? current.dishTypes),
     cuisine: patch.cuisine ?? current.cuisine,
+    cuisines: normalizeRecipeCuisineList(patch.cuisines ?? current.cuisines),
     mainProduct: patch.mainProduct ?? current.mainProduct,
     mainProducts: normalizeStringList(patch.mainProducts ?? current.mainProducts),
     ingredients: normalizeStringList(patch.ingredients ?? current.ingredients),
@@ -1201,6 +1251,10 @@ function mapRecipeRow(row: RecipeRow): Recipe {
     || row.cuisine === 'international'
       ? row.cuisine
       : undefined;
+  const dishTypes = normalizeRecipeDishTypeList(row.dish_types ?? undefined)
+    ?? (dishType ? [dishType] : undefined);
+  const cuisines = normalizeRecipeCuisineList(row.cuisines ?? undefined)
+    ?? (cuisine ? [cuisine] : undefined);
   const status =
     row.status === 'pending'
     || row.status === 'approved'
@@ -1218,7 +1272,9 @@ function mapRecipeRow(row: RecipeRow): Recipe {
     servings: row.servings ?? 0,
     complexity,
     dishType,
+    dishTypes,
     cuisine,
+    cuisines,
     mainProduct: row.main_product ?? undefined,
     mainProducts: normalizeStringList(row.main_products ?? undefined),
     ingredients: normalizeStringList(row.ingredients ?? undefined),
@@ -1249,7 +1305,9 @@ function mergeRecipesById(primary: Recipe[], secondary: Recipe[]): Recipe[] {
       ...existing,
       complexity: existing.complexity ?? fallback.complexity,
       dishType: existing.dishType ?? fallback.dishType,
+      dishTypes: normalizeRecipeDishTypeList(existing.dishTypes) ?? normalizeRecipeDishTypeList(fallback.dishTypes),
       cuisine: existing.cuisine ?? fallback.cuisine,
+      cuisines: normalizeRecipeCuisineList(existing.cuisines) ?? normalizeRecipeCuisineList(fallback.cuisines),
       mainProduct: existing.mainProduct ?? fallback.mainProduct,
       mainProducts: normalizeStringList(existing.mainProducts) ?? normalizeStringList(fallback.mainProducts),
       ingredients: normalizeStringList(existing.ingredients) ?? normalizeStringList(fallback.ingredients),
@@ -1336,6 +1394,8 @@ export async function fetchRecipeById(id: string): Promise<Recipe | undefined> {
 
 export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
   const id = buildRecipeId(input.title);
+  const dishTypes = normalizeRecipeDishTypeList(input.dishTypes ?? (input.dishType ? [input.dishType] : undefined));
+  const cuisines = normalizeRecipeCuisineList(input.cuisines ?? (input.cuisine ? [input.cuisine] : undefined));
 
   const payload = {
     id,
@@ -1344,8 +1404,10 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
     prep_minutes: input.prepMinutes,
     servings: input.servings,
     complexity: input.complexity ?? null,
-    dish_type: input.dishType ?? null,
-    cuisine: input.cuisine ?? null,
+    dish_type: dishTypes?.[0] ?? input.dishType ?? null,
+    dish_types: dishTypes ?? null,
+    cuisine: cuisines?.[0] ?? input.cuisine ?? null,
+    cuisines: cuisines ?? null,
     main_product: input.mainProduct ?? input.mainProducts?.[0] ?? null,
     main_products: normalizeStringList(input.mainProducts) ?? null,
     ingredients: normalizeStringList(input.ingredients) ?? null,
@@ -1365,8 +1427,10 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
     ownerId: input.ownerId ?? 'admin-user-1',
     ownerRole: input.ownerRole ?? 'admin',
     complexity: input.complexity,
-    dishType: input.dishType,
-    cuisine: input.cuisine,
+    dishType: dishTypes?.[0] ?? input.dishType,
+    dishTypes,
+    cuisine: cuisines?.[0] ?? input.cuisine,
+    cuisines,
     mainProduct: input.mainProduct,
     mainProducts: input.mainProducts,
     ingredients: input.ingredients,
@@ -1431,14 +1495,19 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
 }
 
 export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
+  const dishTypes = normalizeRecipeDishTypeList(input.dishTypes ?? (input.dishType ? [input.dishType] : undefined));
+  const cuisines = normalizeRecipeCuisineList(input.cuisines ?? (input.cuisine ? [input.cuisine] : undefined));
+
   const payload = {
     title: input.title,
     description: input.description,
     prep_minutes: input.prepMinutes,
     servings: input.servings,
     complexity: input.complexity ?? null,
-    dish_type: input.dishType ?? null,
-    cuisine: input.cuisine ?? null,
+    dish_type: dishTypes?.[0] ?? input.dishType ?? null,
+    dish_types: dishTypes ?? null,
+    cuisine: cuisines?.[0] ?? input.cuisine ?? null,
+    cuisines: cuisines ?? null,
     main_product: input.mainProduct ?? input.mainProducts?.[0] ?? null,
     main_products: normalizeStringList(input.mainProducts) ?? null,
     ingredients: normalizeStringList(input.ingredients) ?? null,
@@ -1459,8 +1528,10 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
     ownerId: input.ownerId,
     ownerRole: input.ownerRole,
     complexity: input.complexity,
-    dishType: input.dishType,
-    cuisine: input.cuisine,
+    dishType: dishTypes?.[0] ?? input.dishType,
+    dishTypes,
+    cuisine: cuisines?.[0] ?? input.cuisine,
+    cuisines,
     mainProduct: input.mainProduct,
     mainProducts: input.mainProducts,
     ingredients: input.ingredients,
@@ -1541,8 +1612,12 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
     .select(RECIPE_SELECT_COLUMNS)
     .single();
 
-  if (error || !data) {
-    return persistLocalFallbackUpdate();
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error('Update recipe returned no data');
   }
 
   persistRecipeMeta(input.id, metaPatch);

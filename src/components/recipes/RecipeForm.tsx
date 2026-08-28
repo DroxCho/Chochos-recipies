@@ -10,8 +10,6 @@ import type { RecipeCuisine, RecipeDishType } from '../../types/recipe';
 import { getMainProductMeta } from '../../lib/mainProduct';
 
 type ComplexityValue = '' | 'easy' | 'medium' | 'hard';
-type DishTypeValue = '' | RecipeDishType;
-type CuisineValue = '' | RecipeCuisine;
 type MainProductValue =
   | ''
   | 'agneshko-meso'
@@ -117,8 +115,44 @@ export function RecipeForm({
   const [prepMinutes, setPrepMinutes] = useState(initialValues?.prepMinutes ?? 15);
   const [servings, setServings] = useState(initialValues?.servings ?? 2);
   const [complexity, setComplexity] = useState<ComplexityValue>(initialValues?.complexity ?? '');
-  const [dishType, setDishType] = useState<DishTypeValue>(initialValues?.dishType ?? '');
-  const [cuisine, setCuisine] = useState<CuisineValue>(initialValues?.cuisine ?? '');
+  const [dishTypes, setDishTypes] = useState<RecipeDishType[]>(() => {
+    const fromList = (initialValues?.dishTypes ?? []).filter(
+      (value): value is RecipeDishType =>
+        value === 'main'
+        || value === 'dessert'
+        || value === 'soup'
+        || value === 'salad'
+        || value === 'appetizer'
+        || value === 'breakfast',
+    );
+
+    if (fromList.length > 0) {
+      return [...new Set(fromList)];
+    }
+
+    return initialValues?.dishType ? [initialValues.dishType] : [];
+  });
+  const [cuisines, setCuisines] = useState<RecipeCuisine[]>(() => {
+    const fromList = (initialValues?.cuisines ?? []).filter(
+      (value): value is RecipeCuisine =>
+        value === 'bulgarian'
+        || value === 'french'
+        || value === 'asian'
+        || value === 'italian'
+        || value === 'mexican'
+        || value === 'spanish'
+        || value === 'turkish'
+        || value === 'vegan'
+        || value === 'vegetarian'
+        || value === 'international',
+    );
+
+    if (fromList.length > 0) {
+      return [...new Set(fromList)];
+    }
+
+    return initialValues?.cuisine ? [initialValues.cuisine] : [];
+  });
   const [mainProducts, setMainProducts] = useState<MainProductValue[]>(() => {
     const fromList = (initialValues?.mainProducts ?? []).filter(
       (value): value is MainProductValue => MAIN_PRODUCT_VALUES.includes(value as MainProductValue),
@@ -713,8 +747,8 @@ export function RecipeForm({
           prepMinutes > 0 &&
           servings > 0 &&
           complexity &&
-          dishType &&
-          cuisine &&
+          dishTypes.length > 0 &&
+          cuisines.length > 0 &&
           mainProducts.length > 0,
       );
     }
@@ -786,6 +820,24 @@ export function RecipeForm({
     { value: 'international', label: 'cuisineInternational' },
   ];
 
+  function toggleDishTypeSelection(value: RecipeDishType) {
+    setDishTypes((current) =>
+      current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value],
+    );
+    clearFieldError('dishType');
+  }
+
+  function toggleCuisineSelection(value: RecipeCuisine) {
+    setCuisines((current) =>
+      current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value],
+    );
+    clearFieldError('cuisine');
+  }
+
   const mainProductOptions: Array<{ value: Exclude<MainProductValue, ''>; label: string }> = [
     { value: 'agneshko-meso', label: 'Агнешко месо' },
     { value: 'bebeshki-hrani', label: 'Бебешки храни' },
@@ -848,13 +900,15 @@ export function RecipeForm({
           );
         })();
 
-  const selectedDishTypeLabel = dishType
-    ? `${DISH_TYPE_ICONS[dishType]} ${t(dishTypeOptions.find((option) => option.value === dishType)?.label ?? 'selectDishType')}`
-    : t('selectDishType');
+  const selectedDishTypeLabel =
+    dishTypes.length === 0
+      ? t('selectDishType')
+      : `${dishTypes.length} ${t('selectedItems')}`;
 
-  const selectedCuisineLabel = cuisine
-    ? `${CUISINE_ICONS[cuisine]} ${t(cuisineOptions.find((option) => option.value === cuisine)?.label ?? 'selectCuisineType')}`
-    : t('selectCuisineType');
+  const selectedCuisineLabel =
+    cuisines.length === 0
+      ? t('selectCuisineType')
+      : `${cuisines.length} ${t('selectedItems')}`;
 
   useEffect(() => {
     if (!isDishTypeMenuOpen && !isCuisineMenuOpen && !isMainProductMenuOpen) {
@@ -928,11 +982,11 @@ export function RecipeForm({
         nextErrors.complexity = 'validationComplexityRequired';
       }
 
-      if (!dishType) {
+      if (dishTypes.length === 0) {
         nextErrors.dishType = 'validationTagsRequired';
       }
 
-      if (!cuisine) {
+      if (cuisines.length === 0) {
         nextErrors.cuisine = 'validationTagsRequired';
       }
 
@@ -1055,8 +1109,8 @@ export function RecipeForm({
     setError(null);
 
     const finalComplexity = complexity as 'easy' | 'medium' | 'hard';
-    const finalDishType = dishType as RecipeDishType;
-    const finalCuisine = cuisine as RecipeCuisine;
+    const finalDishType = dishTypes[0] as RecipeDishType;
+    const finalCuisine = cuisines[0] as RecipeCuisine;
     const finalMainProducts = [...mainProducts];
     const finalMainProduct = finalMainProducts[0];
     const photoOriginalCandidate = photoOriginalUrl.trim() || normalizedPhotoUrls[0] || '';
@@ -1073,7 +1127,9 @@ export function RecipeForm({
         servings,
         complexity: finalComplexity,
         dishType: finalDishType,
+        dishTypes: [...dishTypes],
         cuisine: finalCuisine,
+        cuisines: [...cuisines],
         mainProduct: finalMainProduct,
         mainProducts: finalMainProducts,
         ingredients: normalizedIngredients,
@@ -1093,8 +1149,8 @@ export function RecipeForm({
       setPrepMinutes(15);
       setServings(2);
       setComplexity('');
-      setDishType('');
-      setCuisine('');
+      setDishTypes([]);
+      setCuisines([]);
       setMainProducts([]);
       setSelectedComplexityStars(0);
       setIngredients(['']);
@@ -1277,28 +1333,44 @@ export function RecipeForm({
               </button>
 
               {isDishTypeMenuOpen && (
-                <div className="absolute left-0 top-full z-30 mt-1 w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-lg sm:w-80" role="menu">
+                <div className="absolute left-0 top-full z-30 mt-1 w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-2 shadow-lg sm:w-80" role="menu">
                   <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
                     {dishTypeOptions.map((option) => {
-                      const isSelected = dishType === option.value;
+                      const checked = dishTypes.includes(option.value);
 
                       return (
-                        <button
+                        <label
                           key={`dish-type-form-${option.value}`}
-                          className={`flex w-full items-center rounded px-2 py-1.5 text-left text-sm ${isSelected ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
-                          onClick={() => {
-                            setDishType(option.value as DishTypeValue);
-                            clearFieldError('dishType');
-                            setIsDishTypeMenuOpen(false);
-                          }}
-                          role="menuitemradio"
-                          aria-checked={isSelected}
-                          type="button"
+                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm text-slate-700 hover:bg-slate-50"
                         >
-                          {DISH_TYPE_ICONS[option.value]} {t(option.label)}
-                        </button>
+                          <input
+                            checked={checked}
+                            onChange={() => toggleDishTypeSelection(option.value)}
+                            type="checkbox"
+                          />
+                          <span>{DISH_TYPE_ICONS[option.value]} {t(option.label)}</span>
+                        </label>
                       );
                     })}
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center justify-start gap-2 border-t border-slate-200 pt-2 sm:justify-between">
+                    <button
+                      className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                      onClick={() => {
+                        setDishTypes([]);
+                        clearFieldError('dishType');
+                      }}
+                      type="button"
+                    >
+                      {t('clearSelection')}
+                    </button>
+                    <button
+                      className="rounded-md bg-slate-900 px-2 py-1 text-xs text-white"
+                      onClick={() => setIsDishTypeMenuOpen(false)}
+                      type="button"
+                    >
+                      {t('done')}
+                    </button>
                   </div>
                 </div>
               )}
@@ -1324,28 +1396,44 @@ export function RecipeForm({
               </button>
 
               {isCuisineMenuOpen && (
-                <div className="absolute left-0 top-full z-30 mt-1 w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-lg sm:w-80" role="menu">
+                <div className="absolute left-0 top-full z-30 mt-1 w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-2 shadow-lg sm:w-80" role="menu">
                   <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
                     {cuisineOptions.map((option) => {
-                      const isSelected = cuisine === option.value;
+                      const checked = cuisines.includes(option.value);
 
                       return (
-                        <button
+                        <label
                           key={`cuisine-form-${option.value}`}
-                          className={`flex w-full items-center rounded px-2 py-1.5 text-left text-sm ${isSelected ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
-                          onClick={() => {
-                            setCuisine(option.value as CuisineValue);
-                            clearFieldError('cuisine');
-                            setIsCuisineMenuOpen(false);
-                          }}
-                          role="menuitemradio"
-                          aria-checked={isSelected}
-                          type="button"
+                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm text-slate-700 hover:bg-slate-50"
                         >
-                          {CUISINE_ICONS[option.value]} {t(option.label)}
-                        </button>
+                          <input
+                            checked={checked}
+                            onChange={() => toggleCuisineSelection(option.value)}
+                            type="checkbox"
+                          />
+                          <span>{CUISINE_ICONS[option.value]} {t(option.label)}</span>
+                        </label>
                       );
                     })}
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center justify-start gap-2 border-t border-slate-200 pt-2 sm:justify-between">
+                    <button
+                      className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                      onClick={() => {
+                        setCuisines([]);
+                        clearFieldError('cuisine');
+                      }}
+                      type="button"
+                    >
+                      {t('clearSelection')}
+                    </button>
+                    <button
+                      className="rounded-md bg-slate-900 px-2 py-1 text-xs text-white"
+                      onClick={() => setIsCuisineMenuOpen(false)}
+                      type="button"
+                    >
+                      {t('done')}
+                    </button>
                   </div>
                 </div>
               )}

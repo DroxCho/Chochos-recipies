@@ -98,12 +98,30 @@ const MAIN_PRODUCT_KEYWORDS: Record<MainProductValue, string[]> = {
   'yastiya-s-yaitsa': ['яйц', 'омлет'],
 };
 
-function parseDishTypeFilter(value: string | null): 'all' | RecipeDishType {
-  return value && DISH_TYPE_VALUES.includes(value as RecipeDishType) ? (value as RecipeDishType) : 'all';
+function parseDishTypesFilter(value: string | null): RecipeDishType[] {
+  if (!value) {
+    return [];
+  }
+
+  const values = value
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item): item is RecipeDishType => DISH_TYPE_VALUES.includes(item as RecipeDishType));
+
+  return [...new Set(values)];
 }
 
-function parseCuisineFilter(value: string | null): 'all' | RecipeCuisine {
-  return value && CUISINE_VALUES.includes(value as RecipeCuisine) ? (value as RecipeCuisine) : 'all';
+function parseCuisinesFilter(value: string | null): RecipeCuisine[] {
+  if (!value) {
+    return [];
+  }
+
+  const values = value
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item): item is RecipeCuisine => CUISINE_VALUES.includes(item as RecipeCuisine));
+
+  return [...new Set(values)];
 }
 
 function parseMainProductsFilter(value: string | null): MainProductValue[] {
@@ -134,8 +152,10 @@ export function RecipesPage() {
   const [isDishTypeMenuOpen, setIsDishTypeMenuOpen] = useState(false);
   const [isCuisineMenuOpen, setIsCuisineMenuOpen] = useState(false);
   const [isMainProductMenuOpen, setIsMainProductMenuOpen] = useState(false);
-  const selectedDishType = parseDishTypeFilter(searchParams.get('dishType'));
-  const selectedCuisine = parseCuisineFilter(searchParams.get('cuisine'));
+  const dishTypesParam = searchParams.get('dishTypes') ?? searchParams.get('dishType');
+  const cuisinesParam = searchParams.get('cuisines') ?? searchParams.get('cuisine');
+  const selectedDishTypes = useMemo(() => parseDishTypesFilter(dishTypesParam), [dishTypesParam]);
+  const selectedCuisines = useMemo(() => parseCuisinesFilter(cuisinesParam), [cuisinesParam]);
   const mainProductsParam = searchParams.get('mainProducts');
   const selectedMainProducts = useMemo(() => parseMainProductsFilter(mainProductsParam), [mainProductsParam]);
   const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
@@ -172,12 +192,22 @@ export function RecipesPage() {
 
     return recipes.filter((recipe) => {
       const localizedRecipe = getLocalizedRecipe(recipe, language);
+      const recipeDishTypes = (recipe.dishTypes && recipe.dishTypes.length > 0)
+        ? recipe.dishTypes
+        : recipe.dishType
+        ? [recipe.dishType]
+        : [];
+      const recipeCuisines = (recipe.cuisines && recipe.cuisines.length > 0)
+        ? recipe.cuisines
+        : recipe.cuisine
+        ? [recipe.cuisine]
+        : [];
 
-      if (selectedDishType !== 'all' && recipe.dishType !== selectedDishType) {
+      if (selectedDishTypes.length > 0 && !recipeDishTypes.some((item) => selectedDishTypes.includes(item))) {
         return false;
       }
 
-      if (selectedCuisine !== 'all' && recipe.cuisine !== selectedCuisine) {
+      if (selectedCuisines.length > 0 && !recipeCuisines.some((item) => selectedCuisines.includes(item))) {
         return false;
       }
 
@@ -206,13 +236,13 @@ export function RecipesPage() {
       const haystack = `${localizedRecipe.title} ${localizedRecipe.description}`.toLowerCase();
       return haystack.includes(query);
     });
-  }, [language, recipes, searchQuery, selectedCuisine, selectedDishType, selectedMainProducts]);
+  }, [language, recipes, searchQuery, selectedCuisines, selectedDishTypes, selectedMainProducts]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRecipes.length / pageSize));
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCuisine, selectedDishType, selectedMainProducts]);
+  }, [searchQuery, selectedCuisines, selectedDishTypes, selectedMainProducts]);
 
   useEffect(() => {
     if (!isDishTypeMenuOpen && !isCuisineMenuOpen && !isMainProductMenuOpen) {
@@ -249,27 +279,61 @@ export function RecipesPage() {
     };
   }, [isCuisineMenuOpen, isDishTypeMenuOpen, isMainProductMenuOpen]);
 
-  function setDishTypeFilter(value: 'all' | RecipeDishType) {
+  function toggleDishTypeSelection(value: RecipeDishType) {
     const nextParams = new URLSearchParams(searchParams);
+    const selected = new Set(selectedDishTypes);
 
-    if (value === 'all') {
+    if (selected.has(value)) {
+      selected.delete(value);
+    } else {
+      selected.add(value);
+    }
+
+    const nextValues = [...selected];
+    if (nextValues.length === 0) {
+      nextParams.delete('dishTypes');
       nextParams.delete('dishType');
     } else {
-      nextParams.set('dishType', value);
+      nextParams.set('dishTypes', nextValues.join(','));
+      nextParams.delete('dishType');
     }
 
     setSearchParams(nextParams, { replace: true });
   }
 
-  function setCuisineFilter(value: 'all' | RecipeCuisine) {
+  function clearDishTypesFilter() {
     const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('dishTypes');
+    nextParams.delete('dishType');
+    setSearchParams(nextParams, { replace: true });
+  }
 
-    if (value === 'all') {
-      nextParams.delete('cuisine');
+  function toggleCuisineSelection(value: RecipeCuisine) {
+    const nextParams = new URLSearchParams(searchParams);
+    const selected = new Set(selectedCuisines);
+
+    if (selected.has(value)) {
+      selected.delete(value);
     } else {
-      nextParams.set('cuisine', value);
+      selected.add(value);
     }
 
+    const nextValues = [...selected];
+    if (nextValues.length === 0) {
+      nextParams.delete('cuisines');
+      nextParams.delete('cuisine');
+    } else {
+      nextParams.set('cuisines', nextValues.join(','));
+      nextParams.delete('cuisine');
+    }
+
+    setSearchParams(nextParams, { replace: true });
+  }
+
+  function clearCuisinesFilter() {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('cuisines');
+    nextParams.delete('cuisine');
     setSearchParams(nextParams, { replace: true });
   }
 
@@ -362,34 +426,51 @@ export function RecipesPage() {
             onClick={() => {
               setIsDishTypeMenuOpen((open) => !open);
               setIsCuisineMenuOpen(false);
+              setIsMainProductMenuOpen(false);
             }}
             type="button"
           >
-            {dishTypeOptions.find((option) => option.value === selectedDishType)?.label ?? t('allDishTypes')}
+            {selectedDishTypes.length === 0
+              ? t('allDishTypes')
+              : `${selectedDishTypes.length} ${t('selectedItems')}`}
           </button>
 
           {isDishTypeMenuOpen && (
-            <div className="absolute left-0 top-full z-30 mt-1 w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-lg sm:w-80" role="menu">
+            <div className="absolute left-0 top-full z-30 mt-1 w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-2 shadow-lg sm:w-80" role="menu">
               <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
-                {dishTypeOptions.map((option) => {
-                  const isSelected = selectedDishType === option.value;
+                {dishTypeOptions.filter((option) => option.value !== 'all').map((option) => {
+                  const checked = selectedDishTypes.includes(option.value as RecipeDishType);
 
                   return (
-                    <button
+                    <label
                       key={`dish-type-filter-${option.value}`}
-                      className={`flex w-full items-center rounded px-2 py-1.5 text-left text-sm ${isSelected ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
-                      onClick={() => {
-                        setDishTypeFilter(option.value);
-                        setIsDishTypeMenuOpen(false);
-                      }}
-                      role="menuitemradio"
-                      aria-checked={isSelected}
-                      type="button"
+                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm text-slate-700 hover:bg-slate-50"
                     >
-                      {option.label}
-                    </button>
+                      <input
+                        checked={checked}
+                        onChange={() => toggleDishTypeSelection(option.value as RecipeDishType)}
+                        type="checkbox"
+                      />
+                      <span>{option.label}</span>
+                    </label>
                   );
                 })}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center justify-start gap-2 border-t border-slate-200 pt-2 sm:justify-between">
+                <button
+                  className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                  onClick={clearDishTypesFilter}
+                  type="button"
+                >
+                  {t('clearSelection')}
+                </button>
+                <button
+                  className="rounded-md bg-slate-900 px-2 py-1 text-xs text-white"
+                  onClick={() => setIsDishTypeMenuOpen(false)}
+                  type="button"
+                >
+                  {t('done')}
+                </button>
               </div>
             </div>
           )}
@@ -404,34 +485,51 @@ export function RecipesPage() {
             onClick={() => {
               setIsCuisineMenuOpen((open) => !open);
               setIsDishTypeMenuOpen(false);
+              setIsMainProductMenuOpen(false);
             }}
             type="button"
           >
-            {cuisineOptions.find((option) => option.value === selectedCuisine)?.label ?? t('allCuisines')}
+            {selectedCuisines.length === 0
+              ? t('allCuisines')
+              : `${selectedCuisines.length} ${t('selectedItems')}`}
           </button>
 
           {isCuisineMenuOpen && (
-            <div className="absolute left-0 top-full z-30 mt-1 w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-lg sm:w-80" role="menu">
+            <div className="absolute left-0 top-full z-30 mt-1 w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-md border border-slate-200 bg-white p-2 shadow-lg sm:w-80" role="menu">
               <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
-                {cuisineOptions.map((option) => {
-                  const isSelected = selectedCuisine === option.value;
+                {cuisineOptions.filter((option) => option.value !== 'all').map((option) => {
+                  const checked = selectedCuisines.includes(option.value as RecipeCuisine);
 
                   return (
-                    <button
+                    <label
                       key={`cuisine-filter-${option.value}`}
-                      className={`flex w-full items-center rounded px-2 py-1.5 text-left text-sm ${isSelected ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'}`}
-                      onClick={() => {
-                        setCuisineFilter(option.value);
-                        setIsCuisineMenuOpen(false);
-                      }}
-                      role="menuitemradio"
-                      aria-checked={isSelected}
-                      type="button"
+                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm text-slate-700 hover:bg-slate-50"
                     >
-                      {option.label}
-                    </button>
+                      <input
+                        checked={checked}
+                        onChange={() => toggleCuisineSelection(option.value as RecipeCuisine)}
+                        type="checkbox"
+                      />
+                      <span>{option.label}</span>
+                    </label>
                   );
                 })}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center justify-start gap-2 border-t border-slate-200 pt-2 sm:justify-between">
+                <button
+                  className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+                  onClick={clearCuisinesFilter}
+                  type="button"
+                >
+                  {t('clearSelection')}
+                </button>
+                <button
+                  className="rounded-md bg-slate-900 px-2 py-1 text-xs text-white"
+                  onClick={() => setIsCuisineMenuOpen(false)}
+                  type="button"
+                >
+                  {t('done')}
+                </button>
               </div>
             </div>
           )}
@@ -441,7 +539,11 @@ export function RecipesPage() {
           <span className="mr-2 text-sm text-slate-700">{t('mainIngredient')}</span>
           <button
             className="w-full min-w-48 rounded-md border border-slate-300 bg-white px-3 py-1 text-left text-sm text-slate-700 sm:w-auto"
-            onClick={() => setIsMainProductMenuOpen((open) => !open)}
+            onClick={() => {
+              setIsMainProductMenuOpen((open) => !open);
+              setIsDishTypeMenuOpen(false);
+              setIsCuisineMenuOpen(false);
+            }}
             type="button"
           >
             {selectedMainProducts.length === 0
