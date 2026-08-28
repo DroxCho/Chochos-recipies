@@ -138,6 +138,8 @@ export function RecipeForm({
   const [steps, setSteps] = useState<string[]>(
     initialValues?.steps && initialValues.steps.length > 0 ? initialValues.steps : [''],
   );
+  const [insertStepAfterIndex, setInsertStepAfterIndex] = useState<number | null>(null);
+  const [insertStepText, setInsertStepText] = useState('');
   const [notes, setNotes] = useState(initialValues?.notes ?? '');
   const [photoUrls, setPhotoUrls] = useState<string[]>(
     initialValues?.photoUrls && initialValues.photoUrls.length > 0 ? [initialValues.photoUrls[0] ?? ''] : [''],
@@ -173,6 +175,7 @@ export function RecipeForm({
   const hasEmptyStepField = steps.some((item) => item.trim().length === 0);
   const canAddIngredientInput = !hasEmptyIngredientField;
   const canAddStepInput = !hasEmptyStepField;
+  const isInsertStepOverlayOpen = insertStepAfterIndex !== null;
 
   function updateListValue(
     setter: Dispatch<SetStateAction<string[]>>,
@@ -184,6 +187,46 @@ export function RecipeForm({
 
   function addListItem(setter: Dispatch<SetStateAction<string[]>>) {
     setter((current) => [...current, '']);
+  }
+
+  function clearIndexedFieldErrors(prefix: string) {
+    setFieldErrors((current) => {
+      const next = { ...current };
+      Object.keys(next).forEach((key) => {
+        if (key.startsWith(`${prefix}-`)) {
+          delete next[key as keyof FieldErrorMap];
+        }
+      });
+      return next;
+    });
+  }
+
+  function openInsertStepOverlay(afterIndex: number) {
+    setInsertStepAfterIndex(afterIndex);
+    setInsertStepText('');
+  }
+
+  function closeInsertStepOverlay() {
+    setInsertStepAfterIndex(null);
+    setInsertStepText('');
+  }
+
+  function handleInsertStep() {
+    if (insertStepAfterIndex === null) {
+      return;
+    }
+
+    const trimmedStep = insertStepText.trim();
+    if (!trimmedStep) {
+      return;
+    }
+
+    setSteps((current) => {
+      const insertionIndex = insertStepAfterIndex + 1;
+      return [...current.slice(0, insertionIndex), trimmedStep, ...current.slice(insertionIndex)];
+    });
+    clearIndexedFieldErrors('step');
+    closeInsertStepOverlay();
   }
 
   function clearFieldError(field: string) {
@@ -1355,24 +1398,36 @@ export function RecipeForm({
           {!multiStep && <h4 className="text-sm font-semibold text-slate-900">{t('steps')} {requiredMark}</h4>}
           <div className="mt-2 grid gap-2">
             {steps.map((step, index) => (
-              <label key={`step-${index}`} className="flex flex-col gap-1 text-sm text-slate-700">
-                <span>
-                  {t('stepItem')} {index + 1} {index === 0 ? requiredMark : null}
-                </span>
-                <textarea
-                  className={`min-h-20 rounded-md border px-3 py-2 ${inputBorderClass(Boolean(fieldErrors[`step-${index}`]))}`}
-                  value={step}
-                  onChange={(event) => {
-                    updateListValue(setSteps, index, event.target.value);
-                    clearFieldError(`step-${index}`);
-                  }}
-                  placeholder={t('stepPlaceholder')}
-                  required={index === 0}
-                />
-                {fieldErrors[`step-${index}`] && (
-                  <span className="text-xs text-rose-700">{t(fieldErrors[`step-${index}`] as TranslationKey)}</span>
+              <div key={`step-${index}`}>
+                <label className="flex flex-col gap-1 text-sm text-slate-700">
+                  <span>
+                    {t('stepItem')} {index + 1} {index === 0 ? requiredMark : null}
+                  </span>
+                  <textarea
+                    className={`min-h-20 rounded-md border px-3 py-2 ${inputBorderClass(Boolean(fieldErrors[`step-${index}`]))}`}
+                    value={step}
+                    onChange={(event) => {
+                      updateListValue(setSteps, index, event.target.value);
+                      clearFieldError(`step-${index}`);
+                    }}
+                    placeholder={t('stepPlaceholder')}
+                    required={index === 0}
+                  />
+                  {fieldErrors[`step-${index}`] && (
+                    <span className="text-xs text-rose-700">{t(fieldErrors[`step-${index}`] as TranslationKey)}</span>
+                  )}
+                </label>
+
+                {index < steps.length - 1 && (
+                  <button
+                    className="mt-1 inline-flex text-xs text-slate-600 underline underline-offset-2 hover:text-slate-900"
+                    onClick={() => openInsertStepOverlay(index)}
+                    type="button"
+                  >
+                    {t('insertStepLink')}
+                  </button>
                 )}
-              </label>
+              </div>
             ))}
           </div>
           <button
@@ -1511,6 +1566,48 @@ export function RecipeForm({
         </div>
         )}
       </div>
+
+      {isInsertStepOverlayOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/55 p-4">
+          <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
+            <div className="mb-3 flex items-center justify-between">
+              <h4 className="text-base font-semibold text-slate-900">{t('insertStepTitle')}</h4>
+              <button
+                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700"
+                onClick={closeInsertStepOverlay}
+                type="button"
+              >
+                {t('cancel')}
+              </button>
+            </div>
+
+            <textarea
+              className="min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              onChange={(event) => setInsertStepText(event.target.value)}
+              placeholder={t('insertStepPlaceholder')}
+              value={insertStepText}
+            />
+
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <button
+                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700"
+                onClick={closeInsertStepOverlay}
+                type="button"
+              >
+                {t('cancel')}
+              </button>
+              <button
+                className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+                disabled={insertStepText.trim().length === 0}
+                onClick={handleInsertStep}
+                type="button"
+              >
+                {t('insertStepConfirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 flex items-center gap-2">
         {multiStep && currentStep > 1 && (
