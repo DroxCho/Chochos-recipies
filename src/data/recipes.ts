@@ -617,6 +617,7 @@ interface RecipeRow {
   notes?: string | null;
   photo_urls?: string[] | null;
   photo_original_url?: string | null;
+  video_url?: string | null;
   status?: string | null;
   review_comment?: string | null;
   owner_id?: string | null;
@@ -643,6 +644,7 @@ interface RecipeMeta {
   notes?: string;
   photoUrls?: string[];
   photoOriginalUrl?: string;
+  videoUrl?: string;
 }
 
 const CHICKEN_WITH_RICE_IMAGE_URL = 'https://domashnivkusotii.com/wp-content/uploads/2022/01/2-298.jpg';
@@ -1126,6 +1128,9 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
   const normalizedPhotoOriginalUrl = recipe.photoOriginalUrl?.trim()
     ? recipe.photoOriginalUrl.trim()
     : (meta.photoOriginalUrl?.trim() ? meta.photoOriginalUrl.trim() : normalizedPhotoUrls?.[0]);
+  const normalizedVideoUrl = recipe.videoUrl?.trim()
+    ? recipe.videoUrl.trim()
+    : (meta.videoUrl?.trim() ? meta.videoUrl.trim() : undefined);
 
   const withMeta: Recipe = {
     ...recipe,
@@ -1145,6 +1150,7 @@ function applyMeta(recipe: Recipe, map: RecipeMetaMap): Recipe {
     notes: normalizedNotes,
     photoUrls: normalizedPhotoUrls,
     photoOriginalUrl: normalizedPhotoOriginalUrl,
+    videoUrl: normalizedVideoUrl,
   };
 
   const normalizedTitle = withMeta.title.trim().toLowerCase();
@@ -1187,6 +1193,10 @@ function persistRecipeMeta(id: string, patch: Partial<RecipeMeta>): RecipeMeta {
       patch.photoOriginalUrl !== undefined
         ? (patch.photoOriginalUrl.trim() ? patch.photoOriginalUrl.trim() : undefined)
         : (current.photoOriginalUrl?.trim() ? current.photoOriginalUrl.trim() : nextPhotoUrls?.[0]),
+    videoUrl:
+      patch.videoUrl !== undefined
+        ? (patch.videoUrl.trim() ? patch.videoUrl.trim() : undefined)
+        : current.videoUrl,
   };
 
   map[id] = next;
@@ -1282,6 +1292,7 @@ function mapRecipeRow(row: RecipeRow): Recipe {
     notes: row.notes ?? undefined,
     photoUrls: normalizeStringList(row.photo_urls ?? undefined),
     photoOriginalUrl: row.photo_original_url ?? undefined,
+    videoUrl: row.video_url ?? undefined,
     status,
     reviewComment: row.review_comment ?? undefined,
     ownerId: row.owner_id ?? 'admin-user-1',
@@ -1390,6 +1401,7 @@ export async function insertRecipe(input: CreateRecipeInput): Promise<Recipe> {
     notes: input.notes,
     photoUrls: input.photoUrls,
     photoOriginalUrl: input.photoOriginalUrl,
+    videoUrl: input.videoUrl,
   };
 
   if (!hasSupabaseAnonKey) {
@@ -1491,6 +1503,7 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<Recipe> {
     notes: input.notes,
     photoUrls: input.photoUrls,
     photoOriginalUrl: input.photoOriginalUrl,
+    videoUrl: input.videoUrl,
   };
 
   if (input.metaOnly) {

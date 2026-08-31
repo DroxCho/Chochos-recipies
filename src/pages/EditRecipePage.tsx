@@ -47,6 +47,7 @@ export function EditRecipePage() {
       notes: input.notes,
       photoUrls: input.photoUrls,
       photoOriginalUrl: input.photoOriginalUrl,
+      videoUrl: input.videoUrl,
       ownerId: recipe.ownerId,
       ownerRole: recipe.ownerRole,
       status: role === 'registered' ? 'pending' : recipe.status,

@@ -35,6 +35,8 @@ const CUISINE_ICONS: Record<RecipeCuisine, string> = {
   international: '🌍',
 };
 
+const DEFAULT_RECIPE_IMAGE_URL = '/hero-first.png';
+
 interface RecipeCardProps {
   recipe: Recipe;
   onDelete?: (id: string) => Promise<void>;
@@ -106,7 +108,7 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
     localizedRecipe.description.length > 140
       ? `${localizedRecipe.description.slice(0, 137).trimEnd()}...`
       : localizedRecipe.description;
-  const recipeImage = recipe.photoUrls?.[0]?.trim();
+  const recipeImage = recipe.photoUrls?.[0]?.trim() || DEFAULT_RECIPE_IMAGE_URL;
   const complexityStars = complexityToStars(recipe.complexity);
   const canSeeStatus = role === 'admin' || recipe.ownerId === userId;
   const selectedDishTypes = useMemo(
@@ -322,19 +324,12 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
       >
       <article className="flex h-full min-h-[450px] flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-transform duration-200 ease-out group-hover:scale-[1.02] group-hover:shadow-md">
       <div className="relative mb-3">
-        {recipeImage && (
-          <img
-            alt={localizedRecipe.title}
-            className="aspect-square w-full rounded-lg object-cover transition-transform duration-200 ease-out group-hover:scale-[1.01]"
-            loading="lazy"
-            src={recipeImage}
-          />
-        )}
-        {!recipeImage && (
-          <div className="flex aspect-square w-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
-            {t('noPhotoPlaceholder')}
-          </div>
-        )}
+        <img
+          alt={localizedRecipe.title}
+          className="aspect-square w-full rounded-lg object-cover transition-transform duration-200 ease-out group-hover:scale-[1.01]"
+          loading="lazy"
+          src={recipeImage}
+        />
         {(mainProductMetas.length > 0 || canUseFavorites || (isRecipeTried && canUseTried)) && (
           <div className="mt-2 flex items-center justify-between gap-2">
             {mainProductMetas.length > 0 && (

@@ -41,6 +41,8 @@ const CUISINE_ICONS: Record<RecipeCuisine, string> = {
   international: '🌍',
 };
 
+const DEFAULT_RECIPE_IMAGE_URL = '/hero-first.png';
+
 interface RecipeDetailsLocationState {
   created?: boolean;
   updated?: boolean;
@@ -203,6 +205,7 @@ export function RecipeDetailsPage() {
         steps: currentRecipe.steps,
         notes: currentRecipe.notes,
         photoUrls: currentRecipe.photoUrls,
+        videoUrl: currentRecipe.videoUrl,
         ownerId: currentRecipe.ownerId,
         ownerRole: currentRecipe.ownerRole,
         status: 'approved',
@@ -244,6 +247,7 @@ export function RecipeDetailsPage() {
         steps: currentRecipe.steps,
         notes: currentRecipe.notes,
         photoUrls: currentRecipe.photoUrls,
+        videoUrl: currentRecipe.videoUrl,
         ownerId: currentRecipe.ownerId,
         ownerRole: currentRecipe.ownerRole,
         status: 'rejected',
@@ -291,6 +295,7 @@ export function RecipeDetailsPage() {
         steps: currentRecipe.steps,
         notes: currentRecipe.notes,
         photoUrls: currentRecipe.photoUrls,
+        videoUrl: currentRecipe.videoUrl,
         ownerId: currentRecipe.ownerId,
         ownerRole: currentRecipe.ownerRole,
         status: 'changes_requested',
@@ -340,6 +345,7 @@ export function RecipeDetailsPage() {
         steps: currentRecipe.steps,
         notes: currentRecipe.notes,
         photoUrls: currentRecipe.photoUrls,
+        videoUrl: currentRecipe.videoUrl,
         ownerId: currentRecipe.ownerId,
         ownerRole: currentRecipe.ownerRole,
         status: 'pending',
@@ -406,6 +412,7 @@ export function RecipeDetailsPage() {
         notes: currentRecipe.notes,
         photoUrls: currentRecipe.photoUrls,
         photoOriginalUrl: currentRecipe.photoOriginalUrl,
+        videoUrl: currentRecipe.videoUrl,
         status: 'approved',
         ownerId: userId,
         ownerRole: 'admin',
@@ -447,6 +454,7 @@ export function RecipeDetailsPage() {
         notes: currentRecipe.notes,
         photoUrls: currentRecipe.photoUrls,
         photoOriginalUrl: currentRecipe.photoOriginalUrl,
+        videoUrl: currentRecipe.videoUrl,
         ownerId: targetOwnerId,
         ownerRole: 'registered',
         status: currentRecipe.status,
@@ -849,6 +857,24 @@ export function RecipeDetailsPage() {
   const recipeSteps = currentRecipe.steps?.map((item) => item.trim()).filter(Boolean) ?? [];
   const recipeNotes = currentRecipe.notes?.trim() ?? '';
   const recipePhotos = currentRecipe.photoUrls?.map((url) => url.trim()).filter(Boolean) ?? [];
+  const recipePhotosForDisplay = recipePhotos.length > 0 ? recipePhotos : [DEFAULT_RECIPE_IMAGE_URL];
+  const recipeVideoUrl = currentRecipe.videoUrl?.trim() ?? '';
+  const hasRecipeVideo = (() => {
+    if (!recipeVideoUrl) {
+      return false;
+    }
+
+    if (recipeVideoUrl.startsWith('data:video/')) {
+      return true;
+    }
+
+    try {
+      const parsed = new URL(recipeVideoUrl);
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  })();
   const recipesListPath = `/recipes${location.search ? location.search : ''}`;
   const preparationTotalSteps = 4;
   const preparationProgressPercent = ((preparationStep - 1) / (preparationTotalSteps - 1)) * 100;
@@ -1239,9 +1265,9 @@ export function RecipeDetailsPage() {
       {currentRecipe.reviewComment && (
         <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">{currentRecipe.reviewComment}</p>
       )}
-      {recipePhotos.length > 0 && (
+      {recipePhotosForDisplay.length > 0 && (
         <div className="mt-5 grid gap-5">
-          {recipePhotos.map((photoUrl, index) => (
+          {recipePhotosForDisplay.map((photoUrl, index) => (
             <div key={`${currentRecipe.id}-photo-${index}`} className="relative mx-auto w-full max-w-2xl">
               <img
                 alt={`${localizedRecipe.title} ${index + 1}`}
@@ -1307,7 +1333,7 @@ export function RecipeDetailsPage() {
           ))}
         </div>
       )}
-      {recipePhotos.length === 0 && (
+      {recipePhotos.length === 0 && recipePhotosForDisplay.length === 0 && (
         <div className="mt-4">
           <div className="flex h-44 w-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
             {t('noPhotoPlaceholder')}
@@ -1366,6 +1392,19 @@ export function RecipeDetailsPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {hasRecipeVideo && (
+        <div className="mt-5 mx-auto w-full max-w-2xl">
+          <p className="mb-2 text-sm font-semibold text-slate-900">{t('videoItem')}</p>
+          <video
+            className="w-full rounded-xl border border-slate-200 bg-black shadow-sm"
+            controls
+            src={recipeVideoUrl}
+          >
+            {t('videoItem')}
+          </video>
         </div>
       )}
       <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-slate-500">

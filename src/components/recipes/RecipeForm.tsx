@@ -86,6 +86,7 @@ const CUISINE_ICONS: Record<RecipeCuisine, string> = {
 type FieldErrorMap = Partial<Record<string, TranslationKey>>;
 
 const PHOTO_EDITOR_PREVIEW_SIZE = 288;
+const DEFAULT_RECIPE_IMAGE_URL = '/hero-first.png';
 
 interface RecipeFormProps {
   onCreate: (input: CreateRecipeInput) => Promise<void>;
@@ -185,6 +186,7 @@ export function RecipeForm({
   const [photoOriginalUrl, setPhotoOriginalUrl] = useState(
     initialValues?.photoOriginalUrl?.trim() || initialValues?.photoUrls?.[0]?.trim() || '',
   );
+  const [videoUrl, setVideoUrl] = useState(initialValues?.videoUrl?.trim() ?? '');
   const [currentStep, setCurrentStep] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrorMap>({});
@@ -440,6 +442,20 @@ export function RecipeForm({
     return isValidHttpUrl(trimmed);
   }
 
+  function isValidVideoSource(value: string): boolean {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+      return false;
+    }
+
+    if (trimmed.startsWith('data:video/')) {
+      return true;
+    }
+
+    return isValidHttpUrl(trimmed);
+  }
+
   function loadImage(source: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const image = new Image();
@@ -663,6 +679,37 @@ export function RecipeForm({
     reader.readAsDataURL(file);
   }
 
+  function handleVideoFileSelect(file: File | null) {
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('video/')) {
+      setFieldErrors((current) => ({ ...current, video: 'validationVideoUrl' }));
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+
+      if (!result) {
+        setFieldErrors((current) => ({ ...current, video: 'validationVideoUploadFailed' }));
+        return;
+      }
+
+      setVideoUrl(result);
+      clearFieldError('video');
+    };
+
+    reader.onerror = () => {
+      setFieldErrors((current) => ({ ...current, video: 'validationVideoUploadFailed' }));
+    };
+
+    reader.readAsDataURL(file);
+  }
+
   useEffect(() => {
     if (!isPhotoEditorOpen || selectionSquare.size <= 0) {
       return;
@@ -767,7 +814,7 @@ export function RecipeForm({
 
     if (stepNumber === 5) {
       const firstPhoto = (photoUrls[0] ?? '').trim();
-      return Boolean(firstPhoto) && isValidPhotoSource(firstPhoto);
+      return !firstPhoto || isValidPhotoSource(firstPhoto);
     }
 
     return false;
@@ -1000,6 +1047,9 @@ export function RecipeForm({
     const normalizedSteps = steps.map((item) => item.trim()).filter(Boolean);
     const normalizedNotes = notes.trim();
     const normalizedPhotoUrls = photoUrls.map((item) => item.trim());
+    const primaryPhotoUrl = normalizedPhotoUrls[0] ?? '';
+    const fallbackOrProvidedPhotoUrl = primaryPhotoUrl || DEFAULT_RECIPE_IMAGE_URL;
+    const normalizedVideoUrl = videoUrl.trim();
 
     function validateStepOne(): FieldErrorMap {
       const nextErrors: FieldErrorMap = {};
@@ -1072,10 +1122,12 @@ export function RecipeForm({
     function validateStepFive(): FieldErrorMap {
       const nextErrors: FieldErrorMap = {};
       const firstPhoto = normalizedPhotoUrls[0] ?? '';
-      if (!firstPhoto) {
-        nextErrors['photo-0'] = 'validationPhotosRequired';
-      } else if (!isValidPhotoSource(firstPhoto)) {
+      if (firstPhoto && !isValidPhotoSource(firstPhoto)) {
         nextErrors['photo-0'] = 'validationPhotosUrl';
+      }
+
+      if (normalizedVideoUrl && !isValidVideoSource(normalizedVideoUrl)) {
+        nextErrors.video = 'validationVideoUrl';
       }
 
       return nextErrors;
@@ -1161,7 +1213,7 @@ export function RecipeForm({
     const finalCuisine = cuisines[0] as RecipeCuisine;
     const finalMainProducts = [...mainProducts];
     const finalMainProduct = finalMainProducts[0];
-    const photoOriginalCandidate = photoOriginalUrl.trim() || normalizedPhotoUrls[0] || '';
+    const photoOriginalCandidate = photoOriginalUrl.trim() || fallbackOrProvidedPhotoUrl;
 
     try {
       const normalizedPhotoOriginal = photoOriginalCandidate.startsWith('data:image/')
@@ -1183,8 +1235,9 @@ export function RecipeForm({
         ingredients: normalizedIngredients,
         steps: normalizedSteps,
         notes: normalizedNotes,
-        photoUrls: [normalizedPhotoUrls[0] ?? ''],
+        photoUrls: [fallbackOrProvidedPhotoUrl],
         photoOriginalUrl: normalizedPhotoOriginal || undefined,
+        videoUrl: normalizedVideoUrl || undefined,
       });
     } catch {
       setError(t(submitErrorKey));
@@ -1206,6 +1259,7 @@ export function RecipeForm({
       setNotes('');
       setPhotoUrls(['']);
       setPhotoOriginalUrl('');
+      setVideoUrl('');
       setEditorSourceUrl('');
       setEditorZoom(1);
       setEditorNaturalSize({ width: 0, height: 0 });
@@ -1741,12 +1795,12 @@ export function RecipeForm({
 
         {(!multiStep || currentStep === 5) && (
           <div className="sm:col-span-2">
-          {!multiStep && <h4 className="text-sm font-semibold text-slate-900">{t('photos')} {requiredMark}</h4>}
+          {!multiStep && <h4 className="text-sm font-semibold text-slate-900">{t('photos')}</h4>}
           <div className="mt-2 grid gap-2">
             {photoUrls.map((photoUrl, index) => (
               <label key={`photo-${index}`} className="flex flex-col gap-1 text-sm text-slate-700">
                 <span>
-                  {t('photoItem')} {index + 1} {index === 0 ? requiredMark : null}
+                  {t('photoItem')} {index + 1}
                 </span>
                 {photoUrl.trim().length > 0 && isValidPhotoSource(photoUrl) && (
                   <div className="mb-2 rounded-md border border-slate-200 bg-slate-50 p-3">
@@ -1815,7 +1869,6 @@ export function RecipeForm({
                     }}
                     placeholder={t('photoPlaceholder')}
                     type="text"
-                    required={index === 0}
                   />
                   {index === 0 && (
                     <label
@@ -1846,6 +1899,72 @@ export function RecipeForm({
                 )}
               </label>
             ))}
+          </div>
+
+          <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <label className="flex flex-col gap-1 text-sm text-slate-700">
+              <span>{t('videoItem')}</span>
+              {videoUrl.trim().length > 0 && isValidVideoSource(videoUrl) && (
+                <div className="mb-2 rounded-md border border-slate-200 bg-white p-2">
+                  <video
+                    className="w-full rounded-md"
+                    controls
+                    src={videoUrl}
+                  >
+                    {t('videoItem')}
+                  </video>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  className={`w-full rounded-md border px-3 py-2 ${inputBorderClass(Boolean(fieldErrors.video))}`}
+                  value={videoUrl}
+                  onChange={(event) => {
+                    setVideoUrl(event.target.value);
+                    clearFieldError('video');
+                  }}
+                  placeholder={t('videoPlaceholder')}
+                  type="text"
+                />
+                <label
+                  htmlFor="video-upload-input"
+                  className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700"
+                >
+                  {t('uploadVideo')}
+                </label>
+                {videoUrl.trim().length > 0 && (
+                  <button
+                    type="button"
+                    className="inline-flex shrink-0 items-center justify-center rounded-md border border-rose-300 px-3 py-2 text-sm text-rose-700"
+                    onClick={() => {
+                      setVideoUrl('');
+                      clearFieldError('video');
+                    }}
+                  >
+                    {t('removeVideo')}
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <input
+                  id="video-upload-input"
+                  className="hidden"
+                  type="file"
+                  accept="video/*"
+                  onChange={(event) => {
+                    handleVideoFileSelect(event.target.files?.[0] ?? null);
+                    event.currentTarget.value = '';
+                  }}
+                />
+                <span className="text-xs text-slate-500">{t('uploadVideoHint')}</span>
+              </div>
+
+              {fieldErrors.video && (
+                <span className="text-xs text-rose-700">{t(fieldErrors.video as TranslationKey)}</span>
+              )}
+            </label>
           </div>
         </div>
         )}

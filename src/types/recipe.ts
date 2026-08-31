@@ -31,6 +31,7 @@ export interface Recipe {
   notes?: string;
   photoUrls?: string[];
   photoOriginalUrl?: string;
+  videoUrl?: string;
   status: RecipeStatus;
   reviewComment?: string;
   ownerId: string;
@@ -54,6 +55,7 @@ export interface CreateRecipeInput {
   notes?: string;
   photoUrls?: string[];
   photoOriginalUrl?: string;
+  videoUrl?: string;
   status?: RecipeStatus;
   reviewComment?: string;
   ownerId?: string;
