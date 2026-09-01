@@ -35,7 +35,8 @@ const CUISINE_ICONS: Record<RecipeCuisine, string> = {
   international: '🌍',
 };
 
-const DEFAULT_RECIPE_IMAGE_URL = '/hero-first.png';
+const DEFAULT_RECIPE_IMAGE_URL = '/uploads/salata-ga-lyo.png';
+const LEGACY_RECIPE_IMAGE_URL = '/hero-first.png';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -108,7 +109,10 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
     localizedRecipe.description.length > 140
       ? `${localizedRecipe.description.slice(0, 137).trimEnd()}...`
       : localizedRecipe.description;
-  const recipeImage = recipe.photoUrls?.[0]?.trim() || DEFAULT_RECIPE_IMAGE_URL;
+  const primaryPhotoUrl = recipe.photoUrls?.[0]?.trim() ?? '';
+  const recipeImage = !primaryPhotoUrl || primaryPhotoUrl === LEGACY_RECIPE_IMAGE_URL
+    ? DEFAULT_RECIPE_IMAGE_URL
+    : primaryPhotoUrl;
   const complexityStars = complexityToStars(recipe.complexity);
   const canSeeStatus = role === 'admin' || recipe.ownerId === userId;
   const selectedDishTypes = useMemo(

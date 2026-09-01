@@ -86,7 +86,8 @@ const CUISINE_ICONS: Record<RecipeCuisine, string> = {
 type FieldErrorMap = Partial<Record<string, TranslationKey>>;
 
 const PHOTO_EDITOR_PREVIEW_SIZE = 288;
-const DEFAULT_RECIPE_IMAGE_URL = '/hero-first.png';
+const DEFAULT_RECIPE_IMAGE_URL = '/uploads/salata-ga-lyo.png';
+const LEGACY_RECIPE_IMAGE_URL = '/hero-first.png';
 
 interface RecipeFormProps {
   onCreate: (input: CreateRecipeInput) => Promise<void>;
@@ -1048,7 +1049,9 @@ export function RecipeForm({
     const normalizedNotes = notes.trim();
     const normalizedPhotoUrls = photoUrls.map((item) => item.trim());
     const primaryPhotoUrl = normalizedPhotoUrls[0] ?? '';
-    const fallbackOrProvidedPhotoUrl = primaryPhotoUrl || DEFAULT_RECIPE_IMAGE_URL;
+    const fallbackOrProvidedPhotoUrl = !primaryPhotoUrl || primaryPhotoUrl === LEGACY_RECIPE_IMAGE_URL
+      ? DEFAULT_RECIPE_IMAGE_URL
+      : primaryPhotoUrl;
     const normalizedVideoUrl = videoUrl.trim();
 
     function validateStepOne(): FieldErrorMap {
