@@ -89,6 +89,10 @@ const PHOTO_EDITOR_PREVIEW_SIZE = 288;
 const DEFAULT_RECIPE_IMAGE_URL = '/uploads/salata-ga-lyo.png';
 const LEGACY_RECIPE_IMAGE_URL = '/hero-first.png';
 
+function isLegacyFallbackPhotoUrl(url: string): boolean {
+  return url === LEGACY_RECIPE_IMAGE_URL || url.endsWith(LEGACY_RECIPE_IMAGE_URL);
+}
+
 interface RecipeFormProps {
   onCreate: (input: CreateRecipeInput) => Promise<void>;
   isSubmitting: boolean;
@@ -1049,7 +1053,7 @@ export function RecipeForm({
     const normalizedNotes = notes.trim();
     const normalizedPhotoUrls = photoUrls.map((item) => item.trim());
     const primaryPhotoUrl = normalizedPhotoUrls[0] ?? '';
-    const fallbackOrProvidedPhotoUrl = !primaryPhotoUrl || primaryPhotoUrl === LEGACY_RECIPE_IMAGE_URL
+    const fallbackOrProvidedPhotoUrl = !primaryPhotoUrl || isLegacyFallbackPhotoUrl(primaryPhotoUrl)
       ? DEFAULT_RECIPE_IMAGE_URL
       : primaryPhotoUrl;
     const normalizedVideoUrl = videoUrl.trim();

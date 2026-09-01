@@ -38,6 +38,10 @@ const CUISINE_ICONS: Record<RecipeCuisine, string> = {
 const DEFAULT_RECIPE_IMAGE_URL = '/uploads/salata-ga-lyo.png';
 const LEGACY_RECIPE_IMAGE_URL = '/hero-first.png';
 
+function isLegacyFallbackPhotoUrl(url: string): boolean {
+  return url === LEGACY_RECIPE_IMAGE_URL || url.endsWith(LEGACY_RECIPE_IMAGE_URL);
+}
+
 interface RecipeCardProps {
   recipe: Recipe;
   onDelete?: (id: string) => Promise<void>;
@@ -110,7 +114,7 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
       ? `${localizedRecipe.description.slice(0, 137).trimEnd()}...`
       : localizedRecipe.description;
   const primaryPhotoUrl = recipe.photoUrls?.[0]?.trim() ?? '';
-  const recipeImage = !primaryPhotoUrl || primaryPhotoUrl === LEGACY_RECIPE_IMAGE_URL
+  const recipeImage = !primaryPhotoUrl || isLegacyFallbackPhotoUrl(primaryPhotoUrl)
     ? DEFAULT_RECIPE_IMAGE_URL
     : primaryPhotoUrl;
   const complexityStars = complexityToStars(recipe.complexity);
