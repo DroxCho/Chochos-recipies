@@ -35,7 +35,7 @@ const CUISINE_ICONS: Record<RecipeCuisine, string> = {
   international: '🌍',
 };
 
-const DEFAULT_RECIPE_IMAGE_URL = '/uploads/salata-ga-lyo.png';
+const DEFAULT_RECIPE_IMAGE_URL = '/hero-first.png';
 const LEGACY_RECIPE_IMAGE_URL = '/hero-first.png';
 
 function isLegacyFallbackPhotoUrl(url: string): boolean {

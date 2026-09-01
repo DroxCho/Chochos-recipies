@@ -86,7 +86,7 @@ const CUISINE_ICONS: Record<RecipeCuisine, string> = {
 type FieldErrorMap = Partial<Record<string, TranslationKey>>;
 
 const PHOTO_EDITOR_PREVIEW_SIZE = 288;
-const DEFAULT_RECIPE_IMAGE_URL = '/uploads/salata-ga-lyo.png';
+const DEFAULT_RECIPE_IMAGE_URL = '/hero-first.png';
 const LEGACY_RECIPE_IMAGE_URL = '/hero-first.png';
 
 function isLegacyFallbackPhotoUrl(url: string): boolean {

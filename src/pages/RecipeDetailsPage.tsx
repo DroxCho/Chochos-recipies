@@ -41,12 +41,8 @@ const CUISINE_ICONS: Record<RecipeCuisine, string> = {
   international: '🌍',
 };
 
-const DEFAULT_RECIPE_IMAGE_URL = '/uploads/salata-ga-lyo.png';
+const DEFAULT_RECIPE_IMAGE_URL = '/hero-first.png';
 const LEGACY_RECIPE_IMAGE_URL = '/hero-first.png';
-
-function isLegacyFallbackPhotoUrl(url: string): boolean {
-  return url === LEGACY_RECIPE_IMAGE_URL || url.endsWith(LEGACY_RECIPE_IMAGE_URL);
-}
 
 interface RecipeDetailsLocationState {
   created?: boolean;
@@ -864,7 +860,7 @@ export function RecipeDetailsPage() {
   const recipePhotos = (currentRecipe.photoUrls ?? [])
     .map((url) => url.trim())
     .filter(Boolean)
-    .map((url) => (isLegacyFallbackPhotoUrl(url) ? DEFAULT_RECIPE_IMAGE_URL : url));
+    .map((url) => (url === LEGACY_RECIPE_IMAGE_URL ? DEFAULT_RECIPE_IMAGE_URL : url));
   const recipePhotosForDisplay = recipePhotos.length > 0 ? recipePhotos : [DEFAULT_RECIPE_IMAGE_URL];
   const recipeVideoUrl = currentRecipe.videoUrl?.trim() ?? '';
   const hasRecipeVideo = (() => {
