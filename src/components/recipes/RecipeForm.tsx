@@ -86,7 +86,7 @@ const CUISINE_ICONS: Record<RecipeCuisine, string> = {
 type FieldErrorMap = Partial<Record<string, TranslationKey>>;
 
 const PHOTO_EDITOR_PREVIEW_SIZE = 288;
-const DEFAULT_RECIPE_IMAGE_URL = '/hero-first.png';
+const DEFAULT_RECIPE_IMAGE_URL = '/logo-chocos-recipes.png';
 const LEGACY_RECIPE_IMAGE_URL = '/hero-first.png';
 
 function isLegacyFallbackPhotoUrl(url: string): boolean {

@@ -11,7 +11,7 @@ const REFERENCE_HERO_SLIDES = [
     title: 'Домашно и вкусно',
     eyebrow: 'добре дошли на софрата',
     description: 'РЕЦЕПТИ ОТ СЕМЕЙНАТА КУХНЯ',
-    imageUrl: '/hero-banitsa.jpg',
+    imageUrl: '/logo-chocos-recipes.png',
   },
   {
     id: 'hero-step-by-step',

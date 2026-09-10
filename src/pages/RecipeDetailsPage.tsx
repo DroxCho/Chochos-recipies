@@ -41,7 +41,7 @@ const CUISINE_ICONS: Record<RecipeCuisine, string> = {
   international: '🌍',
 };
 
-const DEFAULT_RECIPE_IMAGE_URL = '/hero-first.png';
+const DEFAULT_RECIPE_IMAGE_URL = '/logo-chocos-recipes.png';
 const LEGACY_RECIPE_IMAGE_URL = '/hero-first.png';
 
 interface RecipeDetailsLocationState {
