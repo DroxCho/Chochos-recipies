@@ -147,8 +147,8 @@ export function Header() {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive
-      ? 'text-sm font-medium text-slate-900'
-      : 'text-sm font-medium text-slate-500 transition-colors hover:text-slate-900';
+      ? 'text-lg font-medium text-slate-900'
+      : 'text-lg font-medium text-slate-500 transition-colors hover:text-slate-900';
 
   async function handleLogout() {
     const supabase = getSupabaseClient();
@@ -173,7 +173,7 @@ export function Header() {
           />
         </NavLink>
 
-        <nav className="order-3 flex w-full items-center gap-4 overflow-x-auto pb-1 text-sm sm:order-2 sm:w-auto sm:overflow-visible sm:pb-0" aria-label={t('navAria')}>
+        <nav className="order-3 flex w-full items-center gap-4 overflow-x-auto pb-1 text-lg sm:order-2 sm:w-auto sm:overflow-visible sm:pb-0" aria-label={t('navAria')}>
           <NavLink to="/" end className={linkClass}>
             {t('navHome')}
           </NavLink>
