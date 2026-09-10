@@ -117,6 +117,7 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
   const recipeImage = !primaryPhotoUrl || isLegacyFallbackPhotoUrl(primaryPhotoUrl)
     ? DEFAULT_RECIPE_IMAGE_URL
     : primaryPhotoUrl;
+  const isLogoFallback = recipeImage === DEFAULT_RECIPE_IMAGE_URL;
   const complexityStars = complexityToStars(recipe.complexity);
   const canSeeStatus = role === 'admin' || recipe.ownerId === userId;
   const selectedDishTypes = useMemo(
@@ -334,7 +335,9 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
       <div className="relative mb-3">
         <img
           alt={localizedRecipe.title}
-          className="aspect-square w-full rounded-lg object-cover transition-transform duration-200 ease-out group-hover:scale-[1.01]"
+          className={`aspect-square w-full rounded-lg transition-transform duration-200 ease-out group-hover:scale-[1.01] ${
+            isLogoFallback ? 'object-contain' : 'object-cover'
+          }`}
           loading="lazy"
           src={recipeImage}
         />

@@ -1275,7 +1275,9 @@ export function RecipeDetailsPage() {
             <div key={`${currentRecipe.id}-photo-${index}`} className="relative mx-auto w-full max-w-2xl">
               <img
                 alt={`${localizedRecipe.title} ${index + 1}`}
-                className="aspect-square w-full rounded-xl border border-slate-200 object-cover shadow-sm"
+                className={`aspect-square w-full rounded-xl border border-slate-200 shadow-sm ${
+                  photoUrl === DEFAULT_RECIPE_IMAGE_URL ? 'object-contain' : 'object-cover'
+                }`}
                 loading="lazy"
                 src={photoUrl}
               />

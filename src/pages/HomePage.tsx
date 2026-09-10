@@ -90,6 +90,7 @@ export function HomePage() {
   }, [heroSlides.length]);
 
   const activeSlide = heroSlides[activeSlideIndex] ?? null;
+  const isLogoSlide = activeSlide?.imageUrl === '/logo-chocos-recipes.png';
   function goToPreviousSlide() {
     if (heroSlides.length <= 1) {
       return;
@@ -113,7 +114,9 @@ export function HomePage() {
           {activeSlide.imageUrl ? (
             <img
               alt=""
-              className="h-[320px] w-full object-cover opacity-35 sm:h-[360px]"
+              className={`h-[320px] w-full opacity-35 sm:h-[360px] ${
+                isLogoSlide ? 'object-contain' : 'object-cover'
+              }`}
               loading="lazy"
               src={activeSlide.imageUrl}
             />
