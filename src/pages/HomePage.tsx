@@ -2,11 +2,39 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { RecipeList } from '../components/recipes/RecipeList';
 import { useRecipes } from '../hooks/useRecipes';
-import { getLocalizedRecipe } from '../i18n/recipeContent';
 import { useLanguage } from '../i18n/useLanguage';
 import type { Recipe } from '../types/recipe';
 
-const FIRST_HERO_IMAGE_URL = '/hero-first.png';
+const REFERENCE_HERO_SLIDES = [
+  {
+    id: 'hero-home',
+    title: 'Домашно и вкусно',
+    eyebrow: 'добре дошли на софрата',
+    description: 'РЕЦЕПТИ ОТ СЕМЕЙНАТА КУХНЯ',
+    imageUrl: '/hero-banitsa.jpg',
+  },
+  {
+    id: 'hero-step-by-step',
+    title: 'Стъпка по стъпка',
+    eyebrow: 'добре дошли на софрата',
+    description: 'КАКТО ГО ПРАВЕШЕ БАБА',
+    imageUrl: '/hero-salad.jpg',
+  },
+  {
+    id: 'hero-share',
+    title: 'Сподели своята',
+    eyebrow: 'добре дошли на софрата',
+    description: 'РЕЦЕПТА С НАС',
+    imageUrl: '/hero-banitsa.jpg',
+  },
+  {
+    id: 'hero-kitchen',
+    title: 'Домашно и вкусно',
+    eyebrow: 'добре дошли на софрата',
+    description: 'РЕЦЕПТИ ОТ СЕМЕЙНАТА КУХНЯ',
+    imageUrl: '/hero-salad.jpg',
+  },
+] as const;
 
 function extractCreatedAtFromId(recipeId: string): number {
   const match = recipeId.match(/-(\d{10,})$/);
@@ -29,17 +57,8 @@ function sortByNewest(recipes: Recipe[]): Recipe[] {
   });
 }
 
-function trimDescription(value: string): string {
-  const normalized = value.trim();
-  if (normalized.length <= 130) {
-    return normalized;
-  }
-
-  return `${normalized.slice(0, 127).trimEnd()}...`;
-}
-
 export function HomePage() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { recipes, isLoading, error } = useRecipes();
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
 
@@ -48,30 +67,8 @@ export function HomePage() {
   }, [recipes]);
 
   const heroSlides = useMemo(
-    () => {
-      const recipeSlides = latestRecipes.map((recipe) => {
-        const localized = getLocalizedRecipe(recipe, language);
-        return {
-          id: recipe.id,
-          linkTo: `/recipes/${recipe.id}`,
-          title: localized.title,
-          description: trimDescription(localized.description),
-          imageUrl: recipe.photoUrls?.find((item) => item.trim())?.trim() ?? '',
-        };
-      });
-
-      return [
-        {
-          id: 'hero-static-first',
-          linkTo: '/recipes',
-          title: t('homeLatestRecipesTitle'),
-          description: t('homeLatestRecipesSubtitle'),
-          imageUrl: FIRST_HERO_IMAGE_URL,
-        },
-        ...recipeSlides,
-      ];
-    },
-    [language, latestRecipes, t],
+    () => REFERENCE_HERO_SLIDES.map((slide) => ({ ...slide, linkTo: '/recipes' })),
+    [],
   );
 
   useEffect(() => {
@@ -93,8 +90,6 @@ export function HomePage() {
   }, [heroSlides.length]);
 
   const activeSlide = heroSlides[activeSlideIndex] ?? null;
-  const isStaticFirstSlide = activeSlide?.id === 'hero-static-first';
-
   function goToPreviousSlide() {
     if (heroSlides.length <= 1) {
       return;
@@ -117,10 +112,8 @@ export function HomePage() {
         <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 shadow-sm">
           {activeSlide.imageUrl ? (
             <img
-              alt={activeSlide.title}
-              className={`h-[320px] w-full object-cover sm:h-[360px] ${
-                isStaticFirstSlide ? 'scale-110 sm:scale-125' : ''
-              }`}
+              alt=""
+              className="h-[320px] w-full object-cover opacity-35 sm:h-[360px]"
               loading="lazy"
               src={activeSlide.imageUrl}
             />
@@ -130,23 +123,18 @@ export function HomePage() {
             </div>
           )}
 
-          {!isStaticFirstSlide && (
-            <>
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
-
-              <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-slate-200/90">{t('homeLatestRecipesTitle')}</p>
-                <h3 className="mt-1 text-xl font-semibold text-white sm:text-2xl">{activeSlide.title}</h3>
-                <p className="mt-2 max-w-2xl text-sm text-slate-100/95">{activeSlide.description}</p>
-                <Link
-                  className="mt-3 inline-flex rounded-md border border-white/30 bg-white/15 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/25"
-                  to={activeSlide.linkTo}
-                >
-                  {t('viewDetails')}
-                </Link>
-              </div>
-            </>
-          )}
+          <div className="pointer-events-none absolute inset-0 bg-black/45" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-16 text-center text-white">
+            <p className="text-lg italic">{activeSlide.eyebrow}</p>
+            <h3 className="text-4xl font-semibold sm:text-5xl">{activeSlide.title}</h3>
+            <p className="text-xs tracking-[0.3em] text-white/90">{activeSlide.description}</p>
+            <Link
+              className="mt-2 border border-white/80 bg-white/15 px-5 py-2 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/25"
+              to={activeSlide.linkTo}
+            >
+              Разгледай рецептите
+            </Link>
+          </div>
 
           {heroSlides.length > 1 && (
             <>
