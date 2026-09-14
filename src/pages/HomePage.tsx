@@ -139,7 +139,6 @@ export function HomePage() {
             </div>
           )}
 
-          <div className="pointer-events-none absolute inset-0 bg-black/20" />
           {(activeSlide.eyebrow || activeSlide.title || activeSlide.description) && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-16 text-center text-[var(--rustic-bg)]">
               <p className="text-xl italic sm:text-2xl">{activeSlide.eyebrow}</p>
