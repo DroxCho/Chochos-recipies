@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { RecipeList } from '../components/recipes/RecipeList';
+import { canParticipate } from '../auth/roles';
+import { useUserRole } from '../auth/useUserRole';
 import { useRecipes } from '../hooks/useRecipes';
 import { getLocalizedRecipe } from '../i18n/recipeContent';
 import { useLanguage } from '../i18n/useLanguage';
 import { getMainProductMeta } from '../lib/mainProduct';
+import { hasUserFavoritedRecipe } from '../lib/recipeFavorites';
+import { hasUserTriedRecipe } from '../lib/recipeTried';
 import type { RecipeCuisine, RecipeDishType } from '../types/recipe';
 
 const DISH_TYPE_VALUES: RecipeDishType[] = ['main', 'dessert', 'soup', 'salad', 'appetizer', 'breakfast'];
@@ -145,6 +149,7 @@ function recipeMatchesMainProduct(recipeText: string, mainProduct: MainProductVa
 export function RecipesPage() {
   const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { role, userId } = useUserRole();
   const { recipes, isLoading, deletingRecipeId, error, deleteExistingRecipe } = useRecipes();
   const pageSize = 12;
   const [currentPage, setCurrentPage] = useState(1);
@@ -158,6 +163,8 @@ export function RecipesPage() {
   const selectedCuisines = useMemo(() => parseCuisinesFilter(cuisinesParam), [cuisinesParam]);
   const mainProductsParam = searchParams.get('mainProducts');
   const selectedMainProducts = useMemo(() => parseMainProductsFilter(mainProductsParam), [mainProductsParam]);
+  const showFavoritesOnly = searchParams.get('favorites') === '1';
+  const showTriedOnly = searchParams.get('tried') === '1';
   const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
   const dishTypeMenuRef = useRef<HTMLDivElement | null>(null);
   const cuisineMenuRef = useRef<HTMLDivElement | null>(null);
@@ -203,6 +210,14 @@ export function RecipesPage() {
         ? [recipe.cuisine]
         : [];
 
+      if (showFavoritesOnly && (!canParticipate(role) || !hasUserFavoritedRecipe(userId, recipe.id))) {
+        return false;
+      }
+
+      if (showTriedOnly && (!canParticipate(role) || !hasUserTriedRecipe(userId, recipe.id))) {
+        return false;
+      }
+
       if (selectedDishTypes.length > 0 && !recipeDishTypes.some((item) => selectedDishTypes.includes(item))) {
         return false;
       }
@@ -236,13 +251,13 @@ export function RecipesPage() {
       const haystack = `${localizedRecipe.title} ${localizedRecipe.description}`.toLowerCase();
       return haystack.includes(query);
     });
-  }, [language, recipes, searchQuery, selectedCuisines, selectedDishTypes, selectedMainProducts]);
+  }, [language, recipes, role, searchQuery, selectedCuisines, selectedDishTypes, selectedMainProducts, showFavoritesOnly, showTriedOnly, userId]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRecipes.length / pageSize));
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCuisines, selectedDishTypes, selectedMainProducts]);
+  }, [searchQuery, selectedCuisines, selectedDishTypes, selectedMainProducts, showFavoritesOnly, showTriedOnly]);
 
   useEffect(() => {
     if (!isDishTypeMenuOpen && !isCuisineMenuOpen && !isMainProductMenuOpen) {

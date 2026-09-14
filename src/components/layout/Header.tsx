@@ -62,11 +62,22 @@ export function Header() {
   const authMenuRef = useRef<HTMLDivElement | null>(null);
   const activeUserId = userId ?? sessionUserId;
   const isSignedIn = Boolean(sessionUserId);
-  const isTriedFilterActive = location.pathname === '/tried';
-  const isFavoritesFilterActive = location.pathname === '/favorites';
+  const headerFilterParams = new URLSearchParams(location.search);
+  const isRecipesFilterView = location.pathname === '/recipes';
+  const isTriedFilterActive = isRecipesFilterView && headerFilterParams.get('tried') === '1';
+  const isFavoritesFilterActive = isRecipesFilterView && headerFilterParams.get('favorites') === '1';
 
-  function toggleHeaderFilter(path: '/tried' | '/favorites', isActive: boolean) {
-    navigate(isActive ? '/recipes' : path);
+  function toggleHeaderFilter(filter: 'tried' | 'favorites', isActive: boolean) {
+    const nextParams = new URLSearchParams(location.search);
+
+    if (isActive) {
+      nextParams.delete(filter);
+    } else {
+      nextParams.set(filter, '1');
+    }
+
+    const query = nextParams.toString();
+    navigate(query ? `/recipes?${query}` : '/recipes');
   }
 
   useEffect(() => {
@@ -204,7 +215,7 @@ export function Header() {
                 ? 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 text-emerald-800'
                 : 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-emerald-700 transition-colors hover:border-emerald-300 hover:bg-emerald-50'}
               data-tooltip={t('navTried')}
-              onClick={() => toggleHeaderFilter('/tried', isTriedFilterActive)}
+              onClick={() => toggleHeaderFilter('tried', isTriedFilterActive)}
               type="button"
             >
               <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -220,7 +231,7 @@ export function Header() {
                 ? 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-base text-rose-600'
                 : 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-base text-slate-400 transition-colors hover:border-rose-200 hover:text-rose-600'}
               data-tooltip={t('navFavorites')}
-              onClick={() => toggleHeaderFilter('/favorites', isFavoritesFilterActive)}
+              onClick={() => toggleHeaderFilter('favorites', isFavoritesFilterActive)}
               type="button"
             >
               {'\u2665'}
