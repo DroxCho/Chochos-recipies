@@ -114,7 +114,7 @@ export function HomePage() {
           {activeSlide.imageUrl ? (
             <img
               alt=""
-              className={`h-[320px] w-full opacity-35 sm:h-[360px] ${
+              className={`h-[320px] w-full opacity-75 sm:h-[360px] ${
                 isLogoSlide ? 'object-contain' : 'object-cover'
               }`}
               loading="lazy"
@@ -126,7 +126,7 @@ export function HomePage() {
             </div>
           )}
 
-          <div className="pointer-events-none absolute inset-0 bg-black/45" />
+          <div className="pointer-events-none absolute inset-0 bg-black/20" />
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-16 text-center text-white">
             <p className="text-lg italic">{activeSlide.eyebrow}</p>
             <h3 className="text-4xl font-semibold sm:text-5xl">{activeSlide.title}</h3>
