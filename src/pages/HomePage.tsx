@@ -18,7 +18,7 @@ const REFERENCE_HERO_SLIDES = [
     title: 'Домашно и вкусно',
     eyebrow: 'добре дошли на софрата',
     description: 'РЕЦЕПТИ ОТ СЕМЕЙНАТА КУХНЯ',
-    imageUrl: '/logo-chocos-recipes.png',
+    imageUrl: '',
   },
   {
     id: 'hero-step-by-step',
@@ -131,6 +131,8 @@ export function HomePage() {
               loading="lazy"
               src={activeSlide.imageUrl}
             />
+          ) : activeSlide.id === 'hero-home' ? (
+            <div className="h-[320px] w-full bg-slate-900 sm:h-[360px]" />
           ) : (
             <div className="flex h-[320px] w-full items-center justify-center bg-slate-800 text-sm text-slate-200 sm:h-[360px]">
               {t('noPhotoPlaceholder')}
