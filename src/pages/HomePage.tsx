@@ -7,6 +7,13 @@ import type { Recipe } from '../types/recipe';
 
 const REFERENCE_HERO_SLIDES = [
   {
+    id: 'hero-logo',
+    title: '',
+    eyebrow: '',
+    description: '',
+    imageUrl: '/logo-chocos-recipes.png',
+  },
+  {
     id: 'hero-home',
     title: 'Домашно и вкусно',
     eyebrow: 'добре дошли на софрата',
@@ -131,17 +138,19 @@ export function HomePage() {
           )}
 
           <div className="pointer-events-none absolute inset-0 bg-black/20" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-16 text-center text-[var(--rustic-bg)]">
-            <p className="text-xl italic sm:text-2xl">{activeSlide.eyebrow}</p>
-            <h3 className="text-5xl font-semibold sm:text-6xl">{activeSlide.title}</h3>
-            <p className="text-sm tracking-[0.3em] sm:text-base">{activeSlide.description}</p>
-            <Link
-              className="mt-2 border border-current bg-black/10 px-6 py-3 text-base font-medium backdrop-blur-sm transition-colors hover:bg-black/20"
-              to={activeSlide.linkTo}
-            >
-              Разгледай рецептите
-            </Link>
-          </div>
+          {(activeSlide.eyebrow || activeSlide.title || activeSlide.description) && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-16 text-center text-[var(--rustic-bg)]">
+              <p className="text-xl italic sm:text-2xl">{activeSlide.eyebrow}</p>
+              <h3 className="text-5xl font-semibold sm:text-6xl">{activeSlide.title}</h3>
+              <p className="text-sm tracking-[0.3em] sm:text-base">{activeSlide.description}</p>
+              <Link
+                className="mt-2 border border-current bg-black/10 px-6 py-3 text-base font-medium backdrop-blur-sm transition-colors hover:bg-black/20"
+                to={activeSlide.linkTo}
+              >
+                Разгледай рецептите
+              </Link>
+            </div>
+          )}
 
           {heroSlides.length > 1 && (
             <>
