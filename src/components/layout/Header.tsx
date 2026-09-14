@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { canCreateRecipe } from '../../auth/roles';
 import { useUserRole } from '../../auth/useUserRole';
 import { useLanguage } from '../../i18n/useLanguage';
@@ -51,6 +51,8 @@ function readUserProfilePhoto(userId: string | null | undefined): string {
 export function Header() {
   const { t } = useLanguage();
   const { role, setRole, userId } = useUserRole();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
   const [isAuthMenuOpen, setIsAuthMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -60,6 +62,12 @@ export function Header() {
   const authMenuRef = useRef<HTMLDivElement | null>(null);
   const activeUserId = userId ?? sessionUserId;
   const isSignedIn = Boolean(sessionUserId);
+  const isTriedFilterActive = location.pathname === '/tried';
+  const isFavoritesFilterActive = location.pathname === '/favorites';
+
+  function toggleHeaderFilter(path: '/tried' | '/favorites', isActive: boolean) {
+    navigate(isActive ? '/recipes' : path);
+  }
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -185,41 +193,38 @@ export function Header() {
               {t('navAddRecipe')}
             </NavLink>
           )}
-          <div className="ml-auto shrink-0">
-            <LanguageToggle />
-          </div>
         </nav>
 
         <div className="order-2 ml-auto flex max-w-full flex-wrap items-center justify-end gap-2 sm:order-3 sm:ml-0 sm:flex-nowrap sm:gap-4">
           {isSignedIn && (
-            <NavLink
+            <button
               aria-label={t('navTried')}
-              className={({ isActive }) =>
-                isActive
-                  ? 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 text-emerald-800'
-                  : 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-emerald-700 transition-colors hover:border-emerald-300 hover:bg-emerald-50'
-              }
-              to="/tried"
+              aria-pressed={isTriedFilterActive}
+              className={isTriedFilterActive
+                ? 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 text-emerald-800'
+                : 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-emerald-700 transition-colors hover:border-emerald-300 hover:bg-emerald-50'}
               data-tooltip={t('navTried')}
+              onClick={() => toggleHeaderFilter('/tried', isTriedFilterActive)}
+              type="button"
             >
               <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m5 12 4 4L19 6" />
               </svg>
-            </NavLink>
+            </button>
           )}
           {isSignedIn && (
-            <NavLink
+            <button
               aria-label={t('navFavorites')}
-              className={({ isActive }) =>
-                isActive
-                  ? 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-base text-rose-600'
-                  : 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-base text-slate-400 transition-colors hover:border-rose-200 hover:text-rose-600'
-              }
-              to="/favorites"
+              aria-pressed={isFavoritesFilterActive}
+              className={isFavoritesFilterActive
+                ? 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-base text-rose-600'
+                : 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-base text-slate-400 transition-colors hover:border-rose-200 hover:text-rose-600'}
               data-tooltip={t('navFavorites')}
+              onClick={() => toggleHeaderFilter('/favorites', isFavoritesFilterActive)}
+              type="button"
             >
               {'\u2665'}
-            </NavLink>
+            </button>
           )}
           <div className="relative" ref={authMenuRef}>
             <button
@@ -316,6 +321,9 @@ export function Header() {
           ) : (
             <UserRoleToggle />
           )}
+          <div className="shrink-0">
+            <LanguageToggle />
+          </div>
         </div>
       </div>
       <AuthModal
