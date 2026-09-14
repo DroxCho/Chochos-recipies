@@ -212,8 +212,8 @@ export function Header() {
               aria-label={t('navTried')}
               aria-pressed={isTriedFilterActive}
               className={isTriedFilterActive
-                ? 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 text-emerald-800'
-                : 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-emerald-700 transition-colors hover:border-emerald-300 hover:bg-emerald-50'}
+                ? 'instant-tooltip inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 text-emerald-800'
+                : 'instant-tooltip inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-emerald-700 transition-colors hover:border-emerald-300 hover:bg-emerald-50'}
               data-tooltip={t('navTried')}
               onClick={() => toggleHeaderFilter('tried', isTriedFilterActive)}
               type="button"
@@ -228,8 +228,8 @@ export function Header() {
               aria-label={t('navFavorites')}
               aria-pressed={isFavoritesFilterActive}
               className={isFavoritesFilterActive
-                ? 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-base text-rose-600'
-                : 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-base text-slate-400 transition-colors hover:border-rose-200 hover:text-rose-600'}
+                ? 'instant-tooltip inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-base text-rose-600'
+                : 'instant-tooltip inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-base text-slate-400 transition-colors hover:border-rose-200 hover:text-rose-600'}
               data-tooltip={t('navFavorites')}
               onClick={() => toggleHeaderFilter('favorites', isFavoritesFilterActive)}
               type="button"
