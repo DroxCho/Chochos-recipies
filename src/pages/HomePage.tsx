@@ -98,6 +98,7 @@ export function HomePage() {
 
   const activeSlide = heroSlides[activeSlideIndex] ?? null;
   const isLogoSlide = activeSlide?.imageUrl === '/logo-chocos-recipes.png';
+  const isHeaderStyleSlide = isLogoSlide || activeSlide?.id === 'hero-home';
   function goToPreviousSlide() {
     if (heroSlides.length <= 1) {
       return;
@@ -118,23 +119,23 @@ export function HomePage() {
     <section aria-label="home-page" className="min-h-[320px] space-y-4">
       {!isLoading && activeSlide && (
         <div
-          className={`relative overflow-hidden rounded-2xl border border-slate-200 shadow-sm ${
-            isLogoSlide ? 'bg-[linear-gradient(180deg,#fffaf3_0%,#f6e9d7_100%)]' : 'bg-slate-900'
+          className={`relative h-[320px] overflow-hidden rounded-2xl border border-slate-200 shadow-sm sm:h-[360px] ${
+            isHeaderStyleSlide ? 'bg-[linear-gradient(180deg,#fffaf3_0%,#f6e9d7_100%)]' : 'bg-slate-900'
           }`}
         >
           {activeSlide.imageUrl ? (
             <img
               alt=""
-              className={`h-[320px] w-full opacity-75 sm:h-[360px] ${
+              className={`absolute inset-0 block h-full w-full opacity-75 ${
                 isLogoSlide ? 'object-contain' : 'object-cover'
               }`}
               loading="lazy"
               src={activeSlide.imageUrl}
             />
           ) : activeSlide.id === 'hero-home' ? (
-            <div className="h-[320px] w-full bg-slate-900 sm:h-[360px]" />
+            <div className="absolute inset-0" />
           ) : (
-            <div className="flex h-[320px] w-full items-center justify-center bg-slate-800 text-sm text-slate-200 sm:h-[360px]">
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-800 text-sm text-slate-200">
               {t('noPhotoPlaceholder')}
             </div>
           )}
