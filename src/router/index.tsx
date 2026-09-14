@@ -40,6 +40,10 @@ const FavoritesPage = lazyWithRetry(
   () => import('../pages/FavoritesPage').then((module) => ({ default: module.FavoritesPage })),
   'lazy-retry-favorites-page',
 );
+const TriedRecipesPage = lazyWithRetry(
+  () => import('../pages/TriedRecipesPage').then((module) => ({ default: module.TriedRecipesPage })),
+  'lazy-retry-tried-recipes-page',
+);
 const AddRecipePage = lazyWithRetry(
   () => import('../pages/AddRecipePage').then((module) => ({ default: module.AddRecipePage })),
   'lazy-retry-add-recipe-page',
@@ -87,6 +91,10 @@ export const router = createBrowserRouter([
       {
         path: 'favorites',
         element: withSuspense(<FavoritesPage />),
+      },
+      {
+        path: 'tried',
+        element: withSuspense(<TriedRecipesPage />),
       },
       {
         path: 'recipes/new',

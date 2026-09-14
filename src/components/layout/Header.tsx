@@ -193,6 +193,22 @@ export function Header() {
         <div className="order-2 ml-auto flex max-w-full flex-wrap items-center justify-end gap-2 sm:order-3 sm:ml-0 sm:flex-nowrap sm:gap-4">
           {isSignedIn && (
             <NavLink
+              aria-label={t('navTried')}
+              className={({ isActive }) =>
+                isActive
+                  ? 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 text-emerald-800'
+                  : 'instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-emerald-700 transition-colors hover:border-emerald-300 hover:bg-emerald-50'
+              }
+              to="/tried"
+              data-tooltip={t('navTried')}
+            >
+              <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m5 12 4 4L19 6" />
+              </svg>
+            </NavLink>
+          )}
+          {isSignedIn && (
+            <NavLink
               aria-label={t('navFavorites')}
               className={({ isActive }) =>
                 isActive
