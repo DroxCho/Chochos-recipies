@@ -1274,7 +1274,7 @@ export function RecipeDetailsPage() {
           {recipePhotosForDisplay.map((photoUrl, index) => (
             <div
               key={`${currentRecipe.id}-photo-${index}`}
-              className={`relative mx-auto w-full max-w-2xl ${photoUrl === DEFAULT_RECIPE_IMAGE_URL ? 'px-5' : ''}`}
+              className="relative mx-auto w-full max-w-2xl px-2.5"
             >
               <img
                 alt={`${localizedRecipe.title} ${index + 1}`}
