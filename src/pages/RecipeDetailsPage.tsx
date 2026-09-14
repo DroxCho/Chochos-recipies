@@ -1284,7 +1284,7 @@ export function RecipeDetailsPage() {
                 loading="lazy"
                 src={photoUrl}
               />
-              {(mainProductMetas.length > 0 || canUseSocialRating || (isRecipeTried && canUseTried)) && (
+              {(mainProductMetas.length > 0 || canUseSocialRating || canUseTried) && (
                 <div className="mt-2 flex items-center justify-between gap-2">
                   {mainProductMetas.length > 0 && (
                     <div className="flex flex-wrap items-center gap-1">
@@ -1302,14 +1302,20 @@ export function RecipeDetailsPage() {
                     </div>
                   )}
                   <div className="ml-auto flex items-center gap-2">
-                  {isRecipeTried && canUseTried && (
-                    <span
+                  {canUseTried && (
+                    <button
                       aria-label={t('triedRecipe')}
-                      className="instant-tooltip inline-flex h-12 w-12 items-center justify-center rounded-full border-2 border-emerald-700 bg-emerald-600 text-2xl font-black text-white shadow-md"
+                      className={`instant-tooltip inline-flex h-12 w-12 items-center justify-center rounded-full border-2 text-2xl font-black shadow-md transition-colors ${
+                        isRecipeTried
+                          ? 'border-emerald-700 bg-emerald-600 text-white'
+                          : 'border-emerald-600 bg-white text-emerald-700 hover:bg-emerald-50'
+                      }`}
                       data-tooltip={t('triedRecipe')}
+                      onClick={handleToggleRecipeTried}
+                      type="button"
                     >
-                      ✓
-                    </span>
+                      {isRecipeTried ? '✓' : ''}
+                    </button>
                   )}
                   <button
                     aria-label={t('favoriteRecipe')}
@@ -1347,7 +1353,7 @@ export function RecipeDetailsPage() {
           <div className="flex h-44 w-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
             {t('noPhotoPlaceholder')}
           </div>
-          {(mainProductMetas.length > 0 || canUseSocialRating || (isRecipeTried && canUseTried)) && (
+          {(mainProductMetas.length > 0 || canUseSocialRating || canUseTried) && (
             <div className="mt-2 flex items-center justify-between gap-2">
               {mainProductMetas.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1">
@@ -1365,14 +1371,20 @@ export function RecipeDetailsPage() {
                 </div>
               )}
               <div className="ml-auto flex items-center gap-2">
-              {isRecipeTried && canUseTried && (
-                <span
+              {canUseTried && (
+                <button
                   aria-label={t('triedRecipe')}
-                  className="instant-tooltip inline-flex h-10 w-10 items-center justify-center rounded-full border-2 border-emerald-700 bg-emerald-600 text-xl font-black text-white shadow-md"
+                  className={`instant-tooltip inline-flex h-10 w-10 items-center justify-center rounded-full border-2 text-xl font-black shadow-md transition-colors ${
+                    isRecipeTried
+                      ? 'border-emerald-700 bg-emerald-600 text-white'
+                      : 'border-emerald-600 bg-white text-emerald-700 hover:bg-emerald-50'
+                  }`}
                   data-tooltip={t('triedRecipe')}
+                  onClick={handleToggleRecipeTried}
+                  type="button"
                 >
-                  ✓
-                </span>
+                  {isRecipeTried ? '✓' : ''}
+                </button>
               )}
               <button
                 aria-label={t('favoriteRecipe')}

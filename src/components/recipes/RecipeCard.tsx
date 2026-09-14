@@ -9,7 +9,7 @@ import { hasUserFavoritedRecipe, setUserRecipeFavorite } from '../../lib/recipeF
 import { getMainProductMeta, getMainProductsMeta } from '../../lib/mainProduct';
 import { openPublicUserCard } from '../../lib/publicUserCard';
 import { getRecipeAverageRating, getUserRecipeRating } from '../../lib/recipeRatings';
-import { hasUserTriedRecipe } from '../../lib/recipeTried';
+import { hasUserTriedRecipe, setUserTriedRecipe } from '../../lib/recipeTried';
 import { getUserDisplayName } from '../../lib/userDisplay';
 import type { Recipe, RecipeCuisine, RecipeDishType } from '../../types/recipe';
 
@@ -156,7 +156,7 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
     ? [recipe.cuisine]
     : ['international'];
   const canDeleteFromCard = role === 'admin' && typeof onDelete === 'function';
-  const isRecipeTried = canUseTried && hasUserTriedRecipe(userId, recipe.id);
+  const [isRecipeTried, setIsRecipeTried] = useState(false);
   const [isRecipeFavorite, setIsRecipeFavorite] = useState(false);
   const [userRecipeRating, setUserRecipeRatingState] = useState<number>(0);
   const [recipeRatingAverage, setRecipeRatingAverage] = useState<number>(0);
@@ -169,6 +169,15 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
           ? [{ key: recipe.mainProduct ?? 'fallback-main-product', icon: fallback.icon, iconType: fallback.iconType, label: fallback.label }]
           : [];
       })();
+
+  useEffect(() => {
+    if (!canUseTried) {
+      setIsRecipeTried(false);
+      return;
+    }
+
+    setIsRecipeTried(hasUserTriedRecipe(userId, recipe.id));
+  }, [canUseTried, recipe.id, userId]);
 
   useEffect(() => {
     if (!canUseFavorites) {
@@ -325,6 +334,19 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
     setUserRecipeFavorite(userId, recipe.id, nextValue);
   }
 
+  function handleToggleRecipeTried(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!canUseTried) {
+      return;
+    }
+
+    const nextValue = !isRecipeTried;
+    setIsRecipeTried(nextValue);
+    setUserTriedRecipe(userId, recipe.id, nextValue);
+  }
+
   return (
     <div className="group relative block h-full">
       <Link
@@ -341,7 +363,7 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
           loading="lazy"
           src={recipeImage}
         />
-        {(mainProductMetas.length > 0 || canUseFavorites || (isRecipeTried && canUseTried)) && (
+        {(mainProductMetas.length > 0 || canUseFavorites || canUseTried) && (
           <div className="mt-2 flex items-center justify-between gap-2">
             {mainProductMetas.length > 0 && (
               <div className="flex flex-wrap items-center gap-1">
@@ -376,14 +398,20 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
               </div>
             )}
             <div className="ml-auto flex items-center gap-2">
-            {isRecipeTried && canUseTried && (
-              <span
+            {canUseTried && (
+              <button
                 aria-label={t('triedRecipe')}
-                className="instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-emerald-700 bg-emerald-600 text-xs font-black text-white shadow-sm"
+                className={`instant-tooltip inline-flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-black shadow-sm transition-colors ${
+                  isRecipeTried
+                    ? 'border-emerald-700 bg-emerald-600 text-white'
+                    : 'border-emerald-600 bg-white text-emerald-700 hover:bg-emerald-50'
+                }`}
                 data-tooltip={t('triedRecipe')}
+                onClick={handleToggleRecipeTried}
+                type="button"
               >
-                ✓
-              </span>
+                {isRecipeTried ? '✓' : ''}
+              </button>
             )}
             {canUseFavorites && (
               <button
