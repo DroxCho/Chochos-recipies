@@ -2119,7 +2119,7 @@ export function RecipeForm({
                 <img
                   src={editorSourceUrl}
                   alt={t('photoItem')}
-                  className="h-full w-full select-none object-contain"
+                  className={`h-full w-full select-none object-contain ${editorSourceUrl === DEFAULT_RECIPE_IMAGE_URL ? 'p-[5px]' : ''}`}
                   draggable={false}
                   onLoad={(event) => {
                     const width = event.currentTarget.naturalWidth;
