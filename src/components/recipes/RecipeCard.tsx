@@ -354,7 +354,7 @@ export function RecipeCard({ recipe, onDelete, isDeleting = false }: RecipeCardP
         to={`/recipes/${recipe.id}${listQuery ? `?${listQuery}` : ''}`}
       >
       <article className="flex h-full min-h-[450px] flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-transform duration-200 ease-out group-hover:scale-[1.02] group-hover:shadow-md">
-      <div className={`relative mb-3 overflow-hidden rounded-lg ${isLogoFallback ? 'px-5' : ''}`}>
+      <div className="relative mb-3 overflow-hidden rounded-lg">
         <img
           alt={localizedRecipe.title}
           className={`aspect-square w-full rounded-lg transition-transform duration-200 ease-out ${
