@@ -1305,16 +1305,19 @@ export function RecipeDetailsPage() {
                   {canUseTried && (
                     <button
                       aria-label={t('triedRecipe')}
-                      className={`instant-tooltip inline-flex h-12 w-12 items-center justify-center rounded-full border-2 text-2xl font-black shadow-md transition-colors ${
+                      aria-pressed={isRecipeTried}
+                      className={`instant-tooltip inline-flex h-12 w-12 items-center justify-center rounded-full border-2 shadow-md transition-colors ${
                         isRecipeTried
-                          ? 'border-emerald-700 bg-emerald-600 text-white'
+                          ? 'border-emerald-800 bg-emerald-100 text-emerald-800'
                           : 'border-emerald-600 bg-white text-emerald-700 hover:bg-emerald-50'
                       }`}
                       data-tooltip={t('triedRecipe')}
                       onClick={handleToggleRecipeTried}
                       type="button"
                     >
-                      {isRecipeTried ? '✓' : ''}
+                      <svg aria-hidden="true" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m5 12 4 4L19 6" />
+                      </svg>
                     </button>
                   )}
                   <button
@@ -1374,16 +1377,19 @@ export function RecipeDetailsPage() {
               {canUseTried && (
                 <button
                   aria-label={t('triedRecipe')}
-                  className={`instant-tooltip inline-flex h-10 w-10 items-center justify-center rounded-full border-2 text-xl font-black shadow-md transition-colors ${
+                  aria-pressed={isRecipeTried}
+                  className={`instant-tooltip inline-flex h-10 w-10 items-center justify-center rounded-full border-2 shadow-md transition-colors ${
                     isRecipeTried
-                      ? 'border-emerald-700 bg-emerald-600 text-white'
+                      ? 'border-emerald-800 bg-emerald-100 text-emerald-800'
                       : 'border-emerald-600 bg-white text-emerald-700 hover:bg-emerald-50'
                   }`}
                   data-tooltip={t('triedRecipe')}
                   onClick={handleToggleRecipeTried}
                   type="button"
                 >
-                  {isRecipeTried ? '✓' : ''}
+                  <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m5 12 4 4L19 6" />
+                  </svg>
                 </button>
               )}
               <button
