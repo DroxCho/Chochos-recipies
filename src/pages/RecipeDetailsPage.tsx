@@ -41,7 +41,7 @@ const CUISINE_ICONS: Record<RecipeCuisine, string> = {
   international: '🌍',
 };
 
-const DEFAULT_RECIPE_IMAGE_URL = '/logo-chocos-recipes.png';
+const DEFAULT_RECIPE_IMAGE_URL = '/recipe-placeholder.png';
 const LEGACY_RECIPE_IMAGE_URL = '/hero-first.png';
 
 interface RecipeDetailsLocationState {
@@ -1272,7 +1272,10 @@ export function RecipeDetailsPage() {
       {recipePhotosForDisplay.length > 0 && (
         <div className="mt-5 grid gap-5">
           {recipePhotosForDisplay.map((photoUrl, index) => (
-            <div key={`${currentRecipe.id}-photo-${index}`} className="relative mx-auto w-full max-w-2xl">
+            <div
+              key={`${currentRecipe.id}-photo-${index}`}
+              className={`relative mx-auto w-full max-w-2xl ${photoUrl === DEFAULT_RECIPE_IMAGE_URL ? 'px-5' : ''}`}
+            >
               <img
                 alt={`${localizedRecipe.title} ${index + 1}`}
                 className={`aspect-square w-full rounded-xl border border-slate-200 shadow-sm ${
