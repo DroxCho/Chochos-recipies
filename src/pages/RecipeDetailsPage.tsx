@@ -1279,6 +1279,8 @@ export function RecipeDetailsPage() {
               <img
                 alt={`${localizedRecipe.title} ${index + 1}`}
                 className={`aspect-square w-full rounded-xl border border-slate-200 shadow-sm ${
+                  photoUrl === DEFAULT_RECIPE_IMAGE_URL ? 'p-[5px]' : ''
+                } ${
                   photoUrl === DEFAULT_RECIPE_IMAGE_URL ? 'object-contain' : 'object-cover'
                 }`}
                 loading="lazy"
