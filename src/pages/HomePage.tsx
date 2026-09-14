@@ -110,7 +110,11 @@ export function HomePage() {
   return (
     <section aria-label="home-page" className="min-h-[320px] space-y-4">
       {!isLoading && activeSlide && (
-        <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 shadow-sm">
+        <div
+          className={`relative overflow-hidden rounded-2xl border border-slate-200 shadow-sm ${
+            isLogoSlide ? 'bg-[linear-gradient(180deg,#fffaf3_0%,#f6e9d7_100%)]' : 'bg-slate-900'
+          }`}
+        >
           {activeSlide.imageUrl ? (
             <img
               alt=""
@@ -127,12 +131,12 @@ export function HomePage() {
           )}
 
           <div className="pointer-events-none absolute inset-0 bg-black/20" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-16 text-center text-white">
-            <p className="text-lg italic">{activeSlide.eyebrow}</p>
-            <h3 className="text-4xl font-semibold sm:text-5xl">{activeSlide.title}</h3>
-            <p className="text-xs tracking-[0.3em] text-white/90">{activeSlide.description}</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-16 text-center text-[var(--rustic-bg)]">
+            <p className="text-xl italic sm:text-2xl">{activeSlide.eyebrow}</p>
+            <h3 className="text-5xl font-semibold sm:text-6xl">{activeSlide.title}</h3>
+            <p className="text-sm tracking-[0.3em] sm:text-base">{activeSlide.description}</p>
             <Link
-              className="mt-2 border border-white/80 bg-white/15 px-5 py-2 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/25"
+              className="mt-2 border border-current bg-black/10 px-6 py-3 text-base font-medium backdrop-blur-sm transition-colors hover:bg-black/20"
               to={activeSlide.linkTo}
             >
               Разгледай рецептите
