@@ -32,8 +32,7 @@
     font-family: 'Trebuchet MS', 'Gill Sans', 'Segoe UI', sans-serif;
     background-color: var(--rustic-bg);
     background-image:
-      radial-gradient(circle at 12% 22%, rgb(255 255 255 / 65%) 0 8%, transparent 8.5%),
-      radial-gradient(circle at 90% 12%, rgb(255 248 235 / 70%) 0 10%, transparent 10.5%),
+      repeating-linear-gradient(0deg, rgb(122 79 44 / 1.5%) 0 1px, transparent 1px 6px),
       linear-gradient(165deg, #f3e7d7 0%, #f8f1e6 38%, #f2e8d9 100%);
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
@@ -64,8 +63,13 @@
     position: absolute;
     left: 0;
     right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #8a5a30, #b78649, #8a5a30);
+    height: 5px;
+    background-color: #c9a977;
+    background-image:
+      linear-gradient(45deg, transparent 39%, #a34e3f 40% 47%, transparent 48%),
+      linear-gradient(-45deg, transparent 39%, #68764c 40% 47%, transparent 48%);
+    background-size: 12px 5px;
+    background-position: 0 0, 0 0;
   }
 
   header::after {
@@ -96,7 +100,21 @@
   }
 
   .rustic-shell {
+    position: relative;
+    z-index: 1;
     color: var(--rustic-text);
+    background-image:
+      repeating-linear-gradient(45deg, transparent 0 6px, rgb(158 71 57 / 30%) 6px 7px, transparent 7px 14px),
+      repeating-linear-gradient(-45deg, transparent 0 6px, rgb(99 116 73 / 30%) 6px 7px, transparent 7px 14px),
+      repeating-linear-gradient(45deg, transparent 0 6px, rgb(158 71 57 / 30%) 6px 7px, transparent 7px 14px),
+      repeating-linear-gradient(-45deg, transparent 0 6px, rgb(99 116 73 / 30%) 6px 7px, transparent 7px 14px),
+      linear-gradient(90deg, rgb(255 250 241 / 72%) 0 46px, transparent 46px calc(100% - 46px), rgb(255 250 241 / 72%) calc(100% - 46px) 100%),
+      linear-gradient(rgb(246 239 228 / 62%), rgb(246 239 228 / 62%)),
+      url('/hero-banitsa.jpg');
+    background-size: 44px 100%, 44px 100%, 44px 100%, 44px 100%, 100% 100%, 180px 140px, 180px 140px;
+    background-position: left top, left top, right top, right top, center, right 18px bottom 4rem, right 18px bottom 4rem;
+    background-repeat: repeat-y, repeat-y, repeat-y, repeat-y, no-repeat, no-repeat, no-repeat;
+    background-attachment: scroll, scroll, scroll, scroll, scroll, fixed, fixed;
   }
 
   .rustic-main {
@@ -117,6 +135,12 @@
   .rustic-header,
   .rustic-footer {
     border-color: #d4b996 !important;
+  }
+
+  @media (max-width: 760px) {
+    .rustic-shell {
+      background-size: 12px 100%, 12px 100%, 12px 100%, 12px 100%, 100% 100%, 0 0, 0 0;
+    }
   }
 
   .bg-white {
